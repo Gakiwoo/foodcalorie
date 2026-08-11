@@ -72,97 +72,21 @@ const PAGES = [
   { path: '/register', Comp: FoodCalorieRegister }
 ];
 
-// ===== 点击跳转规则表（按 data-name 正则匹配）=====
-// action: 路径字符串 | 'back' | 函数(名称)
-//   函数返回值: 字符串=目标路径 | {toast?, path?, state?} | null
+// ===== 全局 toast 注入（供 src/ui/toast.js 的 toast() 使用）=====
 let toastFn = null;      // 由 App 注入
-let confirmDeleteFn = null; // 由 App 注入
 function addMsg(name) {
   const m = name.match(/^food-add-(\d+)$/) || name.match(/^result-(\d+)-add$/);
   return m ? `已添加第 ${m[1]} 项，正在返回记录页` : '已添加，正在返回记录页';
 }
-
-const NAV = {
-  '/': [
-    [/^nav-record/, '/records'],
-    [/^nav-discover/, '/discover'],
-    [/^nav-me/, '/me'],
-    [/^camera-(card|cta|section)/, '/camera'],
-    [/^food-card-[123]$/, '/detail'],
-    [/^history-more/, '/records'],
-    [/^nav-settings/, '/settings'],
-    [/^nav-date/, '/today']
-  ],
-  '/camera': [],
-  '/camera-result': [],
-  // ===== 以下页面已改为真实数据组件（组件内部自处理导航与交互，不再使用全局委托）=====
-  '/records': [],
-  '/today': [],
-  '/addfood': [],
-  '/search': [],
-  // ===== 真实数据组件（组件内部自处理导航与交互）=====
-  '/detail': [],
-  '/editrecord': [],
-  '/records-week': [],
-  '/records-month': [],
-  '/dataexport': [],
-  '/discover': [],
-  '/challenge': [],
-  '/favorites': [],
-  '/article': [],
-  '/recipe': [],
-  '/me': [
-    [/^nav-home/, '/'],
-    [/^nav-record/, '/records'],
-    [/^nav-discover/, '/discover'],
-    [/^quick-1/, '/records'],
-    [/^quick-2/, '/goal'],
-    [/^quick-3/, '/favorites'],
-    [/^quick-4/, '/dataexport'],
-    [/^settings-row-1/, '/notification'],
-    [/^settings-row-2/, '/privacy'],
-    [/^settings-row-3/, '/help'],
-    [/^settings-row-4/, '/about'],
-    [/^s-icon-1|^s-label-1|^s-arrow-1|^s-icon-i-1/, '/notification'],
-    [/^s-icon-2|^s-label-2|^s-arrow-2|^s-icon-i-2/, '/privacy'],
-    [/^s-icon-3|^s-label-3|^s-arrow-3|^s-icon-i-3/, '/help'],
-    [/^s-icon-4|^s-label-4|^s-arrow-4|^s-icon-i-4/, '/about'],
-    [/^today-detail/, '/today'],
-    [/^profile-arrow/, '/profile']
-  ],
-  '/goal': [],
-  '/notification': [],
-  // ===== 已迁移为组件内自处理导航的页面（不再使用全局委托）=====
-  '/privacy': [],
-  '/about': [],
-  '/settings': [],
-  // ===== 登录注册（真实表单组件内部处理交互，无需全局委托规则）=====
-  '/login': [],
-  '/register': [],
-  // ===== 以下设置/资料页已改为真实数据组件（组件内部自处理）=====
-  '/profile': [],
-  '/dietpref': [],
-  '/unit': [],
-  '/precision': [],
-  '/burst': [],
-  '/help': [
-    [/^nav-back/, 'back'],
-    [/^faq-/, () => ({ toast: '常见问题详情开发中' })],
-    [/^feedback-submit/, () => ({ toast: '反馈已提交，感谢你的建议' })],
-    [/^contact-card/, () => ({ toast: '客服接入开发中' })]
-  ]
-};
 
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const stackRef = useRef([]);
   const [toast, setToast] = useState('');
-  const [showDelete, setShowDelete] = useState(false);
   const toastTimer = useRef(null);
 
   toastFn = (msg) => showToast(msg);
-  confirmDeleteFn = () => setShowDelete(true);
 
   function showToast(msg) {
     setToast(msg);
@@ -185,49 +109,6 @@ export default function App() {
       navigate('/');
     }
   }
-
-  // 删除确认
-  function confirmDelete() {
-    setShowDelete(false);
-    showToast('记录已删除');
-    navigate('/records');
-  }
-
-  // 全局点击事件委托
-  useEffect(() => {
-    const handler = (e) => {
-      const rules = NAV[location.pathname];
-      if (!rules) return;
-      let el = e.target;
-      while (el && el !== document.body && el.nodeType === 1) {
-        const name = el.getAttribute && el.getAttribute('data-name');
-        if (name) {
-          for (const [re, action] of rules) {
-            if (re.test(name)) {
-              let target = action;
-              let toastMsg = null;
-              if (typeof action === 'function') {
-                const r = action(name);
-                if (typeof r === 'string') target = r;
-                else if (r && typeof r === 'object') {
-                  toastMsg = r.toast || null;
-                  target = r.path ? { path: r.path, state: r.state || {} } : null;
-                } else target = null;
-              }
-              if (target === 'back') goBack();
-              else if (typeof target === 'string') navigate(target);
-              else if (target && typeof target === 'object' && target.path) navigate(target.path, { state: target.state });
-              if (toastMsg) showToast(toastMsg);
-              return;
-            }
-          }
-        }
-        el = el.parentElement;
-      }
-    };
-    document.addEventListener('click', handler);
-    return () => document.removeEventListener('click', handler);
-  }, [location.pathname]);
 
   // 记录页：从设置进入时显示返回箭头
   const fromSettings = location.pathname === '/records' && location.state && location.state.from === 'settings';
@@ -258,25 +139,6 @@ export default function App() {
           </button>
         )}
       </div>
-      {showDelete && (
-        <div className="modal-mask" onClick={() => setShowDelete(false)}>
-          <div className="modal-card" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-icon">
-              <i className="fas fa-trash-can" style={{ fontSize: '22px', color: '#FF6B6B' }} />
-            </div>
-            <p className="modal-title">删除这条记录？</p>
-            <p className="modal-desc">「红烧牛肉面 · 520 kcal」删除后无法恢复</p>
-            <div className="modal-actions">
-              <button className="modal-btn modal-cancel" onClick={() => setShowDelete(false)}>
-                取消
-              </button>
-              <button className="modal-btn modal-danger" onClick={confirmDelete}>
-                删除
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
       {toast && <div className="toast">{toast}</div>}
     </div>
   );

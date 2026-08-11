@@ -39,14 +39,14 @@ export default function FoodCalorieHome() {
           <div style={{ fontSize: 11, color: '#9CA3AF' }}>{greet}，{today.slice(5)}</div>
           <div style={{ fontSize: 22, fontWeight: 800, color: '#1A1A1A' }}>食刻</div>
         </div>
-        <div data-name="nav-settings" style={{ width: 36, height: 36, borderRadius: 18, background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+        <div onClick={() => navigate('/settings')} style={{ width: 36, height: 36, borderRadius: 18, background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
           <i className="fas fa-gear" style={{ fontSize: 15, color: '#1A1A1A' }} />
         </div>
       </div>
 
       {/* 拍照识别卡 */}
       <div style={{ margin: '6px 20px 14px' }}>
-        <div data-name="camera-card" style={{ borderRadius: 20, padding: '18px 20px', background: 'linear-gradient(135deg,#34C759 0%,#1FA355 100%)', color: '#fff', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
+        <div onClick={() => navigate('/camera')} style={{ borderRadius: 20, padding: '18px 20px', background: 'linear-gradient(135deg,#34C759 0%,#1FA355 100%)', color: '#fff', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
           <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <i className="fas fa-camera" style={{ fontSize: 22 }} />
           </div>
@@ -60,7 +60,7 @@ export default function FoodCalorieHome() {
 
       {/* 今日摄入卡（真实数据） */}
       <div style={{ margin: '0 20px 14px' }}>
-        <div data-name="nav-date" style={{ borderRadius: 20, background: '#FFFFFF', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', padding: '20px 18px', display: 'flex', alignItems: 'center', gap: 18, cursor: 'pointer' }}>
+        <div onClick={() => navigate('/today')} style={{ borderRadius: 20, background: '#FFFFFF', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', padding: '20px 18px', display: 'flex', alignItems: 'center', gap: 18, cursor: 'pointer' }}>
           {loading ? (
             <div style={{ padding: '24px 0', flex: 1, textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>加载中…</div>
           ) : !authed ? (
@@ -92,12 +92,12 @@ export default function FoodCalorieHome() {
           <div style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A', marginBottom: 12 }}>快捷入口</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
             {[
-              { n: 'nav-record', icon: 'fa-clipboard-list', label: '记录' },
-              { n: 'nav-discover', icon: 'fa-compass', label: '发现' },
-              { n: 'nav-me', icon: 'fa-user', label: '我的' },
-              { n: 'camera-cta', icon: 'fa-camera', label: '拍照' }
+              { to: '/records', icon: 'fa-clipboard-list', label: '记录' },
+              { to: '/discover', icon: 'fa-compass', label: '发现' },
+              { to: '/me', icon: 'fa-user', label: '我的' },
+              { to: '/camera', icon: 'fa-camera', label: '拍照' }
             ].map((g) => (
-              <div key={g.label} data-name={g.n} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 0', borderRadius: 14, cursor: 'pointer' }}>
+              <div key={g.label} onClick={() => navigate(g.to)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 0', borderRadius: 14, cursor: 'pointer' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 14, background: '#E8F5EC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <i className={'fas ' + g.icon} style={{ fontSize: 17, color: '#22A85A' }} />
                 </div>

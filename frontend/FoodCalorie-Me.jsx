@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { http, apiClient } from './src/api/client';
+import { http } from './src/api/client';
+import { logout, fetchMe } from './src/api/auth';
 import { toast, todayStr } from './src/ui/toast';
 import { StatusBar } from './src/ui/common';
 
@@ -15,7 +16,7 @@ export default function FoodCalorieMe() {
     (async () => {
       // 用户信息
       try {
-        const me = await apiClient('/api/auth/me');
+        const me = await fetchMe();
         setUser(me.user);
       } catch {
         setAuthed(false);
@@ -53,7 +54,7 @@ export default function FoodCalorieMe() {
                 {authed ? (user?.email || '') + (stats ? ' · 目标 ' + stats.target + ' kcal' : '') : '点击右侧箭头登录账号'}
               </div>
             </div>
-            <div data-name="profile-arrow" style={{ width: 34, height: 34, borderRadius: 17, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+            <div onClick={() => navigate(authed ? '/profile' : '/login')} style={{ width: 34, height: 34, borderRadius: 17, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
               <i className="fas fa-chevron-right" style={{ fontSize: 13, color: '#6B7280' }} />
             </div>
           </div>
@@ -62,7 +63,7 @@ export default function FoodCalorieMe() {
 
       {/* 今日记录摘要 */}
       <div style={{ margin: '0 20px 14px' }}>
-        <div data-name="today-card" style={{ borderRadius: 20, background: 'linear-gradient(135deg,#34C759 0%,#1FA355 100%)', padding: '16px 18px', color: '#fff', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+        <div onClick={() => navigate('/today')} style={{ borderRadius: 20, background: 'linear-gradient(135deg,#34C759 0%,#1FA355 100%)', padding: '16px 18px', color: '#fff', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
           <i className="fas fa-bowl-food" style={{ fontSize: 22, opacity: 0.9 }} />
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 13, opacity: 0.9 }}>今日摄入</div>
@@ -81,12 +82,12 @@ export default function FoodCalorieMe() {
           <div style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A', marginBottom: 12 }}>快捷功能</div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
             {[
-              { n: 'quick-1', icon: 'fa-clipboard-list', label: '我的记录' },
-              { n: 'quick-2', icon: 'fa-bullseye', label: '目标设置' },
-              { n: 'quick-3', icon: 'fa-bookmark', label: '我的收藏' },
-              { n: 'quick-4', icon: 'fa-file-export', label: '数据导出' }
+              { to: '/records', icon: 'fa-clipboard-list', label: '我的记录' },
+              { to: '/goal', icon: 'fa-bullseye', label: '目标设置' },
+              { to: '/favorites', icon: 'fa-bookmark', label: '我的收藏' },
+              { to: '/dataexport', icon: 'fa-file-export', label: '数据导出' }
             ].map((g) => (
-              <div key={g.label} data-name={g.n} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '10px 0', borderRadius: 14, cursor: 'pointer' }}>
+              <div key={g.label} onClick={() => navigate(g.to)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '10px 0', borderRadius: 14, cursor: 'pointer' }}>
                 <div style={{ width: 44, height: 44, borderRadius: 14, background: '#E8F5EC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <i className={'fas ' + g.icon} style={{ fontSize: 16, color: '#22A85A' }} />
                 </div>
@@ -101,25 +102,30 @@ export default function FoodCalorieMe() {
       <div style={{ margin: '0 20px 14px' }}>
         <div style={{ borderRadius: 20, background: '#FFFFFF', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', padding: '4px 16px' }}>
           {[
-            { n: 1, icon: 'fa-bell', label: '通知设置' },
-            { n: 2, icon: 'fa-shield-halved', label: '隐私设置' },
-            { n: 3, icon: 'fa-circle-question', label: '帮助反馈' },
-            { n: 4, icon: 'fa-circle-info', label: '关于食刻' }
+            { to: '/notification', icon: 'fa-bell', label: '通知设置' },
+            { to: '/privacy', icon: 'fa-shield-halved', label: '隐私设置' },
+            { to: '/help', icon: 'fa-circle-question', label: '帮助反馈' },
+            { to: '/about', icon: 'fa-circle-info', label: '关于食刻' }
           ].map((s, i) => (
-            <div key={s.n} data-name={'settings-row-' + s.n} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '15px 0', borderBottom: i < 3 ? '1px solid #F3F4F6' : 'none', cursor: 'pointer' }}>
-              <div data-name={'s-icon-' + s.n} style={{ width: 34, height: 34, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div key={s.label} onClick={() => navigate(s.to)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '15px 0', borderBottom: i < 3 ? '1px solid #F3F4F6' : 'none', cursor: 'pointer' }}>
+              <div style={{ width: 34, height: 34, borderRadius: 10, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <i className={'fas ' + s.icon} style={{ fontSize: 13, color: '#6B7280' }} />
               </div>
-              <span data-name={'s-label-' + s.n} style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>{s.label}</span>
-              <i data-name={'s-arrow-' + s.n} className="fas fa-chevron-right" style={{ fontSize: 12, color: '#C0C4CC' }} />
+              <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>{s.label}</span>
+              <i className="fas fa-chevron-right" style={{ fontSize: 12, color: '#C0C4CC' }} />
             </div>
           ))}
         </div>
       </div>
 
-      {/* 退出登录 */}
+      {/* 退出登录（未登录显示登录入口） */}
       <div style={{ margin: '0 20px 24px' }}>
-        <div data-name="logout-card" style={{ borderRadius: 20, background: '#FFFFFF', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', padding: '15px 0', textAlign: 'center', cursor: 'pointer' }}>
+        <div onClick={() => {
+          if (!authed) return navigate('/login');
+          logout().catch(() => {});
+          toast('已退出登录');
+          navigate('/login');
+        }} style={{ borderRadius: 20, background: '#FFFFFF', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', padding: '15px 0', textAlign: 'center', cursor: 'pointer' }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: '#E03131' }}>{authed ? '退出登录' : '登录账号'}</span>
         </div>
       </div>
