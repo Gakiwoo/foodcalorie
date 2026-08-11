@@ -37,3 +37,14 @@ Thumbs.db
 
 # Vite 崩溃残留（配置热重载临时文件）
 frontend/vite.config.js.timestamp-*.mjs
+
+# ── Capacitor / Android 原生工程生成物 ──
+frontend/android/.gradle/
+frontend/android/app/build/
+frontend/android/build/
+frontend/android/capacitor-cordova-android-plugins/build/
+frontend/android/local.properties
+frontend/.npm-cache-tmp/
+
+# ── Gradle 本地缓存（构建环境残留）──
+.gradle-home/
