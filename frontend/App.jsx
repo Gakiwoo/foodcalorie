@@ -34,7 +34,7 @@ import FoodCalorieRecordsMonth from './FoodCalorie-RecordsMonth.jsx';
 import FoodCalorieLogin from './FoodCalorie-Login.jsx';
 import FoodCalorieRegister from './FoodCalorie-Register.jsx';
 // 真实后端对接
-import { logout } from './src/api/auth';
+// (logout 已内聚到 Settings 组件内部处理，不再需要全局注入)
 
 // 路由注册
 const PAGES = [
@@ -47,7 +47,7 @@ const PAGES = [
   { path: '/discover', Comp: FoodCalorieDiscover },
   { path: '/me', Comp: FoodCalorieMe },
   { path: '/addfood', Comp: FoodCalorieAddFood },
-  { path: '/camerresult', Comp: FoodCalorieCameraResult },
+  { path: '/camera-result', Comp: FoodCalorieCameraResult },
   { path: '/goal', Comp: FoodCalorieGoal },
   { path: '/article', Comp: FoodCalorieArticle },
   { path: '/recipe', Comp: FoodCalorieRecipe },
@@ -94,7 +94,7 @@ const NAV = {
     [/^nav-date/, '/today']
   ],
   '/camera': [],
-  '/camerresult': [],
+  '/camera-result': [],
   // ===== 以下页面已改为真实数据组件（组件内部自处理导航与交互，不再使用全局委托）=====
   '/records': [],
   '/today': [],
@@ -132,38 +132,10 @@ const NAV = {
   ],
   '/goal': [],
   '/notification': [],
-  '/privacy': [
-    [/^nav-back/, 'back'],
-    [/^security-row-1/, () => ({ toast: '修改密码开发中' })],
-    [/^security-row-2/, () => ({ toast: '注销账号需二次确认（演示）' })]
-  ],
-  '/about': [
-    [/^nav-back/, 'back'],
-    [/^link-1/, () => ({ toast: '用户协议（演示）' })],
-    [/^link-2/, () => ({ toast: '隐私政策（演示）' })],
-    [/^link-3/, () => ({ toast: '联系我们：hello@shike.app' })],
-    [/^update-btn/, () => ({ toast: '已是最新版本 v1.0.0' })]
-  ],
-  '/settings': [
-    [/^nav-back/, 'back'],
-    [/^card-target/, '/goal'],
-    [/^card-recognize/, '/precision'],
-    [/^card-notify/, '/notification'],
-    [/^label-target-cal|^icon-target-cal|^chev-target-cal/, '/goal'],
-    [/^label-diet|^icon-diet|^chev-diet/, '/dietpref'],
-    [/^label-unit|^icon-unit|^chev-unit/, '/unit'],
-    [/^label-precision|^icon-precision|^chev-precision/, '/precision'],
-    [/^label-burst|^icon-burst|^chev-burst/, '/burst'],
-    [/^label-privacy|^icon-privacy|^chev-privacy/, '/privacy'],
-    [/^label-about|^icon-about|^chev-about/, '/about'],
-    [/^label-help|^icon-help|^chev-help/, '/help'],
-    [/^account-card/, '/profile'],
-    [/^card-records|^label-records|^records-left/, () => ({ path: '/records', state: { from: 'settings' } })],
-    [/^logout-card/, () => {
-      logout().catch(() => {});
-      return { toast: '已退出登录', path: '/login' };
-    }]
-  ],
+  // ===== 已迁移为组件内自处理导航的页面（不再使用全局委托）=====
+  '/privacy': [],
+  '/about': [],
+  '/settings': [],
   // ===== 登录注册（真实表单组件内部处理交互，无需全局委托规则）=====
   '/login': [],
   '/register': [],

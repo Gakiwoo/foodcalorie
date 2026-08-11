@@ -1,748 +1,126 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from './src/ui/toast';
+
+// 关于我们页：静态内容（数据驱动重构，原 749 行重复 JSX → 数据渲染）
+// 视觉保持设计稿：Logo 渐变圆 / 统计三卡 / 功能列表 / 链接行 / 页脚
+const ICON = {
+  signal: './asset/icons/svg_dafe2afa.svg',
+  wifi: './asset/icons/svg_7d24f493.svg',
+  battery: './asset/icons/svg_c23974ea.svg',
+  back: './asset/icons/svg_e5121903.svg',
+  logo: './asset/icons/svg_acabd864.svg',
+  feat: './asset/icons/svg_42ba747e.svg',
+  arrow: './asset/icons/svg_a35c487a.svg',
+  update: './asset/icons/svg_820a89e2.svg'
+};
+
+const STATS = [
+  { val: '128', label: '已记录餐', color: '#34C759' },
+  { val: '23', label: '坚持天数', color: '#1677FF' },
+  { val: '18', label: '收藏项', color: '#FA8C16' }
+];
+
+const FEATURES = [
+  'AI 智能识别 - 一拍即识千种食物',
+  '数据统计 - 周月年趋势一目了然',
+  '食物库 - 10 万 + 食物营养数据',
+  '个性化推荐 - 智能匹配你的目标'
+];
+
+const LINKS = [
+  { key: 'agreement', text: '用户协议', action: () => toast('用户协议（演示）') },
+  { key: 'privacy', text: '隐私政策', action: () => toast('隐私政策（演示）') },
+  { key: 'contact', text: '联系我们', action: () => toast('联系我们：hello@shike.app') }
+];
+
+const cardStyle = { width: '100%', background: '#FFFFFF', borderRadius: 16, boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)' };
+const dividerStyle = { width: 'calc(100% - 32px)', height: 1, background: '#EEF0F2', marginLeft: 16 };
 
 export default function FoodCalorieAbout() {
+  const navigate = useNavigate();
+
   return (
-    <div
-      data-node-id="12:23711"
-      data-name="FoodCalorie-About"
-      style={{
-        width: '375px',
-        height: '968px',
-        minHeight: '812px',
-        display: 'flex',
-        justifyContent: 'flex-start',
-        alignItems: 'flex-start',
-        flexDirection: 'column',
-        background: '#F7F8FA',
-        overflow: 'hidden'
-      }}>
-      <div
-        data-node-id="12:23717"
-        data-name="status-bar"
-        style={{
-          width: '375px',
-          display: 'flex',
-          flex: 'none',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingTop: '12px',
-          paddingBottom: '8px',
-          paddingRight: '20px',
-          paddingLeft: '20px'
-        }}>
-        <span
-          data-node-id="12:23719"
-          data-name="status-time"
-          style={{
-            color: '#1A1A1A',
-            fontSize: '15px',
-            fontFamily: 'Inter',
-            fontWeight: '600',
-            lineHeight: '20px'
-          }}>
-          9:41
-        </span>
-        <div
-          data-node-id="12:23749"
-          data-name="status-icons"
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            gap: '6px'
-          }}>
-          <img
-            src="./asset/icons/svg_dafe2afa.svg"
-            data-node-id="12:23508"
-            data-name="icon-signal"
-            style={{ width: '14px', height: '14px' }}
-          />
-          <img
-            src="./asset/icons/svg_7d24f493.svg"
-            data-node-id="12:23512"
-            data-name="icon-wifi"
-            style={{ width: '14px', height: '14px' }}
-          />
-          <img
-            src="./asset/icons/svg_c23974ea.svg"
-            data-node-id="12:23516"
-            data-name="icon-battery"
-            style={{ width: '14px', height: '14px' }}
-          />
+    <div data-name="FoodCalorie-About" style={{ width: 375, minHeight: 812, display: 'flex', flexDirection: 'column', background: '#F7F8FA' }}>
+      {/* 状态栏（设计稿固定样式） */}
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px 8px' }}>
+        <span style={{ color: '#1A1A1A', fontSize: 15, fontWeight: 600 }}>9:41</span>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {[ICON.signal, ICON.wifi, ICON.battery].map((s, i) => (
+            <img key={i} src={s} style={{ width: 14, height: 14 }} alt="" />
+          ))}
         </div>
       </div>
-      <div
-        data-node-id="12:23763"
-        data-name="top-nav"
-        style={{
-          width: '375px',
-          display: 'flex',
-          flex: 'none',
-          justifyContent: 'flex-start',
-          alignItems: 'center',
-          paddingTop: '10px',
-          paddingBottom: '10px',
-          paddingRight: '20px',
-          paddingLeft: '20px'
-        }}>
-        <img
-          src="./asset/icons/svg_e5121903.svg"
-          data-node-id="12:23520"
-          data-name="nav-back"
-          style={{ width: '22px', height: '22px' }}
-        />
-        <p
-          data-node-id="12:23769"
-          data-name="nav-title"
-          style={{
-            flex: '1',
-            color: '#1A1A1A',
-            fontSize: '18px',
-            fontFamily: 'Inter',
-            textAlign: 'center',
-            fontWeight: '700',
-            lineHeight: '24px'
-          }}>
-          关于我们
-        </p>
-        <div
-          data-node-id="12:23812"
-          data-name="nav-spacer"
-          style={{
-            width: '22px',
-            height: '1px',
-            display: 'flex',
-            flex: 'none',
-            justifyContent: 'flex-start',
-            alignItems: 'flex-start',
-            flexDirection: 'column'
-          }}></div>
+
+      {/* 顶部导航 */}
+      <div style={{ width: '100%', display: 'flex', alignItems: 'center', padding: '10px 20px' }}>
+        <img src={ICON.back} style={{ width: 22, height: 22, cursor: 'pointer' }} alt="返回" onClick={() => navigate(-1)} />
+        <p style={{ flex: 1, textAlign: 'center', color: '#1A1A1A', fontSize: 18, fontWeight: 700, margin: 0 }}>关于我们</p>
+        <div style={{ width: 22, height: 22 }} />
       </div>
-      <div
-        data-node-id="12:23816"
-        data-name="content"
-        style={{
-          width: '375px',
-          display: 'flex',
-          flex: 'none',
-          justifyContent: 'flex-start',
-          alignItems: 'flex-start',
-          flexDirection: 'column',
-          gap: '12px',
-          paddingTop: '4px',
-          paddingBottom: '8px',
-          paddingRight: '20px',
-          paddingLeft: '20px'
-        }}>
-        <div
-          data-node-id="12:23818"
-          data-name="logo-card"
-          style={{
-            width: '335px',
-            display: 'flex',
-            flex: 'none',
-            justifyContent: 'center',
-            alignItems: 'center',
-            flexDirection: 'column',
-            gap: '10px',
-            paddingTop: '24px',
-            paddingBottom: '24px',
-            paddingRight: '20px',
-            paddingLeft: '20px',
-            background: '#FFFFFF',
-            borderRadius: '20px',
-            boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)'
-          }}>
-          <div
-            data-node-id="12:23824"
-            data-name="logo-circle"
-            style={{
-              width: '80px',
-              height: '80px',
-              display: 'flex',
-              flex: 'none',
-              justifyContent: 'center',
-              alignItems: 'center',
-              background: 'linear-gradient(135deg, #34C759 0%, #22A85A 100%)',
-              borderRadius: '40px'
-            }}>
-            <img
-              src="./asset/icons/svg_acabd864.svg"
-              data-node-id="12:23524"
-              data-name="logo-icon"
-              style={{ width: '36px', height: '36px' }}
-            />
+
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: '4px 20px 8px' }}>
+        {/* Logo + 版本 */}
+        <div style={{ ...cardStyle, borderRadius: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '24px 20px' }}>
+          <div style={{ width: 80, height: 80, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #34C759 0%, #22A85A 100%)', borderRadius: 40 }}>
+            <img src={ICON.logo} style={{ width: 36, height: 36 }} alt="食刻" />
           </div>
-          <span
-            data-node-id="12:23832"
-            data-name="app-name"
-            style={{
-              color: '#1A1A1A',
-              fontSize: '24px',
-              fontFamily: 'Inter',
-              textAlign: 'center',
-              fontWeight: '700',
-              lineHeight: '30px'
-            }}>
-            食刻
-          </span>
-          <span
-            data-node-id="12:23871"
-            data-name="app-version"
-            style={{
-              color: '#9CA3AF',
-              fontSize: '12px',
-              fontFamily: 'Inter',
-              textAlign: 'center',
-              lineHeight: '16px'
-            }}>
-            Version 1.0.0 · Build 20260805
-          </span>
+          <span style={{ color: '#1A1A1A', fontSize: 24, fontWeight: 700 }}>食刻</span>
+          <span style={{ color: '#9CA3AF', fontSize: 12 }}>Version 1.0.0 · Build 20260805</span>
         </div>
-        <div
-          data-node-id="12:23901"
-          data-name="intro-card"
-          style={{
-            width: '335px',
-            display: 'flex',
-            flex: 'none',
-            justifyContent: 'flex-start',
-            alignItems: 'flex-start',
-            flexDirection: 'column',
-            gap: '8px',
-            paddingTop: '14px',
-            paddingBottom: '14px',
-            paddingRight: '16px',
-            paddingLeft: '16px',
-            background: '#FFFFFF',
-            borderRadius: '16px',
-            boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)'
-          }}>
-          <p
-            data-node-id="12:23907"
-            data-name="intro-text"
-            style={{
-              alignSelf: 'stretch',
-              color: '#3A3A3A',
-              fontSize: '14px',
-              fontFamily: 'Inter',
-              lineHeight: '24px'
-            }}>
-            食刻是一款专注健康饮食记录与营养管理的
-            App，让你轻松掌握每一餐的热量、蛋白质和营养比例。我们相信，健康来自对每一口食物的了解。
+
+        {/* 简介 */}
+        <div style={{ ...cardStyle, padding: '14px 16px' }}>
+          <p style={{ margin: 0, color: '#3A3A3A', fontSize: 14, lineHeight: '24px' }}>
+            食刻是一款专注健康饮食记录与营养管理的 App，让你轻松掌握每一餐的热量、蛋白质和营养比例。我们相信，健康来自对每一口食物的了解。
           </p>
         </div>
-        <div
-          data-node-id="12:24000"
-          data-name="stats-row"
-          style={{
-            width: '335px',
-            display: 'flex',
-            flex: 'none',
-            justifyContent: 'flex-start',
-            alignItems: 'flex-start',
-            gap: '10px'
-          }}>
-          <div
-            data-node-id="12:24002"
-            data-name="stat-1"
-            style={{
-              display: 'flex',
-              flex: '1',
-              justifyContent: 'center',
-              alignItems: 'center',
-              flexDirection: 'column',
-              gap: '4px',
-              paddingTop: '14px',
-              paddingBottom: '14px',
-              background: '#FFFFFF',
-              borderRadius: '12px',
-              boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)'
-            }}>
-            <span
-              data-node-id="12:24008"
-              data-name="stat-1-val"
-              style={{
-                flexShrink: '0',
-                color: '#34C759',
-                fontSize: '20px',
-                fontFamily: 'Inter',
-                textAlign: 'center',
-                fontWeight: '700',
-                lineHeight: '24px'
-              }}>
-              128
-            </span>
-            <span
-              data-node-id="12:24040"
-              data-name="stat-1-label"
-              style={{
-                flexShrink: '0',
-                color: '#9CA3AF',
-                fontSize: '11px',
-                fontFamily: 'Inter',
-                textAlign: 'center',
-                lineHeight: '15px'
-              }}>
-              已记录餐
-            </span>
-          </div>
-          <div
-            data-node-id="12:24077"
-            data-name="stat-2"
-            style={{
-              display: 'flex',
-              flex: '1',
-              justifyContent: 'center',
-              alignItems: 'center',
-              flexDirection: 'column',
-              gap: '4px',
-              paddingTop: '14px',
-              paddingBottom: '14px',
-              background: '#FFFFFF',
-              borderRadius: '12px',
-              boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)'
-            }}>
-            <span
-              data-node-id="12:24083"
-              data-name="stat-2-val"
-              style={{
-                flexShrink: '0',
-                color: '#1677FF',
-                fontSize: '20px',
-                fontFamily: 'Inter',
-                textAlign: 'center',
-                fontWeight: '700',
-                lineHeight: '24px'
-              }}>
-              23
-            </span>
-            <span
-              data-node-id="12:24114"
-              data-name="stat-2-label"
-              style={{
-                flexShrink: '0',
-                color: '#9CA3AF',
-                fontSize: '11px',
-                fontFamily: 'Inter',
-                textAlign: 'center',
-                lineHeight: '15px'
-              }}>
-              坚持天数
-            </span>
-          </div>
-          <div
-            data-node-id="12:24150"
-            data-name="stat-3"
-            style={{
-              display: 'flex',
-              flex: '1',
-              justifyContent: 'center',
-              alignItems: 'center',
-              flexDirection: 'column',
-              gap: '4px',
-              paddingTop: '14px',
-              paddingBottom: '14px',
-              background: '#FFFFFF',
-              borderRadius: '12px',
-              boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)'
-            }}>
-            <span
-              data-node-id="12:24156"
-              data-name="stat-3-val"
-              style={{
-                flexShrink: '0',
-                color: '#FA8C16',
-                fontSize: '20px',
-                fontFamily: 'Inter',
-                textAlign: 'center',
-                fontWeight: '700',
-                lineHeight: '24px'
-              }}>
-              18
-            </span>
-            <span
-              data-node-id="12:24187"
-              data-name="stat-3-label"
-              style={{
-                flexShrink: '0',
-                color: '#9CA3AF',
-                fontSize: '11px',
-                fontFamily: 'Inter',
-                textAlign: 'center',
-                lineHeight: '15px'
-              }}>
-              收藏项
-            </span>
-          </div>
+
+        {/* 统计三卡 */}
+        <div style={{ width: '100%', display: 'flex', gap: 10 }}>
+          {STATS.map((s) => (
+            <div key={s.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '14px 0', ...cardStyle }}>
+              <span style={{ color: s.color, fontSize: 20, fontWeight: 700 }}>{s.val}</span>
+              <span style={{ color: '#9CA3AF', fontSize: 11 }}>{s.label}</span>
+            </div>
+          ))}
         </div>
-        <div
-          data-node-id="12:24223"
-          data-name="features-card"
-          style={{
-            width: '335px',
-            display: 'flex',
-            flex: 'none',
-            justifyContent: 'flex-start',
-            alignItems: 'flex-start',
-            flexDirection: 'column',
-            gap: '12px',
-            paddingTop: '14px',
-            paddingBottom: '14px',
-            paddingRight: '16px',
-            paddingLeft: '16px',
-            background: '#FFFFFF',
-            borderRadius: '16px',
-            boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)'
-          }}>
-          <span
-            data-node-id="12:24229"
-            data-name="features-title"
-            style={{
-              color: '#1A1A1A',
-              fontSize: '15px',
-              fontFamily: 'Inter',
-              fontWeight: '700',
-              lineHeight: '20px'
-            }}>
-            核心功能
-          </span>
-          <div
-            data-node-id="12:24264"
-            data-name="feat-1"
-            style={{
-              display: 'flex',
-              alignSelf: 'stretch',
-              justifyContent: 'flex-start',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-            <img
-              src="./asset/icons/svg_42ba747e.svg"
-              data-node-id="12:23528"
-              data-name="feat-1-icon"
-              style={{ width: '14px', height: '14px' }}
-            />
-            <span
-              data-node-id="12:24270"
-              data-name="feat-1-text"
-              style={{
-                flexShrink: '0',
-                color: '#1A1A1A',
-                fontSize: '13px',
-                fontFamily: 'Inter',
-                fontWeight: '500',
-                lineHeight: '18px'
-              }}>
-              AI 智能识别 - 一拍即识千种食物
-            </span>
-          </div>
-          <div
-            data-node-id="12:24313"
-            data-name="feat-2"
-            style={{
-              display: 'flex',
-              alignSelf: 'stretch',
-              justifyContent: 'flex-start',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-            <img
-              src="./asset/icons/svg_42ba747e.svg"
-              data-node-id="12:23532"
-              data-name="feat-2-icon"
-              style={{ width: '14px', height: '14px' }}
-            />
-            <span
-              data-node-id="12:24319"
-              data-name="feat-2-text"
-              style={{
-                flexShrink: '0',
-                color: '#1A1A1A',
-                fontSize: '13px',
-                fontFamily: 'Inter',
-                fontWeight: '500',
-                lineHeight: '18px'
-              }}>
-              数据统计 - 周月年趋势一目了然
-            </span>
-          </div>
-          <div
-            data-node-id="12:24362"
-            data-name="feat-3"
-            style={{
-              display: 'flex',
-              alignSelf: 'stretch',
-              justifyContent: 'flex-start',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-            <img
-              src="./asset/icons/svg_42ba747e.svg"
-              data-node-id="12:23536"
-              data-name="feat-3-icon"
-              style={{ width: '14px', height: '14px' }}
-            />
-            <span
-              data-node-id="12:24368"
-              data-name="feat-3-text"
-              style={{
-                flexShrink: '0',
-                color: '#1A1A1A',
-                fontSize: '13px',
-                fontFamily: 'Inter',
-                fontWeight: '500',
-                lineHeight: '18px'
-              }}>
-              食物库 - 10 万 + 食物营养数据
-            </span>
-          </div>
-          <div
-            data-node-id="12:24417"
-            data-name="feat-4"
-            style={{
-              display: 'flex',
-              alignSelf: 'stretch',
-              justifyContent: 'flex-start',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-            <img
-              src="./asset/icons/svg_42ba747e.svg"
-              data-node-id="12:23540"
-              data-name="feat-4-icon"
-              style={{ width: '14px', height: '14px' }}
-            />
-            <span
-              data-node-id="12:24423"
-              data-name="feat-4-text"
-              style={{
-                flexShrink: '0',
-                color: '#1A1A1A',
-                fontSize: '13px',
-                fontFamily: 'Inter',
-                fontWeight: '500',
-                lineHeight: '18px'
-              }}>
-              个性化推荐 - 智能匹配你的目标
-            </span>
-          </div>
+
+        {/* 核心功能 */}
+        <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column', gap: 12, padding: '14px 16px' }}>
+          <span style={{ color: '#1A1A1A', fontSize: 15, fontWeight: 700 }}>核心功能</span>
+          {FEATURES.map((f) => (
+            <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <img src={ICON.feat} style={{ width: 14, height: 14 }} alt="" />
+              <span style={{ color: '#1A1A1A', fontSize: 13, fontWeight: 500 }}>{f}</span>
+            </div>
+          ))}
         </div>
-        <div
-          data-node-id="12:24466"
-          data-name="links-card"
-          style={{
-            width: '335px',
-            display: 'flex',
-            flex: 'none',
-            justifyContent: 'flex-start',
-            alignItems: 'flex-start',
-            flexDirection: 'column',
-            background: '#FFFFFF',
-            borderRadius: '16px',
-            boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)'
-          }}>
-          <div
-            data-node-id="12:24472"
-            data-name="link-1"
-            style={{
-              width: '335px',
-              display: 'flex',
-              flex: 'none',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              paddingTop: '14px',
-              paddingBottom: '14px',
-              paddingRight: '16px',
-              paddingLeft: '16px'
-            }}>
-            <span
-              data-node-id="12:24474"
-              data-name="link-1-text"
-              style={{
-                color: '#1A1A1A',
-                fontSize: '14px',
-                fontFamily: 'Inter',
-                fontWeight: '500',
-                lineHeight: '20px'
-              }}>
-              用户协议
-            </span>
-            <img
-              src="./asset/icons/svg_a35c487a.svg"
-              data-node-id="12:23544"
-              data-name="link-1-arrow"
-              style={{ width: '12px', height: '12px' }}
-            />
-          </div>
-          <div
-            data-node-id="12:24511"
-            data-name="link-divider-1"
-            style={{
-              width: '303px',
-              height: '1px',
-              display: 'flex',
-              flex: 'none',
-              justifyContent: 'flex-start',
-              alignItems: 'flex-start',
-              flexDirection: 'column',
-              background: '#EEF0F2'
-            }}></div>
-          <div
-            data-node-id="12:24515"
-            data-name="link-2"
-            style={{
-              width: '335px',
-              display: 'flex',
-              flex: 'none',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              paddingTop: '14px',
-              paddingBottom: '14px',
-              paddingRight: '16px',
-              paddingLeft: '16px'
-            }}>
-            <span
-              data-node-id="12:24517"
-              data-name="link-2-text"
-              style={{
-                color: '#1A1A1A',
-                fontSize: '14px',
-                fontFamily: 'Inter',
-                fontWeight: '500',
-                lineHeight: '20px'
-              }}>
-              隐私政策
-            </span>
-            <img
-              src="./asset/icons/svg_a35c487a.svg"
-              data-node-id="12:23548"
-              data-name="link-2-arrow"
-              style={{ width: '12px', height: '12px' }}
-            />
-          </div>
-          <div
-            data-node-id="12:24554"
-            data-name="link-divider-2"
-            style={{
-              width: '303px',
-              height: '1px',
-              display: 'flex',
-              flex: 'none',
-              justifyContent: 'flex-start',
-              alignItems: 'flex-start',
-              flexDirection: 'column',
-              background: '#EEF0F2'
-            }}></div>
-          <div
-            data-node-id="12:24558"
-            data-name="link-3"
-            style={{
-              width: '335px',
-              display: 'flex',
-              flex: 'none',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              paddingTop: '14px',
-              paddingBottom: '14px',
-              paddingRight: '16px',
-              paddingLeft: '16px'
-            }}>
-            <span
-              data-node-id="12:24560"
-              data-name="link-3-text"
-              style={{
-                color: '#1A1A1A',
-                fontSize: '14px',
-                fontFamily: 'Inter',
-                fontWeight: '500',
-                lineHeight: '20px'
-              }}>
-              联系我们
-            </span>
-            <img
-              src="./asset/icons/svg_a35c487a.svg"
-              data-node-id="12:23552"
-              data-name="link-3-arrow"
-              style={{ width: '12px', height: '12px' }}
-            />
-          </div>
+
+        {/* 链接 */}
+        <div style={{ ...cardStyle, display: 'flex', flexDirection: 'column' }}>
+          {LINKS.map((l, i) => (
+            <React.Fragment key={l.key}>
+              <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', cursor: 'pointer' }} onClick={l.action}>
+                <span style={{ color: '#1A1A1A', fontSize: 14, fontWeight: 500 }}>{l.text}</span>
+                <img src={ICON.arrow} style={{ width: 12, height: 12 }} alt="" />
+              </div>
+              {i < LINKS.length - 1 && <div style={dividerStyle} />}
+            </React.Fragment>
+          ))}
         </div>
-        <div
-          data-node-id="12:24597"
-          data-name="update-btn"
-          style={{
-            width: '335px',
-            height: '44px',
-            display: 'flex',
-            flex: 'none',
-            justifyContent: 'center',
-            alignItems: 'center',
-            gap: '6px',
-            background: '#F7F8FA',
-            borderRadius: '14px'
-          }}>
-          <img
-            src="./asset/icons/svg_820a89e2.svg"
-            data-node-id="12:23556"
-            data-name="update-icon"
-            style={{ width: '14px', height: '14px' }}
-          />
-          <span
-            data-node-id="12:24605"
-            data-name="update-text"
-            style={{
-              color: '#22A85A',
-              fontSize: '14px',
-              fontFamily: 'Inter',
-              textAlign: 'center',
-              fontWeight: '600',
-              lineHeight: '20px'
-            }}>
-            检查更新
-          </span>
+
+        {/* 检查更新 */}
+        <div style={{ width: '100%', height: 44, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, background: '#F7F8FA', borderRadius: 14, cursor: 'pointer' }} onClick={() => toast('已是最新版本 v1.0.0')}>
+          <img src={ICON.update} style={{ width: 14, height: 14 }} alt="" />
+          <span style={{ color: '#22A85A', fontSize: 14, fontWeight: 600 }}>检查更新</span>
         </div>
       </div>
-      <div
-        data-node-id="12:24639"
-        data-name="footer"
-        style={{
-          width: '375px',
-          display: 'flex',
-          flex: 'none',
-          justifyContent: 'center',
-          alignItems: 'center',
-          flexDirection: 'column',
-          gap: '4px',
-          paddingTop: '12px',
-          paddingBottom: '20px',
-          paddingRight: '20px',
-          paddingLeft: '20px'
-        }}>
-        <span
-          data-node-id="12:24641"
-          data-name="footer-copyright"
-          style={{
-            color: '#9CA3AF',
-            fontSize: '11px',
-            fontFamily: 'Inter',
-            textAlign: 'center',
-            lineHeight: '15px'
-          }}>
-          © 2026 食刻 Studio
-        </span>
-        <span
-          data-node-id="12:24677"
-          data-name="footer-icp"
-          style={{
-            color: '#C0C4CC',
-            fontSize: '10px',
-            fontFamily: 'Inter',
-            textAlign: 'center',
-            lineHeight: '14px'
-          }}>
-          粤ICP备2025362354号
-        </span>
+
+      {/* 页脚 */}
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '12px 20px 20px' }}>
+        <span style={{ color: '#9CA3AF', fontSize: 11 }}>© 2026 食刻 Studio</span>
+        <span style={{ color: '#C0C4CC', fontSize: 10 }}>粤ICP备2025362354号</span>
       </div>
     </div>
   );

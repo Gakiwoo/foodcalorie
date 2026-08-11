@@ -1,1315 +1,173 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { logout } from './src/api/auth';
+import { toast } from './src/ui/toast';
+
+// 设置页：静态导航壳（数据驱动重构，原 1317 行重复 JSX → 数据渲染）
+// 视觉保持设计稿：375px 容器 / 白卡圆角 16px / 图标沿用 asset/icons svg
+const ICON = {
+  signal: './asset/icons/svg_dafe2afa.svg',
+  wifi: './asset/icons/svg_7d24f493.svg',
+  battery: './asset/icons/svg_c23974ea.svg',
+  back: './asset/icons/svg_e5121903.svg',
+  chevron: './asset/icons/svg_4380ec87.svg',
+  avatar: './asset/images/3e1a5d7c9145e2459e60d4c1ab3aa43e.jpg',
+  // 设置项图标
+  target: './asset/icons/svg_f5de3366.svg',
+  diet: './asset/icons/svg_46491fc1.svg',
+  unit: './asset/icons/svg_cc4f6b56.svg',
+  precision: './asset/icons/svg_e2d16172.svg',
+  auto: './asset/icons/svg_733a8d31.svg',
+  burst: './asset/icons/svg_09b7eb08.svg',
+  checkin: './asset/icons/svg_d3b95eb4.svg',
+  over: './asset/icons/svg_fe8730e3.svg',
+  privacy: './asset/icons/svg_93cbd066.svg',
+  help: './asset/icons/svg_72249477.svg',
+  about: './asset/icons/svg_9ab0e5a7.svg',
+  switchOn: './asset/icons/svg_a43e76cd.svg',
+  switchOff: './asset/icons/svg_3418de29.svg'
+};
+
+const STATUS_BAR = [
+  { icon: ICON.signal, name: 'icon-signal' },
+  { icon: ICON.wifi, name: 'icon-wifi' },
+  { icon: ICON.battery, name: 'icon-battery' }
+];
+
+// 分组与设置项（value 为右侧文案；switch 为演示开关；to 为跳转目标）
+const GROUPS = [
+  {
+    title: '目标与偏好',
+    rows: [
+      { key: 'target', icon: ICON.target, label: '每日目标热量', value: '2000 kcal', to: '/goal' },
+      { key: 'diet', icon: ICON.diet, label: '饮食偏好', to: '/dietpref' },
+      { key: 'unit', icon: ICON.unit, label: '单位设置', value: '千卡(kcal)', to: '/unit' }
+    ]
+  },
+  {
+    title: '识别设置',
+    rows: [
+      { key: 'precision', icon: ICON.precision, label: '拍照识别精度', value: '标准', to: '/precision' },
+      { key: 'auto', icon: ICON.auto, label: '自动识别', switch: ICON.switchOn },
+      { key: 'burst', icon: ICON.burst, label: '连拍模式', switch: ICON.switchOff }
+    ]
+  },
+  {
+    title: '通知',
+    rows: [
+      { key: 'checkin', icon: ICON.checkin, label: '每日打卡提醒', switch: ICON.switchOn },
+      { key: 'over', icon: ICON.over, label: '摄入超标提醒', switch: ICON.switchOn }
+    ]
+  },
+  {
+    title: '通用',
+    rows: [
+      { key: 'privacy', icon: ICON.privacy, label: '隐私设置', to: '/privacy' },
+      { key: 'help', icon: ICON.help, label: '帮助反馈', to: '/help' },
+      { key: 'about', icon: ICON.about, label: '关于食刻', to: '/about' }
+    ]
+  }
+];
+
+const rowStyle = { width: '100%', height: 56, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', cursor: 'pointer' };
+const leftStyle = { display: 'flex', alignItems: 'center', gap: 12 };
+const labelStyle = { color: '#1A1A1A', fontSize: 15, fontWeight: 500 };
+const valueStyle = { color: '#9CA3AF', fontSize: 14, textAlign: 'right' };
+const dividerStyle = { width: 'calc(100% - 32px)', height: 1, background: '#EEF0F2', marginLeft: 16 };
 
 export default function FoodCalorieSettings() {
+  const navigate = useNavigate();
+
+  function handleLogout() {
+    logout()
+      .catch(() => {})
+      .finally(() => {
+        toast('已退出登录');
+        navigate('/login');
+      });
+  }
+
   return (
-    <div
-      data-node-id="5:024266"
-      data-name="FoodCalorie-Settings"
-      style={{
-        width: '375px',
-        height: '1079px',
-        minHeight: '812px',
-        display: 'flex',
-        justifyContent: 'flex-start',
-        alignItems: 'flex-start',
-        flexDirection: 'column',
-        background: '#F7F8FA',
-        overflow: 'hidden'
-      }}>
-      <div
-        data-node-id="5:024272"
-        data-name="status-bar"
-        style={{
-          width: '375px',
-          display: 'flex',
-          flex: 'none',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingTop: '12px',
-          paddingBottom: '8px',
-          paddingRight: '20px',
-          paddingLeft: '20px'
-        }}>
-        <span
-          data-node-id="5:024274"
-          data-name="status-time"
-          style={{
-            color: '#1A1A1A',
-            fontSize: '15px',
-            fontFamily: 'Inter',
-            fontWeight: '600',
-            lineHeight: '20px'
-          }}>
-          9:41
-        </span>
-        <div
-          data-node-id="5:024307"
-          data-name="status-icons"
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-            gap: '6px'
-          }}>
-          <img
-            src="./asset/icons/svg_dafe2afa.svg"
-            data-node-id="5:022957"
-            data-name="icon-signal"
-            style={{ width: '14px', height: '14px' }}
-          />
-          <img
-            src="./asset/icons/svg_7d24f493.svg"
-            data-node-id="5:022961"
-            data-name="icon-wifi"
-            style={{ width: '14px', height: '14px' }}
-          />
-          <img
-            src="./asset/icons/svg_c23974ea.svg"
-            data-node-id="5:022965"
-            data-name="icon-battery"
-            style={{ width: '14px', height: '14px' }}
-          />
-        </div>
-      </div>
-      <div
-        data-node-id="5:024323"
-        data-name="top-nav"
-        style={{
-          width: '375px',
-          display: 'flex',
-          flex: 'none',
-          justifyContent: 'flex-start',
-          alignItems: 'center',
-          paddingTop: '10px',
-          paddingBottom: '10px',
-          paddingRight: '20px',
-          paddingLeft: '20px'
-        }}>
-        <img
-          src="./asset/icons/svg_e5121903.svg"
-          data-node-id="5:022969"
-          data-name="nav-back"
-          style={{ width: '22px', height: '22px' }}
-        />
-        <p
-          data-node-id="5:024329"
-          data-name="nav-title"
-          style={{
-            flex: '1',
-            color: '#1A1A1A',
-            fontSize: '18px',
-            fontFamily: 'Inter',
-            textAlign: 'center',
-            fontWeight: '700',
-            lineHeight: '24px'
-          }}>
-          设置
-        </p>
-        <div
-          data-node-id="5:024373"
-          data-name="nav-spacer"
-          style={{
-            width: '22px',
-            height: '22px',
-            display: 'flex',
-            flex: 'none',
-            justifyContent: 'flex-start',
-            alignItems: 'flex-start',
-            flexDirection: 'column'
-          }}></div>
-      </div>
-      <div
-        data-node-id="5:024378"
-        data-name="settings-content"
-        style={{
-          width: '375px',
-          display: 'flex',
-          flex: 'none',
-          justifyContent: 'flex-start',
-          alignItems: 'center',
-          flexDirection: 'column',
-          gap: '20px',
-          paddingTop: '12px',
-          paddingBottom: '12px',
-          paddingRight: '20px',
-          paddingLeft: '20px'
-        }}>
-        <div
-          data-node-id="5:024380"
-          data-name="account-card"
-          style={{
-            width: '335px',
-            display: 'flex',
-            flex: 'none',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '16px',
-            background: '#FFFFFF',
-            borderRadius: '20px',
-            boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)'
-          }}>
-          <div
-            data-node-id="5:024386"
-            data-name="account-left"
-            style={{
-              display: 'flex',
-              justifyContent: 'flex-start',
-              alignItems: 'center',
-              gap: '12px'
-            }}>
-            <div
-              data-node-id="5:024388"
-              data-name="avatar-wrap"
-              style={{
-                width: '56px',
-                height: '56px',
-                display: 'flex',
-                flex: 'none',
-                justifyContent: 'center',
-                alignItems: 'center',
-                borderRadius: '56px',
-                overflow: 'hidden'
-              }}>
-              <img
-                data-node-id="5:024390"
-                data-name="avatar-img"
-                style={{
-                  width: '56px',
-                  height: '56px',
-                  flex: 'none',
-                  objectFit: 'cover'
-                }}
-                src="./asset/images/3e1a5d7c9145e2459e60d4c1ab3aa43e.jpg"
-                title="avatar-img"
-              />
-            </div>
-            <div
-              data-node-id="5:024391"
-              data-name="account-text"
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'flex-start',
-                flexDirection: 'column',
-                gap: '4px'
-              }}>
-              <span
-                data-node-id="5:024393"
-                data-name="account-name"
-                style={{
-                  color: '#1A1A1A',
-                  fontSize: '17px',
-                  fontFamily: 'Inter',
-                  fontWeight: '700',
-                  lineHeight: '22px'
-                }}>
-                健康生活家
-              </span>
-              <span
-                data-node-id="5:024432"
-                data-name="account-sub"
-                style={{
-                  color: '#9CA3AF',
-                  fontSize: '13px',
-                  fontFamily: 'Inter',
-                  lineHeight: '18px'
-                }}>
-                查看个人主页
-              </span>
-            </div>
-          </div>
-          <img
-            src="./asset/icons/svg_c0ea1f2d.svg"
-            data-node-id="5:022973"
-            data-name="account-chevron"
-            style={{ width: '16px', height: '16px' }}
-          />
-        </div>
-      <div
-        data-node-id="S-RECORDS"
-        data-name="card-records"
-        style={{
-          width: '335px',
-          height: '48px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          paddingLeft: '16px',
-          paddingRight: '16px',
-          background: '#FFFFFF',
-          borderRadius: '16px',
-          boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)'
-        }}>
-        <div
-          data-name="records-left"
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-start',
-            alignItems: 'center',
-            gap: '12px'
-          }}>
-          <div
-            data-name="records-icon-wrap"
-            style={{
-              width: '36px',
-              height: '36px',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              borderRadius: '10px',
-              background: '#E8F5EC'
-            }}>
-            <i className="fas fa-clipboard-list" style={{ fontSize: '16px', color: '#22A85A' }} />
-          </div>
-          <span
-            data-name="label-records"
-            style={{
-              color: '#1A1A1A',
-              fontSize: '14px',
-              fontWeight: '600',
-              lineHeight: '20px'
-            }}>
-            我的记录
-          </span>
-        </div>
-        <div data-name="records-right" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span data-name="records-sub" style={{ color: '#9CA3AF', fontSize: '12px' }}>128 条记录</span>
-          <i className="fas fa-chevron-right" style={{ fontSize: '12px', color: '#C0C4CC' }} />
+    <div data-name="FoodCalorie-Settings" style={{ width: 375, minHeight: 812, display: 'flex', flexDirection: 'column', background: '#F7F8FA' }}>
+      {/* 状态栏（设计稿固定样式） */}
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px 8px' }}>
+        <span style={{ color: '#1A1A1A', fontSize: 15, fontWeight: 600 }}>9:41</span>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {STATUS_BAR.map((s) => (
+            <img key={s.name} src={s.icon} style={{ width: 14, height: 14 }} alt="" />
+          ))}
         </div>
       </div>
 
-        <div
-          data-node-id="5:024478"
-          data-name="group-target"
-          style={{
-            width: '335px',
-            display: 'flex',
-            flex: 'none',
-            justifyContent: 'flex-start',
-            alignItems: 'flex-start',
-            flexDirection: 'column',
-            gap: '8px'
-          }}>
-          <div
-            data-node-id="5:024480"
-            data-name="group-title-target"
-            style={{
-              display: 'flex',
-              alignSelf: 'stretch',
-              justifyContent: 'flex-start',
-              alignItems: 'flex-start',
-              flexDirection: 'column',
-              paddingRight: '4px',
-              paddingLeft: '4px'
-            }}>
-            <span
-              data-node-id="5:024482"
-              data-name="目标与偏好"
-              style={{
-                flexShrink: '0',
-                color: '#9CA3AF',
-                fontSize: '13px',
-                fontFamily: 'Inter',
-                fontWeight: '500',
-                lineHeight: '18px'
-              }}>
-              目标与偏好
-            </span>
+      {/* 顶部导航 */}
+      <div style={{ width: '100%', display: 'flex', alignItems: 'center', padding: '10px 20px' }}>
+        <img src={ICON.back} style={{ width: 22, height: 22, cursor: 'pointer' }} alt="返回" onClick={() => navigate(-1)} />
+        <p style={{ flex: 1, textAlign: 'center', color: '#1A1A1A', fontSize: 18, fontWeight: 700, margin: 0 }}>设置</p>
+        <div style={{ width: 22, height: 22 }} />
+      </div>
+
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, padding: '12px 20px' }}>
+        {/* 账户卡 → 个人主页 */}
+        <div data-name="account-card" onClick={() => navigate('/profile')} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 16, background: '#FFFFFF', borderRadius: 20, boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 56, height: 56, borderRadius: 28, overflow: 'hidden' }}>
+              <img src={ICON.avatar} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="头像" />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ color: '#1A1A1A', fontSize: 17, fontWeight: 700 }}>健康生活家</span>
+              <span style={{ color: '#9CA3AF', fontSize: 13 }}>查看个人主页</span>
+            </div>
           </div>
-          <div
-            data-node-id="5:024521"
-            data-name="card-target"
-            style={{
-              width: '335px',
-              display: 'flex',
-              flex: 'none',
-              justifyContent: 'flex-start',
-              alignItems: 'flex-start',
-              flexDirection: 'column',
-              background: '#FFFFFF',
-              borderRadius: '16px',
-              boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)',
-              overflow: 'hidden'
-            }}>
-            <div
-              data-node-id="5:024527"
-              data-name="row-target-cal"
-              style={{
-                width: '335px',
-                height: '56px',
-                display: 'flex',
-                flex: 'none',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingRight: '16px',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:024530"
-                data-name="left-target-cal"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                <img
-                  src="./asset/icons/svg_f5de3366.svg"
-                  data-node-id="5:022977"
-                  data-name="icon-target-cal"
-                  style={{ width: '18px', height: '18px' }}
-                />
-                <span
-                  data-node-id="5:024536"
-                  data-name="label-target-cal"
-                  style={{
-                    color: '#1A1A1A',
-                    fontSize: '15px',
-                    fontFamily: 'Inter',
-                    fontWeight: '500',
-                    lineHeight: '20px'
-                  }}>
-                  每日目标热量
-                </span>
-              </div>
-              <div
-                data-node-id="5:024577"
-                data-name="right-target-cal"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}>
-                <span
-                  data-node-id="5:024579"
-                  data-name="value-target-cal"
-                  style={{
-                    color: '#9CA3AF',
-                    fontSize: '14px',
-                    fontFamily: 'Inter',
-                    textAlign: 'right',
-                    lineHeight: '20px'
-                  }}>
-                  2000 kcal
-                </span>
-                <img
-                  src="./asset/icons/svg_4380ec87.svg"
-                  data-node-id="5:022981"
-                  data-name="chev-target-cal"
-                  style={{ width: '14px', height: '14px' }}
-                />
-              </div>
+          <img src={ICON.chevron} style={{ width: 16, height: 16 }} alt="" />
+        </div>
+
+        {/* 我的记录 → 记录页（带来源标记） */}
+        <div data-name="card-records" onClick={() => navigate('/records', { state: { from: 'settings' } })} style={{ width: '100%', height: 48, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', background: '#FFFFFF', borderRadius: 16, boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 36, height: 36, display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 10, background: '#E8F5EC' }}>
+              <i className="fas fa-clipboard-list" style={{ fontSize: 16, color: '#22A85A' }} />
             </div>
-            <div
-              data-node-id="5:024615"
-              data-name="div-target-1-margin-wrapper"
-              style={{
-                display: 'flex',
-                alignSelf: 'stretch',
-                justifyContent: 'flex-start',
-                alignItems: 'flex-start',
-                flexDirection: 'column',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:024617"
-                data-name="div-target-1"
-                style={{
-                  width: '319px',
-                  height: '1px',
-                  display: 'flex',
-                  flex: 'none',
-                  justifyContent: 'flex-start',
-                  alignItems: 'flex-start',
-                  flexDirection: 'column',
-                  background: '#EEF0F2'
-                }}></div>
-            </div>
-            <div
-              data-node-id="5:024621"
-              data-name="row-diet"
-              style={{
-                width: '335px',
-                height: '56px',
-                display: 'flex',
-                flex: 'none',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingRight: '16px',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:024623"
-                data-name="left-diet"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                <img
-                  src="./asset/icons/svg_46491fc1.svg"
-                  data-node-id="5:022985"
-                  data-name="icon-diet"
-                  style={{ width: '18px', height: '18px' }}
-                />
-                <span
-                  data-node-id="5:024629"
-                  data-name="label-diet"
-                  style={{
-                    color: '#1A1A1A',
-                    fontSize: '15px',
-                    fontFamily: 'Inter',
-                    fontWeight: '500',
-                    lineHeight: '20px'
-                  }}>
-                  饮食偏好
-                </span>
-              </div>
-              <img
-                src="./asset/icons/svg_4380ec87.svg"
-                data-node-id="5:022989"
-                data-name="chev-diet"
-                style={{ width: '14px', height: '14px' }}
-              />
-            </div>
-            <div
-              data-node-id="5:024672"
-              data-name="div-target-2-margin-wrapper"
-              style={{
-                display: 'flex',
-                alignSelf: 'stretch',
-                justifyContent: 'flex-start',
-                alignItems: 'flex-start',
-                flexDirection: 'column',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:024674"
-                data-name="div-target-2"
-                style={{
-                  width: '319px',
-                  height: '1px',
-                  display: 'flex',
-                  flex: 'none',
-                  justifyContent: 'flex-start',
-                  alignItems: 'flex-start',
-                  flexDirection: 'column',
-                  background: '#EEF0F2'
-                }}></div>
-            </div>
-            <div
-              data-node-id="5:024678"
-              data-name="row-unit"
-              style={{
-                width: '335px',
-                height: '56px',
-                display: 'flex',
-                flex: 'none',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingRight: '16px',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:024680"
-                data-name="left-unit"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                <img
-                  src="./asset/icons/svg_cc4f6b56.svg"
-                  data-node-id="5:022993"
-                  data-name="icon-unit"
-                  style={{ width: '18px', height: '18px' }}
-                />
-                <span
-                  data-node-id="5:024686"
-                  data-name="label-unit"
-                  style={{
-                    color: '#1A1A1A',
-                    fontSize: '15px',
-                    fontFamily: 'Inter',
-                    fontWeight: '500',
-                    lineHeight: '20px'
-                  }}>
-                  单位设置
-                </span>
-              </div>
-              <div
-                data-node-id="5:024724"
-                data-name="right-unit"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}>
-                <span
-                  data-node-id="5:024726"
-                  data-name="value-unit"
-                  style={{
-                    color: '#9CA3AF',
-                    fontSize: '14px',
-                    fontFamily: 'Inter',
-                    textAlign: 'right',
-                    lineHeight: '20px'
-                  }}>
-                  千卡(kcal)
-                </span>
-                <img
-                  src="./asset/icons/svg_4380ec87.svg"
-                  data-node-id="5:022997"
-                  data-name="chev-unit"
-                  style={{ width: '14px', height: '14px' }}
-                />
-              </div>
-            </div>
+            <span style={{ color: '#1A1A1A', fontSize: 14, fontWeight: 600 }}>我的记录</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ color: '#9CA3AF', fontSize: 12 }}>128 条记录</span>
+            <img src={ICON.chevron} style={{ width: 14, height: 14 }} alt="" />
           </div>
         </div>
-        <div
-          data-node-id="5:024768"
-          data-name="group-recognize"
-          style={{
-            width: '335px',
-            display: 'flex',
-            flex: 'none',
-            justifyContent: 'flex-start',
-            alignItems: 'flex-start',
-            flexDirection: 'column',
-            gap: '8px'
-          }}>
-          <div
-            data-node-id="5:024770"
-            data-name="group-title-recognize"
-            style={{
-              display: 'flex',
-              alignSelf: 'stretch',
-              justifyContent: 'flex-start',
-              alignItems: 'flex-start',
-              flexDirection: 'column',
-              paddingRight: '4px',
-              paddingLeft: '4px'
-            }}>
-            <span
-              data-node-id="5:024772"
-              data-name="识别设置"
-              style={{
-                flexShrink: '0',
-                color: '#9CA3AF',
-                fontSize: '13px',
-                fontFamily: 'Inter',
-                fontWeight: '500',
-                lineHeight: '18px'
-              }}>
-              识别设置
-            </span>
-          </div>
-          <div
-            data-node-id="5:024810"
-            data-name="card-recognize"
-            style={{
-              width: '335px',
-              display: 'flex',
-              flex: 'none',
-              justifyContent: 'flex-start',
-              alignItems: 'flex-start',
-              flexDirection: 'column',
-              background: '#FFFFFF',
-              borderRadius: '16px',
-              boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)',
-              overflow: 'hidden'
-            }}>
-            <div
-              data-node-id="5:024817"
-              data-name="row-precision"
-              style={{
-                width: '335px',
-                height: '56px',
-                display: 'flex',
-                flex: 'none',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingRight: '16px',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:024819"
-                data-name="left-precision"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                <img
-                  src="./asset/icons/svg_e2d16172.svg"
-                  data-node-id="5:023001"
-                  data-name="icon-precision"
-                  style={{ width: '18px', height: '18px' }}
-                />
-                <span
-                  data-node-id="5:024825"
-                  data-name="label-precision"
-                  style={{
-                    color: '#1A1A1A',
-                    fontSize: '15px',
-                    fontFamily: 'Inter',
-                    fontWeight: '500',
-                    lineHeight: '20px'
-                  }}>
-                  拍照识别精度
-                </span>
-              </div>
-              <div
-                data-node-id="5:024863"
-                data-name="right-precision"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  alignItems: 'center',
-                  gap: '6px'
-                }}>
-                <span
-                  data-node-id="5:024866"
-                  data-name="value-precision"
-                  style={{
-                    color: '#9CA3AF',
-                    fontSize: '14px',
-                    fontFamily: 'Inter',
-                    textAlign: 'right',
-                    lineHeight: '20px'
-                  }}>
-                  标准
-                </span>
-                <img
-                  src="./asset/icons/svg_4380ec87.svg"
-                  data-node-id="5:023005"
-                  data-name="chev-precision"
-                  style={{ width: '14px', height: '14px' }}
-                />
-              </div>
+
+        {/* 分组设置项 */}
+        {GROUPS.map((g) => (
+          <div key={g.title} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ padding: '0 4px' }}>
+              <span style={{ color: '#9CA3AF', fontSize: 13, fontWeight: 500 }}>{g.title}</span>
             </div>
-            <div
-              data-node-id="5:024907"
-              data-name="div-recognize-1-margin-wrapper"
-              style={{
-                display: 'flex',
-                alignSelf: 'stretch',
-                justifyContent: 'flex-start',
-                alignItems: 'flex-start',
-                flexDirection: 'column',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:024909"
-                data-name="div-recognize-1"
-                style={{
-                  width: '319px',
-                  height: '1px',
-                  display: 'flex',
-                  flex: 'none',
-                  justifyContent: 'flex-start',
-                  alignItems: 'flex-start',
-                  flexDirection: 'column',
-                  background: '#EEF0F2'
-                }}></div>
-            </div>
-            <div
-              data-node-id="5:024913"
-              data-name="row-auto"
-              style={{
-                width: '335px',
-                height: '56px',
-                display: 'flex',
-                flex: 'none',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingRight: '16px',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:024915"
-                data-name="left-auto"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                <img
-                  src="./asset/icons/svg_733a8d31.svg"
-                  data-node-id="5:024917"
-                  data-name="icon-auto"
-                  style={{ width: '18px', height: '18px' }}
-                />
-                <span
-                  data-node-id="5:025021"
-                  data-name="label-auto"
-                  style={{
-                    color: '#1A1A1A',
-                    fontSize: '15px',
-                    fontFamily: 'Inter',
-                    fontWeight: '500',
-                    lineHeight: '20px'
-                  }}>
-                  自动识别
-                </span>
-              </div>
-              <img
-                src="./asset/icons/svg_a43e76cd.svg"
-                data-node-id="5:025060"
-                data-name="Switch"
-                style={{ width: '28px', height: '16px' }}
-              />
-            </div>
-            <div
-              data-node-id="5:025061"
-              data-name="div-recognize-2-margin-wrapper"
-              style={{
-                display: 'flex',
-                alignSelf: 'stretch',
-                justifyContent: 'flex-start',
-                alignItems: 'flex-start',
-                flexDirection: 'column',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:025063"
-                data-name="div-recognize-2"
-                style={{
-                  width: '319px',
-                  height: '1px',
-                  display: 'flex',
-                  flex: 'none',
-                  justifyContent: 'flex-start',
-                  alignItems: 'flex-start',
-                  flexDirection: 'column',
-                  background: '#EEF0F2'
-                }}></div>
-            </div>
-            <div
-              data-node-id="5:025071"
-              data-name="row-burst"
-              style={{
-                width: '335px',
-                height: '56px',
-                display: 'flex',
-                flex: 'none',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingRight: '16px',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:025073"
-                data-name="left-burst"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                <img
-                  src="./asset/icons/svg_09b7eb08.svg"
-                  data-node-id="5:024921"
-                  data-name="icon-burst"
-                  style={{ width: '18px', height: '18px' }}
-                />
-                <span
-                  data-node-id="5:025079"
-                  data-name="label-burst"
-                  style={{
-                    color: '#1A1A1A',
-                    fontSize: '15px',
-                    fontFamily: 'Inter',
-                    fontWeight: '500',
-                    lineHeight: '20px'
-                  }}>
-                  连拍模式
-                </span>
-              </div>
-              <img
-                src="./asset/icons/svg_3418de29.svg"
-                data-node-id="5:025117"
-                data-name="Switch"
-                style={{ width: '28px', height: '16px' }}
-              />
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', background: '#FFFFFF', borderRadius: 16, boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+              {g.rows.map((r, i) => (
+                <React.Fragment key={r.key}>
+                  <div style={rowStyle} onClick={r.to ? () => navigate(r.to) : () => toast('该功能开发中')}>
+                    <div style={leftStyle}>
+                      <img src={r.icon} style={{ width: 18, height: 18 }} alt="" />
+                      <span style={labelStyle}>{r.label}</span>
+                    </div>
+                    {r.switch ? (
+                      <img src={r.switch} style={{ width: 28, height: 16 }} alt="" />
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {r.value && <span style={valueStyle}>{r.value}</span>}
+                        <img src={ICON.chevron} style={{ width: 14, height: 14 }} alt="" />
+                      </div>
+                    )}
+                  </div>
+                  {i < g.rows.length - 1 && <div style={dividerStyle} />}
+                </React.Fragment>
+              ))}
             </div>
           </div>
-        </div>
-        <div
-          data-node-id="5:025119"
-          data-name="group-notify"
-          style={{
-            width: '335px',
-            display: 'flex',
-            flex: 'none',
-            justifyContent: 'flex-start',
-            alignItems: 'flex-start',
-            flexDirection: 'column',
-            gap: '8px'
-          }}>
-          <div
-            data-node-id="5:025122"
-            data-name="group-title-notify"
-            style={{
-              display: 'flex',
-              alignSelf: 'stretch',
-              justifyContent: 'flex-start',
-              alignItems: 'flex-start',
-              flexDirection: 'column',
-              paddingRight: '4px',
-              paddingLeft: '4px'
-            }}>
-            <span
-              data-node-id="5:025124"
-              data-name="通知"
-              style={{
-                flexShrink: '0',
-                color: '#9CA3AF',
-                fontSize: '13px',
-                fontFamily: 'Inter',
-                fontWeight: '500',
-                lineHeight: '18px'
-              }}>
-              通知
-            </span>
-          </div>
-          <div
-            data-node-id="5:025162"
-            data-name="card-notify"
-            style={{
-              width: '335px',
-              display: 'flex',
-              flex: 'none',
-              justifyContent: 'flex-start',
-              alignItems: 'flex-start',
-              flexDirection: 'column',
-              background: '#FFFFFF',
-              borderRadius: '16px',
-              boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)',
-              overflow: 'hidden'
-            }}>
-            <div
-              data-node-id="5:025169"
-              data-name="row-checkin"
-              style={{
-                width: '335px',
-                height: '56px',
-                display: 'flex',
-                flex: 'none',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingRight: '16px',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:025171"
-                data-name="left-checkin"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                <img
-                  src="./asset/icons/svg_d3b95eb4.svg"
-                  data-node-id="5:024925"
-                  data-name="icon-checkin"
-                  style={{ width: '18px', height: '18px' }}
-                />
-                <span
-                  data-node-id="5:025177"
-                  data-name="label-checkin"
-                  style={{
-                    color: '#1A1A1A',
-                    fontSize: '15px',
-                    fontFamily: 'Inter',
-                    fontWeight: '500',
-                    lineHeight: '20px'
-                  }}>
-                  每日打卡提醒
-                </span>
-              </div>
-              <img
-                src="./asset/icons/svg_a43e76cd.svg"
-                data-node-id="5:025216"
-                data-name="Switch"
-                style={{ width: '28px', height: '16px' }}
-              />
-            </div>
-            <div
-              data-node-id="5:025217"
-              data-name="div-notify-1-margin-wrapper"
-              style={{
-                display: 'flex',
-                alignSelf: 'stretch',
-                justifyContent: 'flex-start',
-                alignItems: 'flex-start',
-                flexDirection: 'column',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:025219"
-                data-name="div-notify-1"
-                style={{
-                  width: '319px',
-                  height: '1px',
-                  display: 'flex',
-                  flex: 'none',
-                  justifyContent: 'flex-start',
-                  alignItems: 'flex-start',
-                  flexDirection: 'column',
-                  background: '#EEF0F2'
-                }}></div>
-            </div>
-            <div
-              data-node-id="5:025223"
-              data-name="row-over"
-              style={{
-                width: '335px',
-                height: '56px',
-                display: 'flex',
-                flex: 'none',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingRight: '16px',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:025225"
-                data-name="left-over"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                <img
-                  src="./asset/icons/svg_fe8730e3.svg"
-                  data-node-id="5:024929"
-                  data-name="icon-over"
-                  style={{ width: '18px', height: '18px' }}
-                />
-                <span
-                  data-node-id="5:025231"
-                  data-name="label-over"
-                  style={{
-                    color: '#1A1A1A',
-                    fontSize: '15px',
-                    fontFamily: 'Inter',
-                    fontWeight: '500',
-                    lineHeight: '20px'
-                  }}>
-                  摄入超标提醒
-                </span>
-              </div>
-              <img
-                src="./asset/icons/svg_a43e76cd.svg"
-                data-node-id="5:025269"
-                data-name="Switch"
-                style={{ width: '28px', height: '16px' }}
-              />
-            </div>
-          </div>
-        </div>
-        <div
-          data-node-id="5:025271"
-          data-name="group-general"
-          style={{
-            width: '335px',
-            display: 'flex',
-            flex: 'none',
-            justifyContent: 'flex-start',
-            alignItems: 'flex-start',
-            flexDirection: 'column',
-            gap: '8px'
-          }}>
-          <div
-            data-node-id="5:025273"
-            data-name="group-title-general"
-            style={{
-              display: 'flex',
-              alignSelf: 'stretch',
-              justifyContent: 'flex-start',
-              alignItems: 'flex-start',
-              flexDirection: 'column',
-              paddingRight: '4px',
-              paddingLeft: '4px'
-            }}>
-            <span
-              data-node-id="5:025275"
-              data-name="通用"
-              style={{
-                flexShrink: '0',
-                color: '#9CA3AF',
-                fontSize: '13px',
-                fontFamily: 'Inter',
-                fontWeight: '500',
-                lineHeight: '18px'
-              }}>
-              通用
-            </span>
-          </div>
-          <div
-            data-node-id="5:025313"
-            data-name="card-general"
-            style={{
-              width: '335px',
-              display: 'flex',
-              flex: 'none',
-              justifyContent: 'flex-start',
-              alignItems: 'flex-start',
-              flexDirection: 'column',
-              background: '#FFFFFF',
-              borderRadius: '16px',
-              boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)',
-              overflow: 'hidden'
-            }}>
-            <div
-              data-node-id="5:025320"
-              data-name="row-privacy"
-              style={{
-                width: '335px',
-                height: '56px',
-                display: 'flex',
-                flex: 'none',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingRight: '16px',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:025322"
-                data-name="left-privacy"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                <img
-                  src="./asset/icons/svg_93cbd066.svg"
-                  data-node-id="5:024933"
-                  data-name="icon-privacy"
-                  style={{ width: '18px', height: '18px' }}
-                />
-                <span
-                  data-node-id="5:025328"
-                  data-name="label-privacy"
-                  style={{
-                    color: '#1A1A1A',
-                    fontSize: '15px',
-                    fontFamily: 'Inter',
-                    fontWeight: '500',
-                    lineHeight: '20px'
-                  }}>
-                  隐私设置
-                </span>
-              </div>
-              <img
-                src="./asset/icons/svg_4380ec87.svg"
-                data-node-id="5:024937"
-                data-name="chev-privacy"
-                style={{ width: '14px', height: '14px' }}
-              />
-            </div>
-            <div
-              data-node-id="5:025371"
-              data-name="div-general-1-margin-wrapper"
-              style={{
-                display: 'flex',
-                alignSelf: 'stretch',
-                justifyContent: 'flex-start',
-                alignItems: 'flex-start',
-                flexDirection: 'column',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:025373"
-                data-name="div-general-1"
-                style={{
-                  width: '319px',
-                  height: '1px',
-                  display: 'flex',
-                  flex: 'none',
-                  justifyContent: 'flex-start',
-                  alignItems: 'flex-start',
-                  flexDirection: 'column',
-                  background: '#EEF0F2'
-                }}></div>
-            </div>
-            <div
-              data-node-id="5:025377"
-              data-name="row-about"
-              style={{
-                width: '335px',
-                height: '56px',
-                display: 'flex',
-                flex: 'none',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingRight: '16px',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:025379"
-                data-name="left-about"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                <img
-                  src="./asset/icons/svg_9ab0e5a7.svg"
-                  data-node-id="5:024941"
-                  data-name="icon-about"
-                  style={{ width: '18px', height: '18px' }}
-                />
-                <span
-                  data-node-id="5:025385"
-                  data-name="label-about"
-                  style={{
-                    color: '#1A1A1A',
-                    fontSize: '15px',
-                    fontFamily: 'Inter',
-                    fontWeight: '500',
-                    lineHeight: '20px'
-                  }}>
-                  关于食刻
-                </span>
-              </div>
-              <img
-                src="./asset/icons/svg_4380ec87.svg"
-                data-node-id="5:024945"
-                data-name="chev-about"
-                style={{ width: '14px', height: '14px' }}
-              />
-            </div>
-            <div
-              data-node-id="5:025428"
-              data-name="div-general-2-margin-wrapper"
-              style={{
-                display: 'flex',
-                alignSelf: 'stretch',
-                justifyContent: 'flex-start',
-                alignItems: 'flex-start',
-                flexDirection: 'column',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:025430"
-                data-name="div-general-2"
-                style={{
-                  width: '319px',
-                  height: '1px',
-                  display: 'flex',
-                  flex: 'none',
-                  justifyContent: 'flex-start',
-                  alignItems: 'flex-start',
-                  flexDirection: 'column',
-                  background: '#EEF0F2'
-                }}></div>
-            </div>
-            <div
-              data-node-id="5:025434"
-              data-name="row-help"
-              style={{
-                width: '335px',
-                height: '56px',
-                display: 'flex',
-                flex: 'none',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingRight: '16px',
-                paddingLeft: '16px'
-              }}>
-              <div
-                data-node-id="5:025436"
-                data-name="left-help"
-                style={{
-                  display: 'flex',
-                  justifyContent: 'flex-start',
-                  alignItems: 'center',
-                  gap: '12px'
-                }}>
-                <img
-                  src="./asset/icons/svg_72249477.svg"
-                  data-node-id="5:024949"
-                  data-name="icon-help"
-                  style={{ width: '18px', height: '18px' }}
-                />
-                <span
-                  data-node-id="5:025442"
-                  data-name="label-help"
-                  style={{
-                    color: '#1A1A1A',
-                    fontSize: '15px',
-                    fontFamily: 'Inter',
-                    fontWeight: '500',
-                    lineHeight: '20px'
-                  }}>
-                  帮助与反馈
-                </span>
-              </div>
-              <img
-                src="./asset/icons/svg_4380ec87.svg"
-                data-node-id="5:024953"
-                data-name="chev-help"
-                style={{ width: '14px', height: '14px' }}
-              />
-            </div>
-          </div>
-        </div>
-        <div
-          data-node-id="5:025485"
-          data-name="logout-card"
-          style={{
-            width: '335px',
-            height: '56px',
-            display: 'flex',
-            flex: 'none',
-            justifyContent: 'center',
-            alignItems: 'center',
-            background: '#FFFFFF',
-            borderRadius: '16px',
-            boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)'
-          }}>
-          <div
-            data-node-id="5:025491"
-            data-name="logout-inner"
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '8px'
-            }}>
-            <img
-              src="./asset/icons/svg_45ac6198.svg"
-              data-node-id="5:024957"
-              data-name="logout-icon"
-              style={{ width: '18px', height: '18px' }}
-            />
-            <span
-              data-node-id="5:025499"
-              data-name="logout-text"
-              style={{
-                color: '#FF3B30',
-                fontSize: '16px',
-                fontFamily: 'Inter',
-                textAlign: 'center',
-                fontWeight: '600',
-                lineHeight: '22px'
-              }}>
-              退出登录
-            </span>
-          </div>
+        ))}
+
+        {/* 退出登录 */}
+        <div data-name="logout-card" onClick={handleLogout} style={{ width: '100%', padding: '15px 0', textAlign: 'center', background: '#FFFFFF', borderRadius: 16, boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+          <span style={{ color: '#E03131', fontSize: 14, fontWeight: 700 }}>退出登录</span>
         </div>
       </div>
     </div>

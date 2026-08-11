@@ -51,7 +51,7 @@ const clickByText = (page, text) =>
     await clickByText(page, '开始识别');
     await sleep(4000);
     const crPath = await page.evaluate(() => location.pathname);
-    ok('识别→结果页', crPath === '/camerresult', crPath);
+    ok('识别→结果页', crPath === '/camera-result', crPath);
 
     // 2) 结果页：候选列表 → 确认添加
     const crText = await page.evaluate(() => document.body.innerText);

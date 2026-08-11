@@ -40,7 +40,7 @@ const clickByText = (page, text) =>
   await clickByText(page, '开始识别');
   await sleep(6000); // Kimi 真实识别 + 回灌
   const crPath = await page.evaluate(() => location.pathname);
-  ok('识别→结果页', crPath === '/camerresult', crPath);
+  ok('识别→结果页', crPath === '/camera-result', crPath);
   const imgSrc = await page.evaluate(() => { const img = document.querySelector('img[alt="识别照片"]'); return img ? img.src : ''; });
   ok('结果页图片来自 /uploads/（后端持久化）', imgSrc.includes('/uploads/'), imgSrc.split('/').pop() || imgSrc.slice(0, 40));
   const crText = await page.evaluate(() => document.body.innerText);

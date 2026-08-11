@@ -39,7 +39,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     const camText = await page.evaluate(() => document.body.innerText);
     log.push(`${camText.includes('拍照识别') || !!document.querySelector('.fa-camera') ? '✅' : '❌'} 相机页加载（取景框+快门）`);
     // 相机→识别结果（真实拍照/上传链路见 verify_m12 登录态）
-    await page.goto(BASE + 'camerresult', { waitUntil: 'networkidle2' });
+    await page.goto(BASE + 'camera-result', { waitUntil: 'networkidle2' });
     await sleep(1000);
     const crText = await page.evaluate(() => document.body.innerText);
     log.push(`${crText.includes('请先拍照识别') ? '✅' : '❌'} 识别结果页无状态兜底`);

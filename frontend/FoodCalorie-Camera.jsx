@@ -36,7 +36,7 @@ export default function FoodCalorieCamera() {
       // 统一走 apiClient：自动携带鉴权 + 401 刷新自愈（原原生 fetch 缺这两项）
       const body = await upload.post('/api/v1/foodcalorie/ai/recognize', fd);
       // 优先用后端持久化的 image_url（/uploads/xxx），本地 dataURL 仅作回显兜底
-      navigate('/camerresult', { state: { imageUrl: body.data.image_url || preview, preview, candidates: body.data.candidates, message: body.data.message } });
+      navigate('/camera-result', { state: { imageUrl: body.data.image_url || preview, preview, candidates: body.data.candidates, message: body.data.message } });
     } catch (e) {
       toast(e.message || '识别失败，请检查登录状态');
       setRecognizing(false);
