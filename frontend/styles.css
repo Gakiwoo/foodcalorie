@@ -1,0 +1,154 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Inter, -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: #eef0f3;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  padding: 24px 16px 60px;
+}
+
+/* 页面手机壳（仅视觉装帧，不参与业务布局） */
+.page-frame {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+/* 轻提示 */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 48px;
+  transform: translateX(-50%);
+  z-index: 999;
+  background: rgba(26, 26, 26, 0.88);
+  color: #ffffff;
+  font-size: 13px;
+  line-height: 18px;
+  padding: 10px 20px;
+  border-radius: 999px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  animation: toast-in 0.25s ease-out;
+  white-space: nowrap;
+  max-width: 80vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* 记录页：从设置进入时的返回浮层 */
+.records-back-btn {
+  position: absolute;
+  left: 14px;
+  top: 58px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+
+.page-frame {
+  position: relative;
+}
+
+/* 删除确认弹窗 */
+.modal-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: mask-in 0.2s ease-out;
+}
+
+.modal-card {
+  width: 300px;
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 24px 20px 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
+  animation: modal-in 0.25s ease-out;
+}
+
+.modal-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 28px;
+  background: #ffe8ec;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 6px;
+}
+
+.modal-desc {
+  font-size: 13px;
+  color: #9ca3af;
+  line-height: 18px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.modal-btn {
+  flex: 1;
+  height: 44px;
+  border-radius: 14px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modal-cancel {
+  background: #f7f8fa;
+  color: #1a1a1a;
+}
+
+.modal-danger {
+  background: #ff6b6b;
+  color: #ffffff;
+}
+
+@keyframes mask-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}

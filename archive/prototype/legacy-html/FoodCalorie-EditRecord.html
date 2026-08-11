@@ -1,0 +1,94 @@
+<main data-name='FoodCalorie-EditRecord' class='flex flex-col justify-start items-stretch w-[375px] min-h-[812px] bg-[#F7F8FA]'>
+  <div data-name='status-bar' class='flex flex-row justify-between items-center w-[375px] px-[20px] pt-[12px] pb-[8px]'>
+    <span data-name='status-time' class='text-[15px] leading-[20px] font-[600] text-[#1A1A1A] text-left'>9:41</span>
+    <div data-name='status-icons' class='flex flex-row justify-end items-center gap-[6px]'>
+      <i data-name='icon-signal' class='fas fa-signal text-[14px] text-[#1A1A1A]'></i>
+      <i data-name='icon-wifi' class='fas fa-wifi text-[14px] text-[#1A1A1A]'></i>
+      <i data-name='icon-battery' class='fas fa-battery-full text-[14px] text-[#1A1A1A]'></i>
+    </div>
+  </div>
+  <div data-name='top-nav' class='flex flex-row justify-between items-center w-[375px] px-[20px] py-[10px]'>
+    <i data-name='nav-back' class='fas fa-chevron-left text-[22px] text-[#1A1A1A] shrink-0'></i>
+    <span data-name='nav-title' class='flex-1 text-[18px] leading-[24px] font-[700] text-[#1A1A1A] text-center'>编辑信息</span>
+    <div data-name='nav-spacer' class='w-[22px] shrink-0'></div>
+  </div>
+  <div data-name='food-section' class='flex flex-col justify-start items-stretch w-[375px] px-[20px] pt-[4px] pb-[8px]'>
+    <div data-name='food-card' class='flex flex-row justify-start items-center gap-[14px] w-[335px] px-[16px] py-[16px] bg-[#FFFFFF] rounded-[16px] shadow-[0px_4px_14px_0px_rgba(0,0,0,0.05)]'>
+      <div data-name='food-thumb' class='flex flex-row justify-center items-center w-[64px] h-[64px] rounded-[12px] bg-[linear-gradient(135deg,#FFE0B2_0%,#FFCC80_100%)] shrink-0'>
+        <i data-name='food-icon' class='fas fa-bowl-rice text-[28px] text-[#FFFFFF]'></i>
+      </div>
+      <div data-name='food-info' class='flex flex-col justify-center items-start flex-1 gap-[4px]'>
+        <span data-name='food-name' class='text-[16px] leading-[22px] font-[600] text-[#1A1A1A] text-left'>红烧牛肉面</span>
+        <span data-name='food-category' class='text-[12px] leading-[16px] font-[400] text-[#9CA3AF] text-left'>中式面食</span>
+      </div>
+      <div data-name='food-change' class='flex flex-row justify-center items-center px-[10px] h-[26px] rounded-[13px] bg-[#E8F5EC] shrink-0'>
+        <span data-name='food-change-text' class='text-[12px] leading-[16px] font-[600] text-[#22A85A] text-center'>更换</span>
+      </div>
+    </div>
+  </div>
+  <div data-name='meal-section' class='flex flex-col justify-start items-stretch w-[375px] px-[20px] pt-[4px] pb-[8px]'>
+    <div data-name='meal-card' class='flex flex-col justify-start items-stretch w-[335px] px-[16px] py-[16px] bg-[#FFFFFF] rounded-[16px] shadow-[0px_4px_14px_0px_rgba(0,0,0,0.05)] gap-[12px]'>
+      <span data-name='meal-title' class='text-[15px] leading-[20px] font-[700] text-[#1A1A1A] text-left'>餐次</span>
+      <div data-name='meal-segment' class='flex flex-row justify-start items-center w-[303px] h-[40px] rounded-[20px] bg-[#F7F8FA] p-[4px] gap-[4px]'>
+        <div data-name='meal-breakfast' class='flex flex-1 flex-row justify-center items-center h-[32px] rounded-[16px]'>
+          <span data-name='meal-breakfast-text' class='text-[13px] leading-[18px] font-[500] text-[#9CA3AF] text-center'>早餐</span>
+        </div>
+        <div data-name='meal-lunch' class='flex flex-1 flex-row justify-center items-center h-[32px] rounded-[16px] bg-[#34C759]'>
+          <span data-name='meal-lunch-text' class='text-[13px] leading-[18px] font-[600] text-[#FFFFFF] text-center'>午餐</span>
+        </div>
+        <div data-name='meal-dinner' class='flex flex-1 flex-row justify-center items-center h-[32px] rounded-[16px]'>
+          <span data-name='meal-dinner-text' class='text-[13px] leading-[18px] font-[500] text-[#9CA3AF] text-center'>晚餐</span>
+        </div>
+        <div data-name='meal-snack' class='flex flex-1 flex-row justify-center items-center h-[32px] rounded-[16px]'>
+          <span data-name='meal-snack-text' class='text-[13px] leading-[18px] font-[500] text-[#9CA3AF] text-center'>加餐</span>
+        </div>
+      </div>
+      <div data-name='meal-time-row' class='flex flex-row justify-between items-center w-[303px] px-[14px] h-[44px] bg-[#F7F8FA] rounded-[12px]'>
+        <span data-name='meal-time-label' class='text-[13px] leading-[18px] font-[400] text-[#9CA3AF] text-left'>时间</span>
+        <span data-name='meal-time-value' class='text-[14px] leading-[20px] font-[600] text-[#1A1A1A] text-right'>12:30</span>
+      </div>
+      <div data-name='meal-portion-row' class='flex flex-row justify-between items-center w-[303px] px-[14px] h-[44px] bg-[#F7F8FA] rounded-[12px]'>
+        <span data-name='meal-portion-label' class='text-[13px] leading-[18px] font-[400] text-[#9CA3AF] text-left'>份量</span>
+        <div data-name='meal-portion-stepper' class='flex flex-row justify-end items-center gap-[10px]'>
+          <i data-name='portion-minus' class='fas fa-circle-minus text-[18px] text-[#9CA3AF]'></i>
+          <span data-name='portion-value' class='text-[14px] leading-[20px] font-[600] text-[#1A1A1A] text-center'>1 份</span>
+          <i data-name='portion-plus' class='fas fa-circle-plus text-[18px] text-[#22A85A]'></i>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div data-name='nutrition-section' class='flex flex-col justify-start items-stretch w-[375px] px-[20px] pt-[4px] pb-[8px]'>
+    <div data-name='nutrition-card' class='flex flex-col justify-start items-stretch w-[335px] px-[16px] py-[16px] bg-[#FFFFFF] rounded-[16px] shadow-[0px_4px_14px_0px_rgba(0,0,0,0.05)] gap-[10px]'>
+      <div data-name='nutrition-header' class='flex flex-row justify-between items-center'>
+        <span data-name='nutrition-title' class='text-[15px] leading-[20px] font-[700] text-[#1A1A1A] text-left'>营养数据</span>
+        <span data-name='nutrition-auto' class='text-[11px] leading-[15px] font-[400] text-[#22A85A] text-right'>按份量自动计算</span>
+      </div>
+      <div data-name='nutrition-row' class='flex flex-row justify-between items-start'>
+        <div data-name='nutri-1' class='flex flex-col justify-center items-center gap-[2px]'>
+          <span data-name='nutri-1-val' class='text-[18px] leading-[22px] font-[700] text-[#34C759] text-center'>520</span>
+          <span data-name='nutri-1-label' class='text-[11px] leading-[15px] font-[400] text-[#9CA3AF] text-center'>卡路里 kcal</span>
+        </div>
+        <div data-name='nutri-divider-1' class='w-[1px] h-[28px] bg-[#EEF0F2]'></div>
+        <div data-name='nutri-2' class='flex flex-col justify-center items-center gap-[2px]'>
+          <span data-name='nutri-2-val' class='text-[16px] leading-[20px] font-[700] text-[#1A1A1A] text-center'>28g</span>
+          <span data-name='nutri-2-label' class='text-[11px] leading-[15px] font-[400] text-[#9CA3AF] text-center'>蛋白质</span>
+        </div>
+        <div data-name='nutri-divider-2' class='w-[1px] h-[28px] bg-[#EEF0F2]'></div>
+        <div data-name='nutri-3' class='flex flex-col justify-center items-center gap-[2px]'>
+          <span data-name='nutri-3-val' class='text-[16px] leading-[20px] font-[700] text-[#1A1A1A] text-center'>65g</span>
+          <span data-name='nutri-3-label' class='text-[11px] leading-[15px] font-[400] text-[#9CA3AF] text-center'>碳水</span>
+        </div>
+        <div data-name='nutri-divider-3' class='w-[1px] h-[28px] bg-[#EEF0F2]'></div>
+        <div data-name='nutri-4' class='flex flex-col justify-center items-center gap-[2px]'>
+          <span data-name='nutri-4-val' class='text-[16px] leading-[20px] font-[700] text-[#1A1A1A] text-center'>18g</span>
+          <span data-name='nutri-4-label' class='text-[11px] leading-[15px] font-[400] text-[#9CA3AF] text-center'>脂肪</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div data-name='save-section' class='flex flex-col justify-start items-stretch w-[375px] px-[20px] pt-[12px] pb-[24px]'>
+    <div data-name='save-btn' class='flex flex-row justify-center items-center w-[335px] h-[48px] rounded-[16px] bg-[#34C759]'>
+      <span data-name='save-btn-text' class='text-[16px] leading-[22px] font-[700] text-[#FFFFFF] text-center'>保存修改</span>
+    </div>
+  </div>
+</main>

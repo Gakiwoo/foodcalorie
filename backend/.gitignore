@@ -1,0 +1,22 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# 环境与数据（含敏感信息，禁止提交）
+.env
+data/
+uploads/
+*.db
+*.db-wal
+*.db-shm
+
+# 日志
+logs/
+*.log
+
+# 测试临时
+coverage/
+
+# 系统
+.DS_Store
+Thumbs.db

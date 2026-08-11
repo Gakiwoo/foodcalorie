@@ -1,0 +1,36 @@
+# ── Node（前后端通用）──
+node_modules/
+npm-debug.log*
+*.log
+
+# ── 环境与密钥（含敏感信息，禁止提交）──
+.env
+.env.*
+!.env.example
+
+# ── 数据库与运行时数据 ──
+*.db
+*.db-wal
+*.db-shm
+data/
+backend/uploads/
+uploads/
+
+# ── 前端构建产物（由源码重建）──
+frontend/dist/
+frontend/dist-prod*/
+frontend/.vite/
+
+# ── 设计工具缓存（MasterGo MCP 同步数据，勿提交）──
+.mastergo/
+
+# ── 冗余备份（与 archive/ 重复，文档标注可删）──
+react-app-backup/
+
+# ── 测试/工具临时目录 ──
+coverage/
+.npm-cache-tmp/
+
+# ── 系统 ──
+.DS_Store
+Thumbs.db
