@@ -71,10 +71,14 @@ async function refreshSession() {
 /**
  * 统一请求封装
  * @param {string} path 以 /api 开头的相对路径（或绝对 URL）
- * @param {object} options fetch 选项
+ * @param {object} options fetch 选项；body 为 FormData 时自动省略 Content-Type（浏览器带 multipart boundary）
+ * @param {boolean} options._raw 为 true 时返回原始 Response（供下载 blob 等场景）
+ * @param {boolean} options._retried 内部 401 重试标记（勿传）
  */
 export async function apiClient(path, options = {}) {
-  const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) }
+  const isForm = typeof FormData !== 'undefined' && options.body instanceof FormData
+  const headers = { ...(options.headers || {}) }
+  if (!isForm) headers['Content-Type'] = 'application/json'
   const access = tokenStore.getAccess()
   if (access) headers.Authorization = `Bearer ${access}`
 
@@ -88,8 +92,16 @@ export async function apiClient(path, options = {}) {
       return apiClient(path, { ...options, _retried: true })
     }
     tokenStore.clear()
-    // 未登录/过期：交给调用方决定（如跳转登录页）
+    // 刷新失败（未登录/登录过期）：统一跳转登录页（豁免登录/注册页避免循环）
+    if (typeof window !== 'undefined') {
+      const p = window.location.pathname
+      if (!p.endsWith('/login') && !p.endsWith('/register')) {
+        window.location.href = '/login'
+      }
+    }
   }
+
+  if (options._raw) return resp
 
   let body = null
   try {
@@ -106,6 +118,11 @@ export async function apiClient(path, options = {}) {
     throw err
   }
   return body
+}
+
+// FormData 专用上传封装（拍照识别等 multipart 场景）
+export const upload = {
+  post: (path, formData) => apiClient(path, { method: 'POST', body: formData })
 }
 
 export const http = {

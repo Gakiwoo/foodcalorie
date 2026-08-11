@@ -80,10 +80,12 @@ export default function FoodCalorieCameraResult() {
       {/* 候选列表 */}
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <span style={{ fontSize: 15, fontWeight: 700, color: '#1A1A1A' }}>选择食物</span>
-        {candidates.map((c) => {
-          const on = item.id === c.id;
+        {candidates.map((c, idx) => {
+          // 未匹配食物库的候选 id 为 null：用索引兜底做 key，避免 React key 重复 + 多选高亮
+          const key = c.id != null ? c.id : 'cand-' + idx;
+          const on = (item && item.id === c.id) || (!item && idx === 0);
           return (
-            <Card key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, cursor: 'pointer', border: on ? '1.5px solid #34C759' : '1.5px solid transparent' }} onClick={() => setSelected(c)}>
+            <Card key={key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, cursor: 'pointer', border: on ? '1.5px solid #34C759' : '1.5px solid transparent' }} onClick={() => setSelected(c)}>
               <div style={{ width: 40, height: 40, borderRadius: 12, background: on ? '#34C759' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <i className="fas fa-bowl-food" style={{ fontSize: 15, color: on ? '#fff' : '#9CA3AF' }} />
               </div>

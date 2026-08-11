@@ -7,6 +7,8 @@ const PWD = 'Test123456!';
 const IMG = require('path').join(__dirname, '..', '..', 'archive', 'food-test', 'rice.jpg');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// 截图写入系统临时目录（archive 路径在本机被 Chrome 子进程写入拦截 EPERM；截图仅辅助验证物）
+const SHOT = (n) => require('path').join(require('os').tmpdir(), 'fc-e2e-' + n + '.png');
 const log = [];
 const ok = (name, cond, extra) => log.push(`${cond ? '✅' : '❌'} ${name}${extra ? ' — ' + extra : ''}`);
 const clickByText = (page, text) =>
@@ -43,7 +45,7 @@ const clickByText = (page, text) =>
   ok('结果页图片来自 /uploads/（后端持久化）', imgSrc.includes('/uploads/'), imgSrc.split('/').pop() || imgSrc.slice(0, 40));
   const crText = await page.evaluate(() => document.body.innerText);
   ok('候选列表展示(≥3)', crText.includes('选择食物') && crText.includes('推荐度'), '');
-  await page.screenshot({ path: require('path').join(__dirname, '..', '..', 'archive', 'verify-screenshots', 'verify13', '01-camerresult.png') });
+  await page.screenshot({ path: SHOT('m14-01-camerresult') });
 
   // 确认添加 → 回记录页
   await clickByText(page, '确认添加');
@@ -57,7 +59,7 @@ const clickByText = (page, text) =>
   ok('记录卡→详情页', clickedCard && /\/detail\?id=\d+/.test(detailPath), detailPath);
   const detailImg = await page.evaluate(() => { const img = document.querySelector('[data-name="FoodCalorie-Detail"] img'); return img ? img.src : ''; });
   ok('详情页展示记录图片(来自 uploads)', detailImg.includes('/uploads/'), detailImg.split('/').pop() || '无图片');
-  await page.screenshot({ path: require('path').join(__dirname, '..', '..', 'archive', 'verify-screenshots', 'verify13', '02-detail-image.png') });
+  await page.screenshot({ path: SHOT('m14-02-detail') });
 
   ok('无页面 JS 错误', errors.length === 0, errors[0] || '');
   console.log(log.join('\n'));

@@ -25,6 +25,7 @@ export default defineConfig({
   base: '/', // 独立子域名根路径部署；本地 dev 亦为 /
   plugins: [react()],
   server: {
+    host: '0.0.0.0', // 绑定所有接口（E2E 脚本用 127.0.0.1 访问；默认 localhost 在 Windows 仅绑 ::1）
     port: 5173,
     open: false,
     proxy: {

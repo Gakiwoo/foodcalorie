@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { apiClient } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card, Seg } from './src/ui/common';
 
@@ -16,7 +17,8 @@ export default function FoodCalorieDataExport() {
     setJsonPreview(null);
     try {
       const url = '/api/v1/foodcalorie/export?format=' + format + '&range=' + range;
-      const resp = await fetch(url, { method: 'POST' });
+      // 统一走 apiClient（_raw 返回原始 Response）：自动鉴权 + 401 刷新自愈
+      const resp = await apiClient(url, { method: 'POST', _raw: true });
       if (!resp.ok) {
         const body = await resp.json().catch(() => null);
         throw new Error(body?.message || '导出失败');

@@ -38,6 +38,8 @@ export default function FoodCalorieRecords() {
   }, [load]);
 
   async function handleDelete(id, name) {
+    // 不可恢复操作，二次确认（原直接删除易误触）
+    if (!window.confirm('确定删除「' + name + '」吗？删除后无法恢复')) return;
     try {
       await http.del('/api/v1/foodcalorie/records/' + id);
       toast('已删除「' + name + '」');

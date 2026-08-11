@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { upload } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar } from './src/ui/common';
 
@@ -32,9 +33,8 @@ export default function FoodCalorieCamera() {
       const blob = await fetch(preview).then((r) => r.blob());
       const fd = new FormData();
       fd.append('image', blob, 'food.jpg');
-      const resp = await fetch('/api/v1/foodcalorie/ai/recognize', { method: 'POST', body: fd });
-      const body = await resp.json().catch(() => null);
-      if (!resp.ok) throw new Error(body?.message || '识别失败');
+      // 统一走 apiClient：自动携带鉴权 + 401 刷新自愈（原原生 fetch 缺这两项）
+      const body = await upload.post('/api/v1/foodcalorie/ai/recognize', fd);
       // 优先用后端持久化的 image_url（/uploads/xxx），本地 dataURL 仅作回显兜底
       navigate('/camerresult', { state: { imageUrl: body.data.image_url || preview, preview, candidates: body.data.candidates, message: body.data.message } });
     } catch (e) {
