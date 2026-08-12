@@ -18,6 +18,7 @@ uploads/
 
 # ── 前端构建产物（由源码重建）──
 frontend/dist/
+frontend/dist-apk/
 frontend/dist-prod*/
 frontend/.vite/
 

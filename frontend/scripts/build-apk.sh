@@ -25,6 +25,11 @@ sed -i "s|new File('../node_modules/@capacitor/android/capacitor')|new File('$CA
 # debug 签名：注入 C 盘 keystore（~/.android 被保护）
 sed -i "/android {/a\\
 \\    signingConfigs {\\n\\        debug {\\n\\            storeFile file('C:/fc-debug.keystore')\\n\\            storePassword 'android'\\n\\            keyAlias 'androiddebugkey'\\n\\            keyPassword 'android'\\n\\        }\\n\\    }" "$AB/app/build.gradle"
+# 注入 APK 版 Web assets（dist-apk：相对路径 ./assets + es2015 + VITE_API_BASE）
+rm -rf "$AB/app/src/main/assets/public" 2>/dev/null || true
+mkdir -p "$AB/app/src/main/assets"
+cp -r "E:/00-Vibeo Coding/Foodcalorie/frontend/dist-apk" "$AB/app/src/main/assets/public"
+echo "[2.5] Web assets 注入完成"
 echo "[3/5] 构建 $TASK（全新缓存）..."
 cd "$AB"
 export ANDROID_HOME="C:/Android"

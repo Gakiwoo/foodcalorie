@@ -22,7 +22,14 @@ function cookieRewrite() {
 }
 
 export default defineConfig({
-  base: '/', // 独立子域名根路径部署；本地 dev 亦为 /
+  // base './'：Web 子域根路径部署与 Capacitor APK（本地 assets 加载）双兼容
+  //   - Web：https://foodcalorie.gakiwoo.com/ 下 index.html 的 ./assets/… 解析为 /assets/…（与 '/' 等价）
+  //   - APK：capacitor://localhost/ 下相对路径可解析（'/' 绝对路径在部分 WebView 下白屏）
+  base: './',
+  // build.target es2015：Capacitor minSdk 22 覆盖的老 WebView 不支持 Vite 默认 ES2020 → 白屏
+  build: {
+    target: 'es2015'
+  },
   plugins: [react()],
   server: {
     host: '0.0.0.0', // 绑定所有接口（E2E 脚本用 127.0.0.1 访问；默认 localhost 在 Windows 仅绑 ::1）

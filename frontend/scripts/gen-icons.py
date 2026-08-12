@@ -86,22 +86,16 @@ def main():
            '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
            '    <background android:drawable="@color/ic_launcher_background"/>\n'
            '    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>\n'
-           '    <monochrome android:drawable="@mipmap/ic_launcher_foreground"/>\n'
            '</adaptive-icon>\n')
     for f in ("ic_launcher.xml", "ic_launcher_round.xml"):
         with open(os.path.join(RES, "mipmap-anydpi-v26", f), "w", encoding="utf-8") as fh:
             fh.write(xml)
-    # 背景色
-    colors = os.path.join(RES, "values", "colors.xml")
-    if os.path.exists(colors):
-        with open(colors, "r", encoding="utf-8") as fh:
-            content = fh.read()
-        if "ic_launcher_background" not in content:
-            content = content.replace("</resources>",
-                                      '    <color name="ic_launcher_background">#22A85A</color>\n</resources>')
-            with open(colors, "w", encoding="utf-8") as fh:
-                fh.write(content)
-    print("全部完成 ✅")
+    # 背景色（adaptive icon 背景 = 品牌绿；模板默认 #FFFFFF 是白图标根因）
+    bg_file = os.path.join(RES, "values", "ic_launcher_background.xml")
+    with open(bg_file, "w", encoding="utf-8") as fh:
+        fh.write('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
+                 '    <color name="ic_launcher_background">#22A85A</color>\n</resources>\n')
+    print("ic_launcher_background → #22A85A ✅")
 
 if __name__ == "__main__":
     main()
