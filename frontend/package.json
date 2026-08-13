@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:apk": "vite build --outDir dist-apk --emptyOutDir",
+    "build:apk": "node scripts/build-apk.mjs",
+    "android:assets": "python scripts/gen-icons.py",
     "lint": "eslint .",
     "test": "vitest run",
     "preview": "vite preview"

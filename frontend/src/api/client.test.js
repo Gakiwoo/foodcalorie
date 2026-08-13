@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeApiOrigin, resolveApiUrl } from './client'
+import {
+  NATIVE_API_ORIGIN,
+  normalizeApiOrigin,
+  redirectToLogin,
+  resolveApiUrl,
+  selectApiOrigin,
+} from './client'
 
 describe('API URL resolution', () => {
   it('keeps same-origin API paths unchanged for the web build', () => {
@@ -22,5 +28,16 @@ describe('API URL resolution', () => {
 
   it('rejects origins with arbitrary paths', () => {
     expect(() => normalizeApiOrigin('https://example.com/backend')).toThrow(/纯源站地址/)
+  })
+
+  it('uses the production API origin in a native build without a shell environment variable', () => {
+    expect(selectApiOrigin('', true)).toBe(NATIVE_API_ORIGIN)
+    expect(selectApiOrigin('', false)).toBe('')
+  })
+
+  it('redirects native authentication failures through the hash router without reloading', () => {
+    const location = { hash: '', assign: () => { throw new Error('must not reload') } }
+    redirectToLogin(location, true)
+    expect(location.hash).toBe('/login')
   })
 })

@@ -1,4 +1,7 @@
 // 前端 API 客户端：统一 baseURL / Bearer 附加 / 401 自动刷新 / 错误码映射
+import { Capacitor } from '@capacitor/core'
+
+export const NATIVE_API_ORIGIN = 'https://foodcalorie.gakiwoo.com'
 // 认证接口复用 gakiwoo-api：/api/auth/*（vite proxy → :3000）
 // 业务接口：/api/v1/foodcalorie/*（vite proxy → :3001）
 //
@@ -25,9 +28,22 @@ export function normalizeApiOrigin(value = '') {
   return url.origin
 }
 
-const API_ORIGIN = normalizeApiOrigin(
-  import.meta.env.VITE_API_ORIGIN || import.meta.env.VITE_API_BASE || ''
+export function selectApiOrigin(configuredOrigin = '', isNative = false) {
+  return normalizeApiOrigin(configuredOrigin || (isNative ? NATIVE_API_ORIGIN : ''))
+}
+
+const API_ORIGIN = selectApiOrigin(
+  import.meta.env.VITE_API_ORIGIN || import.meta.env.VITE_API_BASE || '',
+  Capacitor.isNativePlatform()
 )
+
+export function redirectToLogin(location = window.location, isNative = Capacitor.isNativePlatform()) {
+  if (isNative) {
+    location.hash = '/login'
+    return
+  }
+  location.assign('/login')
+}
 
 // 拼接完整请求地址：绝对 URL 原样；相对路径加 base；同源相对时原样
 export function resolveApiUrl(path, origin = '') {
@@ -121,7 +137,7 @@ export async function apiClient(path, options = {}) {
     if (typeof window !== 'undefined') {
       const p = window.location.pathname
       if (!p.endsWith('/login') && !p.endsWith('/register')) {
-        window.location.href = '/login'
+        redirectToLogin()
       }
     }
   }

@@ -1,29 +1,60 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast, todayStr } from './src/ui/toast';
 import { StatusBar, Ring } from './src/ui/common';
 
 // 首页：真实数据（GET stats 今日摄入环 + 快捷入口；data-name 保留供全局 NAV 跳转）
+export function normalizeDailyStats(value) {
+  if (!value || typeof value !== 'object') return null;
+
+  const number = (candidate, fallback = 0) =>
+    Number.isFinite(Number(candidate)) ? Number(candidate) : fallback;
+  return {
+    total: number(value.total),
+    target: number(value.target, 1400),
+    percent: number(value.percent),
+    reachedDays: number(value.reachedDays),
+    totalDays: number(value.totalDays, 1)
+  };
+}
+
 export default function FoodCalorieHome() {
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [authed, setAuthed] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+
+  const loadStats = useCallback(async () => {
+    setLoading(true);
+    setLoadError('');
+    try {
+      const response = await http.get('/api/v1/foodcalorie/records/stats', {
+        range: 'day',
+        date: todayStr()
+      });
+      const nextStats = normalizeDailyStats(response?.data);
+      if (!nextStats) throw new Error('今日统计数据暂不可用');
+      setStats(nextStats);
+      setAuthed(true);
+    } catch (error) {
+      setStats(null);
+      if (error.status === 401) {
+        setAuthed(false);
+      } else {
+        const message = error.message || '加载失败，请检查网络';
+        setLoadError(message);
+        toast(message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const r = await http.get('/api/v1/foodcalorie/records/stats', { range: 'day', date: todayStr() });
-        setStats(r.data);
-      } catch (e) {
-        if (e.status === 401) setAuthed(false);
-        else toast(e.message || '加载失败');
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, []);
+    loadStats();
+  }, [loadStats]);
 
   const hour = new Date().getHours();
   const greet = hour < 6 ? '夜深了' : hour < 12 ? '早上好' : hour < 14 ? '中午好' : hour < 18 ? '下午好' : '晚上好';
@@ -67,6 +98,19 @@ export default function FoodCalorieHome() {
             <div style={{ flex: 1, textAlign: 'center', padding: '8px 0' }}>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A' }}>登录后查看今日摄入</div>
               <button onClick={() => navigate('/login')} style={{ marginTop: 10, padding: '8px 26px', borderRadius: 12, border: 'none', background: '#34C759', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>去登录</button>
+            </div>
+          ) : loadError || !stats ? (
+            <div style={{ flex: 1, textAlign: 'center', padding: '8px 0' }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A' }}>今日数据暂未加载</div>
+              <div style={{ marginTop: 4, fontSize: 12, color: '#9CA3AF' }}>{loadError || '请稍后重试'}</div>
+              <button
+                onClick={(event) => {
+                  event.stopPropagation();
+                  loadStats();
+                }}
+                style={{ marginTop: 10, padding: '8px 26px', borderRadius: 12, border: 'none', background: '#34C759', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                重新加载
+              </button>
             </div>
           ) : (
             <>
