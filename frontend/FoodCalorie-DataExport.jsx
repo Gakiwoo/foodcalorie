@@ -1,12 +1,10 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { apiClient } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card, Seg } from './src/ui/common';
 
 // 数据导出页：真实导出（POST /export → CSV 附件下载 / JSON 预览）
 export default function FoodCalorieDataExport() {
-  const navigate = useNavigate();
   const [range, setRange] = useState('all');
   const [format, setFormat] = useState('csv');
   const [exporting, setExporting] = useState(false);
@@ -54,7 +52,7 @@ export default function FoodCalorieDataExport() {
   ];
 
   return (
-    <div data-name="FoodCalorie-DataExport" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-DataExport" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="数据导出" />
 

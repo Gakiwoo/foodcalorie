@@ -52,7 +52,7 @@ export default function FoodCalorieRecords() {
   const mealIcon = { 早餐: 'fa-mug-hot', 午餐: 'fa-bowl-food', 晚餐: 'fa-moon', 加餐: 'fa-apple-whole' };
 
   return (
-    <div data-name="FoodCalorie-Records" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-Records" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title={isToday ? '记录' : date.slice(5)} right={
         <span style={{ fontSize: 12, color: '#22A85A', fontWeight: 600, cursor: 'pointer' }} onClick={() => navigate('/records')}>

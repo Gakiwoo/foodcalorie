@@ -2,17 +2,41 @@
 // 认证接口复用 gakiwoo-api：/api/auth/*（vite proxy → :3000）
 // 业务接口：/api/v1/foodcalorie/*（vite proxy → :3001）
 //
-// baseURL 解析（支持 APK/独立部署）：
-//   VITE_API_BASE 设置时（如 https://foodcalorie.gakiwoo.com/api）→ 请求拼完整 URL（APK 用）
+// API 源站解析（支持 APK/独立部署）：
+//   VITE_API_ORIGIN 设置时（如 https://foodcalorie.gakiwoo.com）→ 请求拼完整 URL（APK 用）
 //   未设置时 → 同源相对路径（Web 生产/开发走 vite proxy / 同域 nginx）
 
-const API_BASE = (import.meta.env.VITE_API_BASE || '').replace(/\/$/, '')
+export function normalizeApiOrigin(value = '') {
+  const raw = String(value).trim().replace(/\/+$/, '')
+  if (!raw) return ''
+
+  const url = new URL(raw)
+  if (!['http:', 'https:'].includes(url.protocol)) {
+    throw new Error('VITE_API_ORIGIN 仅支持 http/https 地址')
+  }
+
+  // 兼容旧版误配置的 https://host/api，避免与 /api/... 请求路径拼成 /api/api/...
+  if (url.pathname === '/api') url.pathname = '/'
+  if (url.pathname !== '/') {
+    throw new Error('VITE_API_ORIGIN 必须是纯源站地址，不能包含路径')
+  }
+  url.search = ''
+  url.hash = ''
+  return url.origin
+}
+
+const API_ORIGIN = normalizeApiOrigin(
+  import.meta.env.VITE_API_ORIGIN || import.meta.env.VITE_API_BASE || ''
+)
 
 // 拼接完整请求地址：绝对 URL 原样；相对路径加 base；同源相对时原样
-function resolveUrl(path) {
+export function resolveApiUrl(path, origin = '') {
   if (/^https?:\/\//.test(path)) return path
-  return API_BASE ? API_BASE + path : path
+  if (!path.startsWith('/')) throw new Error(`API 路径必须以 / 开头: ${path}`)
+  return origin ? new URL(path, normalizeApiOrigin(origin)).toString() : path
 }
+
+export const resolveUrl = (path) => resolveApiUrl(path, API_ORIGIN)
 
 const TOKEN_KEY = 'fc_access_token'
 const REFRESH_KEY = 'fc_refresh_token'
@@ -76,6 +100,7 @@ async function refreshSession() {
  * @param {boolean} options._retried 内部 401 重试标记（勿传）
  */
 export async function apiClient(path, options = {}) {
+  const { _raw = false, _retried = false, ...fetchOptions } = options
   const isForm = typeof FormData !== 'undefined' && options.body instanceof FormData
   const headers = { ...(options.headers || {}) }
   if (!isForm) headers['Content-Type'] = 'application/json'
@@ -83,10 +108,10 @@ export async function apiClient(path, options = {}) {
   if (access) headers.Authorization = `Bearer ${access}`
 
   const url = resolveUrl(path)
-  let resp = await fetch(url, { ...options, headers, credentials: 'include' })
+  let resp = await fetch(url, { ...fetchOptions, headers, credentials: 'include' })
 
   // 401 → 尝试 refresh 一次
-  if (resp.status === 401 && !options._retried) {
+  if (resp.status === 401 && !_retried) {
     const ok = await refreshSession()
     if (ok) {
       return apiClient(path, { ...options, _retried: true })
@@ -101,7 +126,7 @@ export async function apiClient(path, options = {}) {
     }
   }
 
-  if (options._raw) return resp
+  if (_raw) return resp
 
   let body = null
   try {

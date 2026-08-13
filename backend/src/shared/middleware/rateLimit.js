@@ -1,10 +1,10 @@
 'use strict'
-// 简易内存限流（Redis 可选，未配置 REDIS_URL 时回退内存 Map）。
-// 与 gakiwoo-api rateLimit 语义一致：写 10/min、读 30/min、登录 5/5min。
+// 单实例内存限流。扩展为多实例部署时需替换为共享存储实现。
 const { ServiceError } = require('../utils/serviceError')
 
-const buckets = new Map() // `${key}:${scope}` -> number[]
+const buckets = new Map() // `${scope}:${key}` -> number[]
 const CLEANUP_MS = 60 * 1000
+let scopeSequence = 0
 
 setInterval(() => {
   const cutoff = Date.now() - 10 * 60 * 1000
@@ -15,12 +15,10 @@ setInterval(() => {
   }
 }, CLEANUP_MS).unref?.()
 
-// 提取客户端真实 IP：优先 X-Forwarded-For 首个（nginx 反代注入），回退 req.ip。
-// 注意：XFF 可被客户端伪造，仅用于限流键（绕过影响有限）；真正信任边界由 nginx 收敛。
+// Express 会根据 app.set('trust proxy', 'loopback') 从可信反代链计算 req.ip。
+// 不直接读取客户端可伪造的 X-Forwarded-For。
 function clientIp(req) {
-  const xff = req.headers['x-forwarded-for']
-  if (xff) return String(xff).split(',')[0].trim() || 'unknown'
-  return req.ip || 'unknown'
+  return req.ip || req.socket?.remoteAddress || 'unknown'
 }
 
 /**
@@ -30,9 +28,11 @@ function clientIp(req) {
  * @param {(req)=>string} [keyFn] 限流键生成（默认按真实客户端 IP）
  */
 function createRateLimit(limit, windowMs, keyFn) {
+  const scope = `limiter-${++scopeSequence}`
   return function rateLimit(req, res, next) {
     if (process.env.NODE_ENV === 'test') return next()
-    const key = keyFn ? keyFn(req) : clientIp(req)
+    const identity = keyFn ? keyFn(req) : clientIp(req)
+    const key = `${scope}:${identity}`
     const now = Date.now()
     const arr = buckets.get(key) || []
     const fresh = arr.filter((t) => t > now - windowMs)

@@ -117,6 +117,16 @@ test('周统计 stats?range=week', async () => {
   assert.ok(res.body.data.total >= 600)
 })
 
+test('月统计覆盖传入日期所在完整月份', async () => {
+  const res = await request(app)
+    .get('/api/v1/foodcalorie/records/stats?range=month&date=2026-08-05')
+    .set('Authorization', `Bearer ${token}`)
+  assert.strictEqual(res.status, 200)
+  assert.strictEqual(res.body.data.from, '2026-08-01')
+  assert.strictEqual(res.body.data.to, '2026-08-31')
+  assert.strictEqual(res.body.data.totalDays, 31)
+})
+
 test('月历 calendar', async () => {
   const res = await request(app)
     .get('/api/v1/foodcalorie/records/calendar?month=2026-08')
@@ -140,6 +150,12 @@ test('删除记录 → 200，再查 → 不存在', async () => {
     .set('Authorization', `Bearer ${token}`)
   assert.strictEqual(detail.status, 404)
   assert.strictEqual(detail.body.code, 30001)
+
+  const missing = await request(app)
+    .delete(`/api/v1/foodcalorie/records/${id}`)
+    .set('Authorization', `Bearer ${token}`)
+  assert.strictEqual(missing.status, 404)
+  assert.strictEqual(missing.body.code, 30001)
 })
 
 test('越权访问他人记录 → 404（数据隔离）', async () => {

@@ -46,7 +46,7 @@ export default function FoodCalorieGoal() {
   }
 
   return (
-    <div data-name="FoodCalorie-Goal" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-Goal" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="目标设置" />
 

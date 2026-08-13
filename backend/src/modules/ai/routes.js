@@ -2,7 +2,6 @@
 // Controller 层：AI 拍照识别（multipart 图片上传 → 候选食物，用户确认后落记录）
 // 图片持久化：diskStorage 落盘到 uploads/，识别返回 image_url 供前端确认后随记录落库
 const express = require('express')
-const path = require('path')
 const fs = require('fs')
 const crypto = require('crypto')
 const multer = require('multer')
@@ -11,6 +10,7 @@ const { createRateLimit } = require('../../shared/middleware/rateLimit')
 const { ok } = require('../../shared/utils/response')
 const { ServiceError } = require('../../shared/utils/serviceError')
 const { PARAM_INVALID } = require('../../shared/utils/errors')
+const imageStore = require('../../shared/uploads/imageStore')
 const service = require('./service')
 
 const router = express.Router()
@@ -26,17 +26,25 @@ const MAGIC_CHECKERS = {
     b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47 &&
     b[4] === 0x0d && b[5] === 0x0a && b[6] === 0x1a && b[7] === 0x0a,
   'image/webp': (b) => b.length >= 12 && b.toString('ascii', 0, 4) === 'RIFF' && b.toString('ascii', 8, 12) === 'WEBP',
-  'image/heic': (b) => b.length >= 12 && b.toString('ascii', 4, 8) === 'ftyp',
-  'image/heif': (b) => b.length >= 12 && b.toString('ascii', 4, 8) === 'ftyp'
+  'image/heic': (b) => isHeifFamily(b),
+  'image/heif': (b) => isHeifFamily(b)
+}
+const HEIF_BRANDS = new Set(['heic', 'heix', 'hevc', 'hevx', 'mif1', 'msf1'])
+function isHeifFamily(buffer) {
+  if (buffer.length < 12 || buffer.toString('ascii', 4, 8) !== 'ftyp') return false
+  const brands = [buffer.toString('ascii', 8, 12)]
+  for (let offset = 16; offset + 4 <= Math.min(buffer.length, 64); offset += 4) {
+    brands.push(buffer.toString('ascii', offset, offset + 4))
+  }
+  return brands.some((brand) => HEIF_BRANDS.has(brand))
 }
 function checkMagic(mimetype, buf) {
   const checker = MAGIC_CHECKERS[mimetype]
   return !!checker && checker(buf)
 }
 
-// 上传目录：服务器 /var/www/foodcalorie-api/uploads（由 nginx /uploads/ → alias 静态服务）
-const UPLOAD_DIR = process.env.UPLOAD_DIR || path.join(__dirname, '..', '..', '..', 'uploads')
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true })
+// 上传目录仅供应用读取；nginx 必须禁止直接公开该目录。
+const UPLOAD_DIR = imageStore.getUploadDir()
 
 const EXT_BY_MIME = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/heic': '.heic', 'image/heif': '.heif' }
 
@@ -49,6 +57,17 @@ const storage = multer.diskStorage({
   }
 })
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } })
+
+// 私有图片下载：必须通过当前用户鉴权与所有权检查。
+router.get('/images/:filename', requireAuth, (req, res, next) => {
+  try {
+    const filePath = imageStore.ownedFile(req.params.filename, req.user.id)
+    res.set('Cache-Control', 'private, no-store')
+    return res.sendFile(filePath)
+  } catch (error) {
+    return next(error)
+  }
+})
 
 /**
  * @swagger
@@ -69,12 +88,14 @@ router.post('/recognize', requireAuth, aiUserLimit, upload.single('image'), asyn
       try { fs.unlinkSync(file.path) } catch {}
       throw new ServiceError(400, PARAM_INVALID, '图片文件内容与声明格式不符')
     }
+    const privateImageUrl = imageStore.imageUrl(file.filename)
     const data = await service.recognize({
       mimetype: file.mimetype,
       size: file.size,
       buffer: buf,
-      image_url: '/uploads/' + file.filename
+      image_url: privateImageUrl
     })
+    imageStore.register(file.filename, req.user.id)
     return ok(res, data, '识别完成，请确认')
   } catch (e) {
     // 识别失败（含 Kimi 降级异常/业务错误）→ 清理已落盘文件，防孤儿文件泄漏磁盘

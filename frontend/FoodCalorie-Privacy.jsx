@@ -40,7 +40,7 @@ export default function FoodCaloriePrivacy() {
   }
 
   return (
-    <div data-name="FoodCalorie-Privacy" style={{ width: 375, minHeight: 812, display: 'flex', flexDirection: 'column', background: '#F7F8FA' }}>
+    <div data-name="FoodCalorie-Privacy" style={{ width: '100%', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#F7F8FA' }}>
       {/* 状态栏（设计稿固定样式） */}
       <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px 8px' }}>
         <span style={{ color: '#1A1A1A', fontSize: 15, fontWeight: 600 }}>9:41</span>

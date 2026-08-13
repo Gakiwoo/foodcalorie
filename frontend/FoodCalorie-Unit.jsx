@@ -39,7 +39,7 @@ export default function FoodCalorieUnit() {
   }
 
   return (
-    <div data-name="FoodCalorie-Unit" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-Unit" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="单位设置" />
       {loading ? (

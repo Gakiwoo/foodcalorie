@@ -10,7 +10,7 @@ delete process.env.MOONSHOT_API_KEY
 process.env.DB_PATH = require('path').join(require('os').tmpdir(), 'fc-ai-test.db')
 const fs = require('fs')
 try { fs.unlinkSync(process.env.DB_PATH) } catch {}
-const { getDb, closeDb } = require('../src/db')
+const { closeDb } = require('../src/db')
 const { recognize, parseKimiContent, enrich } = require('../src/modules/ai/service')
 
 after(() => { try { fs.unlinkSync(process.env.DB_PATH) } catch {}; closeDb() })
@@ -58,7 +58,7 @@ test('enrich 用食物库数据补全（匹配到用库值，未匹配用模型�
   assert.ok(r[0].confidence > r[1].confidence, '匹配项置信度更高')
 })
 
-test('recognize 透传 image_url 并回灌模型新食物到食物库', async () => {
+test('受控回灌仓储保持幂等并过滤无效营养', async () => {
   const aiRepo = require('../src/modules/ai/repositories/aiRepo')
   const { getDb } = require('../src/db')
   const db = getDb()
@@ -84,6 +84,7 @@ test('recognize 透传 image_url 并回灌模型新食物到食物库', async ()
 })
 
 test('recognize 返回结果含 image_url', async () => {
-  const result = await recognize({ mimetype: 'image/png', size: 1000, buffer: Buffer.from('x'), image_url: '/uploads/food_test.png' })
-  assert.strictEqual(result.image_url, '/uploads/food_test.png', 'image_url 透传')
+  const imageUrl = '/api/v1/foodcalorie/ai/images/food_12345678_deadbeef.png'
+  const result = await recognize({ mimetype: 'image/png', size: 1000, buffer: Buffer.from('x'), image_url: imageUrl })
+  assert.strictEqual(result.image_url, imageUrl, 'image_url 透传')
 })

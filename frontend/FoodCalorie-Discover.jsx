@@ -32,10 +32,8 @@ export default function FoodCalorieDiscover() {
     return list;
   }, [items, tab, keyword]);
 
-  const TYPE_LABEL = { recipe: '食谱', article: '文章' };
-
   return (
-    <div data-name="FoodCalorie-Discover" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-Discover" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       {/* 顶部：标题 + 铃铛 */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px' }}>

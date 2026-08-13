@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
 
 // 食谱详情页：真实数据（GET /contents/:id 营养/食材/步骤 + 收藏/取消收藏）
 export default function FoodCalorieRecipe() {
-  const navigate = useNavigate();
   const [params] = useSearchParams();
   const id = params.get('id');
   const [recipe, setRecipe] = useState(null);
@@ -60,11 +59,11 @@ export default function FoodCalorieRecipe() {
     </div>
   );
 
-  if (loading) return <div style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="食谱" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;
+  if (loading) return <div style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="食谱" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;
 
   if (!recipe) {
     return (
-      <div data-name="FoodCalorie-Recipe" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
+      <div data-name="FoodCalorie-Recipe" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
         <StatusBar /><NavBar title="食谱" />
         <div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>内容不存在或已删除</div>
       </div>
@@ -72,7 +71,7 @@ export default function FoodCalorieRecipe() {
   }
 
   return (
-    <div data-name="FoodCalorie-Recipe" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-Recipe" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="食谱" right={
         <i className={'fas fa-bookmark'} style={{ fontSize: 16, color: faved ? '#34C759' : '#C0C4CC', cursor: 'pointer' }} onClick={toggleFav} />

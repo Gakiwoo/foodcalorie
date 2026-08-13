@@ -16,7 +16,7 @@ export default function FoodCalorieHelp() {
   const [feedback, setFeedback] = useState('');
 
   return (
-    <div data-name="FoodCalorie-Help" style={{ width: 375, minHeight: 812, display: 'flex', flexDirection: 'column', background: '#F7F8FA' }}>
+    <div data-name="FoodCalorie-Help" style={{ width: '100%', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#F7F8FA' }}>
       <StatusBar />
 
       {/* 顶部导航 */}

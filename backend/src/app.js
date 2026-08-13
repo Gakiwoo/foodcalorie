@@ -56,14 +56,20 @@ function createApp() {
 
   // 安全头
   app.use(helmet())
-  // CORS（白名单来自 CORS_ORIGINS，默认放行所有便于开发）
+  // CORS（生产环境必须显式提供白名单，避免携带凭据时 fail-open）
   const origins = (process.env.CORS_ORIGINS || '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean)
+  const isProduction = process.env.NODE_ENV === 'production'
+  if (isProduction && origins.length === 0) {
+    throw new Error('生产环境必须配置 CORS_ORIGINS 白名单')
+  }
   app.use(
     cors({
-      origin: origins.length ? origins : true,
+      origin: origins.length
+        ? (origin, callback) => callback(null, !origin || origins.includes(origin))
+        : true,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
     })
@@ -88,7 +94,7 @@ function createApp() {
   })
 
   // 全局限流（health 豁免）：写 30/min、读 120/min，按真实客户端 IP
-  // 说明：内存桶单实例有效；多实例部署需替换为 Redis 实现（ioredis 依赖已就绪）
+  // 说明：内存桶仅适用于当前单实例部署；扩展为多实例时需接入共享限流存储。
   const writeLimit = createRateLimit(30, 60 * 1000)
   const readLimit = createRateLimit(120, 60 * 1000)
   v1.use((req, res, next) => {

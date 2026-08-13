@@ -18,7 +18,7 @@ try { fs.rmSync(process.env.UPLOAD_DIR, { recursive: true, force: true }) } catc
 
 const { createApp } = require('../src/app')
 const { closeDb } = require('../src/db')
-const { createRateLimit } = require('../src/shared/middleware/rateLimit')
+const { createRateLimit, clientIp } = require('../src/shared/middleware/rateLimit')
 
 let app
 before(() => {
@@ -69,6 +69,11 @@ test('createRateLimit：不同 IP 独立计数', () => {
   assert.strictEqual(call('2.2.2.2').kind, 'next', '不同 IP 放行')
 })
 
+test('clientIp 忽略客户端伪造的 X-Forwarded-For', () => {
+  const req = { ip: '203.0.113.9', headers: { 'x-forwarded-for': '1.2.3.4' } }
+  assert.strictEqual(clientIp(req), '203.0.113.9')
+})
+
 // ── app 集成：health 豁免限流 ──
 test('GET /health 不受限流影响（连续 3 次 200）', async () => {
   for (let i = 0; i < 3; i++) {
@@ -100,7 +105,7 @@ test('伪装 image/jpeg 的 HTML 文件 → 400 且不留盘', async () => {
   assert.strictEqual(after, before, '伪装文件不应落盘')
 })
 
-test('真实 PNG（魔数正确）→ 200 降级候选（未配置 Kimi key）', async () => {
+test('真实 PNG → 私有图片仅所有者可读，记录删除后清理', async () => {
   // 1x1 透明 PNG（含正确 8 字节魔数）
   const png = Buffer.from(
     '89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4890000000d4944415478da63f8ffff3f030005fe02fea7d4b0d50000000049454e44ae426082',
@@ -113,5 +118,64 @@ test('真实 PNG（魔数正确）→ 200 降级候选（未配置 Kimi key）',
   assert.strictEqual(res.status, 200)
   assert.ok(Array.isArray(res.body.data.candidates), '降级返回候选')
   assert.ok(res.body.data.candidates.length >= 5)
-  assert.ok(res.body.data.image_url.startsWith('/uploads/'), '返回持久化 image_url')
+  assert.ok(res.body.data.image_url.startsWith('/api/v1/foodcalorie/ai/images/'), '返回私有 image_url')
+
+  const imageUrl = res.body.data.image_url
+  const owner = await request(app).get(imageUrl).set('Authorization', 'Bearer ' + TOKEN)
+  assert.strictEqual(owner.status, 200, '所有者可以读取图片')
+  assert.match(owner.headers['cache-control'], /private/)
+
+  const otherToken = jwt.sign({ id: 90092, email: 'other@t.com', role: 'user' }, process.env.JWT_SECRET, { expiresIn: '15m' })
+  const other = await request(app).get(imageUrl).set('Authorization', 'Bearer ' + otherToken)
+  assert.strictEqual(other.status, 404, '其他用户无法读取图片')
+
+  const anonymous = await request(app).get(imageUrl)
+  assert.strictEqual(anonymous.status, 401, '未登录用户无法读取图片')
+
+  const record = await request(app)
+    .post('/api/v1/foodcalorie/records')
+    .set('Authorization', 'Bearer ' + TOKEN)
+    .send({
+      food_name: '测试图片记录',
+      meal_type: '午餐',
+      calories: 100,
+      record_time: '2026-08-13 10:30',
+      source: 'AI识别',
+      image_url: imageUrl
+    })
+  assert.strictEqual(record.status, 201, '识别图片可以绑定到记录')
+
+  const duplicate = await request(app)
+    .post('/api/v1/foodcalorie/records')
+    .set('Authorization', 'Bearer ' + TOKEN)
+    .send({
+      food_name: '重复图片记录',
+      meal_type: '午餐',
+      calories: 100,
+      record_time: '2026-08-13 10:31',
+      source: 'AI识别',
+      image_url: imageUrl
+    })
+  assert.strictEqual(duplicate.status, 400, '同一上传图片不能重复认领')
+
+  const deleted = await request(app)
+    .delete(`/api/v1/foodcalorie/records/${record.body.data.id}`)
+    .set('Authorization', 'Bearer ' + TOKEN)
+  assert.strictEqual(deleted.status, 200)
+  const removedImage = await request(app).get(imageUrl).set('Authorization', 'Bearer ' + TOKEN)
+  assert.strictEqual(removedImage.status, 404, '删除最后一个引用后图片不可读取')
+})
+
+test('生产环境缺少 CORS_ORIGINS 时拒绝启动', () => {
+  const previousNodeEnv = process.env.NODE_ENV
+  const previousOrigins = process.env.CORS_ORIGINS
+  process.env.NODE_ENV = 'production'
+  delete process.env.CORS_ORIGINS
+  try {
+    assert.throws(() => createApp(), /CORS_ORIGINS/)
+  } finally {
+    process.env.NODE_ENV = previousNodeEnv
+    if (previousOrigins === undefined) delete process.env.CORS_ORIGINS
+    else process.env.CORS_ORIGINS = previousOrigins
+  }
 })

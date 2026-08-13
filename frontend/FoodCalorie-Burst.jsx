@@ -39,7 +39,7 @@ export default function FoodCalorieBurst() {
   }
 
   return (
-    <div data-name="FoodCalorie-Burst" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-Burst" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="连拍模式" />
       {loading ? (

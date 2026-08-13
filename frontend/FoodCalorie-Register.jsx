@@ -55,7 +55,7 @@ export default function FoodCalorieRegister() {
   return (
     <div
       data-name="FoodCalorie-Register"
-      style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+      style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       {/* 状态栏 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px 8px' }}>
         <span style={{ fontSize: 15, fontWeight: 600, color: '#1A1A1A' }}>9:41</span>

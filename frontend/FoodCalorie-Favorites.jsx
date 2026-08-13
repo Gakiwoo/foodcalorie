@@ -35,7 +35,7 @@ export default function FoodCalorieFavorites() {
   }
 
   return (
-    <div data-name="FoodCalorie-Favorites" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-Favorites" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="我的收藏" />
 
@@ -50,7 +50,11 @@ export default function FoodCalorieFavorites() {
       ) : (
         <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {items.map((f) => (
-            <Card key={f.id} data-name={'fav-card-' + f.id} style={{ display: 'flex', gap: 12, padding: 12, cursor: 'pointer' }} onClick={() => navigate(f.type === 'recipe' ? '/recipe' : '/article')}>
+            <Card
+              key={f.id}
+              data-name={'fav-card-' + f.id}
+              style={{ display: 'flex', gap: 12, padding: 12, cursor: 'pointer' }}
+              onClick={() => navigate(`${f.type === 'recipe' ? '/recipe' : '/article'}?id=${encodeURIComponent(f.ref_id)}`)}>
               <div style={{ width: 56, height: 56, borderRadius: 14, background: '#E8F5EC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 26 }}>{f.cover_icon || (f.type === 'recipe' ? '🍽️' : '📄')}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

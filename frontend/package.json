@@ -6,20 +6,31 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:apk": "vite build --outDir dist-apk --emptyOutDir",
+    "lint": "eslint .",
+    "test": "vitest run",
     "preview": "vite preview"
   },
   "dependencies": {
-    "@capacitor/android": "^6.2.1",
-    "@capacitor/cli": "^6.2.1",
-    "@capacitor/core": "^6.2.1",
     "@fortawesome/fontawesome-free": "^6.7.2",
-    "puppeteer-core": "^25.5.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.26.0"
+    "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^4.3.1",
-    "vite": "^5.4.0"
+    "@capacitor/android": "^7.6.8",
+    "@capacitor/cli": "^7.6.8",
+    "@capacitor/core": "^7.6.8",
+    "@eslint/js": "^10.0.1",
+    "@vitejs/plugin-react": "^6.0.5",
+    "eslint": "^10.0.0",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "globals": "^16.4.0",
+    "puppeteer-core": "^25.5.0",
+    "vite": "^8.2.1",
+    "vitest": "^4.1.10"
+  },
+  "engines": {
+    "node": ">=20.19"
   }
 }

@@ -11,9 +11,9 @@
 | 维度 | 状态 |
 |------|------|
 | 前端 | ✅ 31 页全部接真实 API（仅 Privacy/About/Help 纯内容页） |
-| 后端 | ✅ 9 模块 / 16 接口 / 单测 27/27 / Kimi 视觉识别真实可用 |
+| 后端 | ✅ 9 模块 / 私有图片接口 / 单测 36/36 / Kimi 视觉识别可降级 |
 | 生产 | ✅ https://foodcalorie.gakiwoo.com （独立子域，P0 三项完成，双守护自愈） |
-| 验证 | ✅ 本地 E2E 9 套 + 生产 E2E 8/8 + 单测 27/27 |
+| 验证 | ✅ 后端测试、前端单测/Lint/构建、依赖审计与 Android CI |
 
 ## 目录结构（精简）
 
@@ -26,7 +26,7 @@
 │   ├── FoodCalorie-Help.html  # ⚠️ 唯一保留的 ?raw 嵌入源（Help.jsx 依赖，勿删）
 │   ├── src/           # api(client/auth) + ui(common/toast)
 │   ├── scripts/       # 12 个核心 E2E 验证脚本（verify_*.cjs）
-│   └── dist-prod3/    # 当前生产构建（已部署）
+│   └── dist/          # 可重建 Web 产物（不进入 Git）
 ├── backend/           # Express + better-sqlite3（Controller/Service/DAO）
 │   ├── src/           # app.js / server.js / db.js / modules(9) / shared
 │   ├── test/          # node:test 单测（4 文件，27 用例）

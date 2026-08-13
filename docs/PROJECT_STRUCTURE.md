@@ -118,7 +118,7 @@ cd frontend/scripts
 | contents | `modules/contents/` | `/foodcalorie/contents` | 发现页文章/食谱 + 详情 + 收藏状态 |
 | challenges | `modules/challenges/` | `/foodcalorie/challenges` | 挑战参与/打卡/**连续 streak** |
 | export | `modules/export/` | `/foodcalorie/export` | 数据导出 csv/json |
-| ai | `modules/ai/` | `/foodcalorie/ai` | **Kimi 视觉识别**（上传→候选→回灌） |
+| ai | `modules/ai/` | `/foodcalorie/ai` | Kimi 视觉识别、私有图片与受控回灌 |
 
 每模块三件套：`routes.js`（Controller+校验）、`service.js`（业务）、`repositories/xxxRepo.js`（SQL DAO）。
 
@@ -128,7 +128,7 @@ cd frontend/scripts
 |------|------|------|
 | middleware | `requireAuth.js` | JWT 鉴权（与 gakiwoo 同密钥互通，Cookie/Bearer 双通道） |
 | middleware | `errorHandler.js` | 统一错误响应 `{code,message,data}` |
-| middleware | `rateLimit.js` | 限流（Redis/ioredis 可选） |
+| middleware | `rateLimit.js` | 基于可信 `req.ip` 的单实例内存限流 |
 | middleware | `validate.js` | zod 参数校验 |
 | utils | `response.js` | ok / okPage 统一响应 |
 | utils | `serviceError.js` | ServiceError（含 HTTP status + 业务码） |
@@ -141,7 +141,7 @@ cd frontend/scripts
 |------|------|
 | `m1-base.test.js` | 基础：health/鉴权/错误码 |
 | `records.test.js` | 记录域 CRUD/stats（含目标读 profile） |
-| `ai.test.js` | AI 降级/解析/enrich/**回灌**/image_url |
+| `ai.test.js` | AI 降级/解析/enrich/受控回灌仓储/image_url |
 | `challenges.test.js` | 挑战：首次/连续/断签/重复 429 |
 
 运行（服务器上，DB 用临时库隔离）：
@@ -184,7 +184,7 @@ DB_PATH=/tmp/fc-test.db NODE_ENV=test npm test
 |------|------|
 | `/var/www/foodcalorie-api/` | 后端代码 + `data/foodcalorie.db` + `uploads/`（识别图片） |
 | `/var/www/foodcalorie-web/` | 前端生产构建（dist-prod3 上传） |
-| `/etc/nginx/sites-enabled/foodcalorie.gakiwoo.com` | 子域 server 块（`/uploads/` 静态 + `/api/*` 反代） |
+| `/etc/nginx/sites-enabled/foodcalorie.gakiwoo.com` | 子域 server 块（禁止 `/uploads/`，仅反代 `/api/*`） |
 | `/usr/local/bin/foodcalorie-nginx-guard.sh` | nginx location 守护（cron 5min） |
 | `/usr/local/bin/foodcalorie-nginx-inject.py` | location 注入器 |
 | `/etc/nginx/backups/` | nginx 配置备份（**勿放 sites-enabled/，会被 include**） |

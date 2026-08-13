@@ -1,5 +1,11 @@
 apply plugin: 'com.android.application'
 
+def releaseStorePath = System.getenv('FC_RELEASE_STORE_FILE') ?: findProperty('FC_RELEASE_STORE_FILE')
+def releaseStorePassword = System.getenv('FC_RELEASE_STORE_PASSWORD') ?: findProperty('FC_RELEASE_STORE_PASSWORD')
+def releaseKeyAlias = System.getenv('FC_RELEASE_KEY_ALIAS') ?: findProperty('FC_RELEASE_KEY_ALIAS')
+def releaseKeyPassword = System.getenv('FC_RELEASE_KEY_PASSWORD') ?: findProperty('FC_RELEASE_KEY_PASSWORD')
+def hasReleaseSigning = [releaseStorePath, releaseStorePassword, releaseKeyAlias, releaseKeyPassword].every { it }
+
 android {
     namespace "com.shike.app"
     compileSdk rootProject.ext.compileSdkVersion
@@ -17,19 +23,30 @@ android {
         }
     }
     signingConfigs {
-        release {
-            storeFile file('C:/fc-release.keystore')
-            storePassword 'ShikeRelease2026'
-            keyAlias 'shike'
-            keyPassword 'ShikeRelease2026'
+        if (hasReleaseSigning) {
+            release {
+                storeFile file(releaseStorePath)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
         }
     }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            }
         }
+    }
+}
+
+gradle.taskGraph.whenReady { graph ->
+    def needsReleaseSigning = graph.allTasks.any { it.name == 'assembleRelease' || it.name == 'bundleRelease' }
+    if (needsReleaseSigning && !hasReleaseSigning) {
+        throw new GradleException('Release 签名未配置。请设置 FC_RELEASE_STORE_FILE、FC_RELEASE_STORE_PASSWORD、FC_RELEASE_KEY_ALIAS、FC_RELEASE_KEY_PASSWORD。')
     }
 }
 

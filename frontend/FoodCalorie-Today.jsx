@@ -48,7 +48,7 @@ export default function FoodCalorieToday() {
   const today = todayStr();
 
   return (
-    <div data-name="FoodCalorie-Today" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-Today" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="今日记录" right={<span style={{ fontSize: 13, color: '#22A85A', fontWeight: 600 }}>{today.slice(5)}</span>} />
 
