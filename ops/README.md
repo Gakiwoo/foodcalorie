@@ -3,6 +3,14 @@
 Production configuration kept here is intentionally free of credentials. Secrets belong in the
 server environment or CI secret store and must never be committed.
 
+## Node.js runtime
+
+Production uses Node.js 24 Active LTS from `/opt/node-v24/bin`. Install backend dependencies with
+`/opt/node-v24/bin/npm ci --omit=dev`, then start the API through
+`pm2 start /var/www/foodcalorie-api/ecosystem.config.cjs --only foodcalorie-api --update-env`.
+The committed PM2 configuration pins the interpreter so a global PM2 daemon cannot silently fall
+back to an end-of-life system Node.js release.
+
 ## SSH baseline
 
 `sshd/99-foodcalorie-hardening.conf` disables password authentication while retaining public-key

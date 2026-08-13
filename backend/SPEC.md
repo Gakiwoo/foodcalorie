@@ -19,7 +19,7 @@
 
 | 层 | 选型 | 版本 | 理由 |
 |----|------|------|------|
-| 运行时 | **Node.js** | 20 LTS（`/opt/node-v20`） | 与服务器现有 gakiwoo-api 生态一致；LTS 稳定；PM2/Nginx 运维已就绪 |
+| 运行时 | **Node.js** | 24 Active LTS（`/opt/node-v24`） | 与服务器现有 gakiwoo-api 生态一致；PM2 显式锁定解释器；Nginx 运维已就绪 |
 | Web 框架 | **Express** | ^4.18.2 | 与现有 auth 模块同栈；中间件生态成熟；学习/维护成本低 |
 | 数据库 | **SQLite（better-sqlite3）** | ^12.9.0 | 与现有 auth 模块同库同引擎，可直接复用 users 表与连接管理；单机部署零运维；后续可平滑迁移 PostgreSQL |
 | 认证 | **jsonwebtoken + bcryptjs** | ^9.0.2 / ^2.4.3 | 复用现有模块同一套 JWT 机制（同一 JWT_SECRET 即可互通）|
@@ -273,7 +273,7 @@ backend/
 
 ## 11. 待确认事项（请评审后确认）
 
-1. **技术栈**：采用与服务器一致的 Node.js 20 + Express 4 + SQLite（better-sqlite3）？或你有其他偏好（如 NestJS / FastAPI / PostgreSQL）？
+1. **技术栈**：采用与服务器一致的 Node.js 24 + Express 4 + SQLite（better-sqlite3）？或你有其他偏好（如 NestJS / FastAPI / PostgreSQL）？
 2. **业务服务部署形态**：新建独立服务 `foodcalorie-api`（端口 3001，Nginx 新 server/路径），还是并入 gakiwoo-api 进程？
 3. **业务 API 前缀**：`/api/v1/foodcalorie/*` 可接受？或希望独立域名（如 `api.shike.app`）？
 4. **统一响应格式**：业务接口采用 `{code,message,data}` 包装（§6.2）？认证接口保持现有 `{user}` 原样？

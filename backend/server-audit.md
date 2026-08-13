@@ -16,7 +16,7 @@
 
 ## 2. 技术栈（现有模块）
 
-- **Node.js ≥ 18**（服务器另有 `/opt/node-v20`、`/opt/node-v24`）
+- **Node.js ≥ 24**（生产运行时固定为 `/opt/node-v24/bin/node`）
 - **Express ^4.18.2**、**better-sqlite3 ^12.9.0**（SQLite）
 - **jsonwebtoken ^9.0.2**（JWT）、**bcryptjs ^2.4.3**（密码哈希）
 - **zod ^3.23.8**（参数校验）、**pino ^10**（日志）、**helmet / cors / cookie-parser**
