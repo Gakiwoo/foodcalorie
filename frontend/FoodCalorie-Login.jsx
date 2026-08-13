@@ -43,8 +43,8 @@ export default function FoodCalorieLogin() {
     <div
       data-name="FoodCalorie-Login"
       style={{
-        width: 375,
-        minHeight: 812,
+        width: '100%',
+        minHeight: '100dvh',
         background: '#F7F8FA',
         display: 'flex',
         flexDirection: 'column',

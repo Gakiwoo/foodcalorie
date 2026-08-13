@@ -59,6 +59,16 @@ function initSchema(db) {
     );
     CREATE INDEX IF NOT EXISTS idx_records_user_time ON food_records(user_id, record_time);
 
+    -- 私有上传图片：记录归属与生命周期，不再由 nginx 公开暴露 uploads 目录
+    CREATE TABLE IF NOT EXISTS uploaded_images (
+      filename    TEXT PRIMARY KEY,
+      user_id     INTEGER NOT NULL,
+      status      TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'claimed')),
+      created_at  TEXT DEFAULT (datetime('now')),
+      claimed_at  TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_uploaded_images_owner ON uploaded_images(user_id, status);
+
     -- 食物库（手动添加/搜索页）
     CREATE TABLE IF NOT EXISTS food_items (
       id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -148,6 +158,29 @@ function migrateColumns(db) {
   }
   ensure('food_items', 'source', "source TEXT DEFAULT 'seed'")
   ensure('challenge_participants', 'streak_days', 'streak_days INTEGER DEFAULT 0')
+}
+
+// 将历史公开 /uploads/... 地址迁移为鉴权 API 地址，并登记原记录所有者。
+function migrateLegacyImages(db) {
+  const rows = db
+    .prepare("SELECT DISTINCT user_id, image_url FROM food_records WHERE image_url LIKE '/uploads/%'")
+    .all()
+  if (rows.length === 0) return
+
+  const insert = db.prepare(
+    `INSERT OR IGNORE INTO uploaded_images (filename, user_id, status, claimed_at)
+     VALUES (?, ?, 'claimed', datetime('now'))`
+  )
+  const update = db.prepare('UPDATE food_records SET image_url = ? WHERE user_id = ? AND image_url = ?')
+  const migrate = db.transaction(() => {
+    for (const row of rows) {
+      const filename = String(row.image_url).split('/').pop()
+      if (!/^food_\d+_[0-9a-f]{8}\.(?:jpg|png|webp|heic|heif)$/i.test(filename)) continue
+      insert.run(filename, row.user_id)
+      update.run(`/api/v1/foodcalorie/ai/images/${filename}`, row.user_id, row.image_url)
+    }
+  })
+  migrate()
 }
 
 // ── 幂等种子数据（仅当对应表为空时插入；业务数据可被前端随时增删）──
@@ -299,6 +332,7 @@ function getDb() {
   dbInstance.pragma('foreign_keys = ON')
   initSchema(dbInstance)
   migrateColumns(dbInstance)
+  migrateLegacyImages(dbInstance)
   seedIfEmpty(dbInstance)
   return dbInstance
 }

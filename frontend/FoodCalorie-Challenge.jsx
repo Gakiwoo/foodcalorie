@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
 
 // 夏季轻食挑战页：真实数据（GET challenges + join + checkin）
 export default function FoodCalorieChallenge() {
-  const navigate = useNavigate();
   const [challenge, setChallenge] = useState(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -54,11 +52,11 @@ export default function FoodCalorieChallenge() {
     }
   }
 
-  if (loading) return <div style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="夏季轻食挑战" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;
+  if (loading) return <div style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="夏季轻食挑战" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;
 
   if (!challenge) {
     return (
-      <div data-name="FoodCalorie-Challenge" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
+      <div data-name="FoodCalorie-Challenge" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
         <StatusBar />
         <NavBar title="夏季轻食挑战" />
         <div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>暂无进行中的挑战</div>
@@ -70,7 +68,7 @@ export default function FoodCalorieChallenge() {
   const pct = Math.min(100, Math.round((challenge.check_in_days / totalDays) * 100));
 
   return (
-    <div data-name="FoodCalorie-Challenge" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-Challenge" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="夏季轻食挑战" right={<i className="fas fa-share-nodes" style={{ fontSize: 15, color: '#1A1A1A' }} />} />
 

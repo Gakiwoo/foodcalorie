@@ -31,12 +31,10 @@ export default function FoodCalorieMe() {
     })();
   }, []);
 
-  const initial = (user?.nickname || user?.email || '?').slice(0, 1).toUpperCase();
   const avatarBg = authed ? 'linear-gradient(135deg,#34C759 0%,#22A85A 100%)' : 'linear-gradient(135deg,#D1D5DB 0%,#9CA3AF 100%)';
-  const today = todayStr();
 
   return (
-    <div data-name="FoodCalorie-Me" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-Me" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
 
       {/* 个人信息卡 */}

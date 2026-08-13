@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
-import { toast, todayStr } from './src/ui/toast';
+import { todayStr } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
 
 // 周视图：真实数据（GET stats?range=week → 周汇总 + 每日摄入，点某天进记录页）
@@ -24,11 +24,11 @@ export default function FoodCalorieRecordsWeek() {
     })();
   }, []);
 
-  if (loading) return <div style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="周记录" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;
+  if (loading) return <div style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="周记录" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;
 
   if (!stats) {
     return (
-      <div data-name="FoodCalorie-RecordsWeek" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
+      <div data-name="FoodCalorie-RecordsWeek" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
         <StatusBar /><NavBar title="本周记录" />
         <div style={{ padding: 40, textAlign: 'center', color: '#E03131', fontSize: 14 }}>
           {error}
@@ -46,10 +46,8 @@ export default function FoodCalorieRecordsWeek() {
     const d = new Date(base.getTime() + i * 86400000);
     days.push({ date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`, name: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][i] });
   }
-  const weekNames = { 一: '周一', 二: '周二', 三: '周三', 四: '周四', 五: '周五', 六: '周六', 日: '周日' };
-
   return (
-    <div data-name="FoodCalorie-RecordsWeek" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-RecordsWeek" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="本周记录" />
 

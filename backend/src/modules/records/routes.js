@@ -6,7 +6,6 @@ const { validate } = require('../../shared/middleware/validate')
 const { requireAuth } = require('../../shared/middleware/requireAuth')
 const { ok, okPage } = require('../../shared/utils/response')
 const { ServiceError } = require('../../shared/utils/serviceError')
-const { RANGE_INVALID } = require('../../shared/utils/errors')
 const service = require('./service')
 const profileRepo = require('../profiles/repositories/profileRepo')
 
@@ -26,12 +25,14 @@ const recordBody = z.object({
   portion: z.string().optional().default('1 份'),
   record_time: z.string().regex(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/, 'record_time 格式应为 YYYY-MM-DD HH:mm'),
   source: z.enum(['AI识别', 'manual', 'search']).optional().default('manual'),
-  // image_url 白名单：仅允许本服务 /uploads/ 相对路径（或空）。拒绝外部任意 URL，
-  // 防记录被塞入跟踪像素/外链（前端仅同域渲染图片）
+  // image_url 白名单：仅允许本服务签发的鉴权图片路径（或空）。
   image_url: z
     .string()
     .max(500)
-    .regex(/^\/uploads\/[\w.\-]+$/, 'image_url 仅支持 /uploads/ 相对路径')
+    .regex(
+      /^\/api\/v1\/foodcalorie\/ai\/images\/food_\d+_[0-9a-f]{8}\.(?:jpg|png|webp|heic|heif)$/i,
+      'image_url 仅支持本服务签发的私有图片地址'
+    )
     .optional()
     .nullable()
 })
@@ -184,10 +185,10 @@ router.put('/:id', requireAuth, validate(idParam, 'params'), validate(recordBody
  *     tags: [Records]
  *     summary: 删除记录
  */
-router.delete('/:id', requireAuth, validate(idParam, 'params'), (req, res, next) => {
+router.delete('/:id', requireAuth, validate(idParam, 'params'), async (req, res, next) => {
   try {
-    service.deleteRecord(req.user.id, req.params.id)
-    return ok(res, { deleted: true }, '记录已删除')
+    const result = await service.deleteRecord(req.user.id, req.params.id)
+    return ok(res, result, '记录已删除')
   } catch (e) {
     next(e)
   }

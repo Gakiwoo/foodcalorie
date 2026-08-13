@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast, nowDateTime } from './src/ui/toast';
@@ -10,13 +10,18 @@ export default function FoodCalorieCameraResult() {
   const location = useLocation();
   const state = location.state || {};
   const candidates = state.candidates || [];
-  const imageUrl = state.imageUrl || null;
-  const [selected, setSelected] = useState(null);
+  const preview = state.preview || null;
+  const storedImageUrl = state.storedImageUrl || null;
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const [meal, setMeal] = useState('午餐');
   const [adding, setAdding] = useState(false);
 
+  useEffect(() => () => {
+    if (preview?.startsWith('blob:')) URL.revokeObjectURL(preview);
+  }, [preview]);
+
   async function confirmAdd() {
-    const item = selected || candidates[0];
+    const item = candidates[selectedIndex];
     if (!item || adding) return;
     setAdding(true);
     try {
@@ -31,7 +36,7 @@ export default function FoodCalorieCameraResult() {
         portion: item.unit_desc || '1 份',
         record_time: nowDateTime(),
         source: 'AI识别',
-        image_url: imageUrl && imageUrl.startsWith('/uploads/') ? imageUrl : null
+        image_url: storedImageUrl
       });
       toast('已添加「' + item.name + '」');
       navigate('/records');
@@ -44,7 +49,7 @@ export default function FoodCalorieCameraResult() {
   // 无识别状态（直接访问）
   if (!candidates.length) {
     return (
-      <div data-name="FoodCalorie-CameraResult" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
+      <div data-name="FoodCalorie-CameraResult" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
         <StatusBar /><NavBar title="识别结果" />
         <div style={{ padding: 60, textAlign: 'center' }}>
           <i className="fas fa-camera" style={{ fontSize: 34, color: '#D1D5DB' }} />
@@ -55,17 +60,17 @@ export default function FoodCalorieCameraResult() {
     );
   }
 
-  const item = selected || candidates[0];
+  const item = candidates[selectedIndex];
 
   return (
-    <div data-name="FoodCalorie-CameraResult" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-CameraResult" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="识别结果" right={<span style={{ fontSize: 13, color: '#22A85A', fontWeight: 600 }} onClick={() => navigate('/camera')}>重拍</span>} />
 
       {/* 照片 */}
-      {imageUrl && (
+      {preview && (
         <div style={{ margin: '6px 20px 12px' }}>
-          <img src={imageUrl} alt="识别照片" style={{ width: '100%', height: 170, objectFit: 'cover', borderRadius: 16 }} />
+          <img src={preview} alt="识别照片" style={{ width: '100%', height: 170, objectFit: 'cover', borderRadius: 16 }} />
         </div>
       )}
 
@@ -83,9 +88,9 @@ export default function FoodCalorieCameraResult() {
         {candidates.map((c, idx) => {
           // 未匹配食物库的候选 id 为 null：用索引兜底做 key，避免 React key 重复 + 多选高亮
           const key = c.id != null ? c.id : 'cand-' + idx;
-          const on = (item && item.id === c.id) || (!item && idx === 0);
+          const on = idx === selectedIndex;
           return (
-            <Card key={key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, cursor: 'pointer', border: on ? '1.5px solid #34C759' : '1.5px solid transparent' }} onClick={() => setSelected(c)}>
+            <Card key={key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, cursor: 'pointer', border: on ? '1.5px solid #34C759' : '1.5px solid transparent' }} onClick={() => setSelectedIndex(idx)}>
               <div style={{ width: 40, height: 40, borderRadius: 12, background: on ? '#34C759' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <i className="fas fa-bowl-food" style={{ fontSize: 15, color: on ? '#fff' : '#9CA3AF' }} />
               </div>

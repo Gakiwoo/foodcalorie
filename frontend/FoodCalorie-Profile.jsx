@@ -80,7 +80,7 @@ export default function FoodCalorieProfile() {
   const inputStyle = { border: 'none', outline: 'none', textAlign: 'right', fontSize: 14, color: '#1A1A1A', background: 'transparent', width: 150 };
 
   return (
-    <div data-name="FoodCalorie-Profile" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-Profile" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="个人信息" right={<span style={{ fontSize: 13, color: '#22A85A', fontWeight: 600 }} onClick={save}>保存</span>} />
       {loading ? (

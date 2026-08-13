@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { upload } from './src/api/client';
 import { toast } from './src/ui/toast';
@@ -8,8 +8,13 @@ import { StatusBar, NavBar } from './src/ui/common';
 export default function FoodCalorieCamera() {
   const navigate = useNavigate();
   const fileRef = useRef(null);
+  const selectedFileRef = useRef(null);
   const [preview, setPreview] = useState(null);
   const [recognizing, setRecognizing] = useState(false);
+
+  useEffect(() => () => {
+    if (preview) URL.revokeObjectURL(preview);
+  }, [preview]);
 
   function pickFile(capture) {
     const input = fileRef.current;
@@ -22,21 +27,29 @@ export default function FoodCalorieCamera() {
     if (!file) return;
     if (!/image\/(jpeg|png|webp|heic|heif)/.test(file.type)) return toast('请选择 JPEG/PNG/WEBP 图片');
     if (file.size > 10 * 1024 * 1024) return toast('图片不能超过 10MB');
+    selectedFileRef.current = file;
     setPreview(URL.createObjectURL(file));
   }
 
   async function recognize() {
-    if (!preview || recognizing) return;
+    const file = selectedFileRef.current;
+    if (!preview || !file || recognizing) return;
     setRecognizing(true);
     try {
-      // 从 objectURL 找回文件：缓存 file 引用
-      const blob = await fetch(preview).then((r) => r.blob());
       const fd = new FormData();
-      fd.append('image', blob, 'food.jpg');
+      fd.append('image', file, file.name || 'food.jpg');
       // 统一走 apiClient：自动携带鉴权 + 401 刷新自愈（原原生 fetch 缺这两项）
       const body = await upload.post('/api/v1/foodcalorie/ai/recognize', fd);
-      // 优先用后端持久化的 image_url（/uploads/xxx），本地 dataURL 仅作回显兜底
-      navigate('/camera-result', { state: { imageUrl: body.data.image_url || preview, preview, candidates: body.data.candidates, message: body.data.message } });
+      // 结果页用独立 object URL 回显；后端私有地址仅用于落记录，避免公开图片 URL。
+      const resultPreview = URL.createObjectURL(file);
+      navigate('/camera-result', {
+        state: {
+          preview: resultPreview,
+          storedImageUrl: body.data.image_url || null,
+          candidates: body.data.candidates,
+          message: body.data.message
+        }
+      });
     } catch (e) {
       toast(e.message || '识别失败，请检查登录状态');
       setRecognizing(false);
@@ -44,11 +57,13 @@ export default function FoodCalorieCamera() {
   }
 
   function retake() {
+    selectedFileRef.current = null;
     setPreview(null);
+    if (fileRef.current) fileRef.current.value = '';
   }
 
   return (
-    <div data-name="FoodCalorie-Camera" style={{ width: 375, minHeight: 812, background: '#111827', display: 'flex', flexDirection: 'column', alignItems: 'stretch', overflow: 'hidden' }}>
+    <div data-name="FoodCalorie-Camera" style={{ width: '100%', minHeight: '100dvh', background: '#111827', display: 'flex', flexDirection: 'column', alignItems: 'stretch', overflow: 'hidden' }}>
       <StatusBar />
       <NavBar title="拍照识别" right={<i className="fas fa-bolt" style={{ fontSize: 15, color: '#fff' }} />} />
       <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFile} />

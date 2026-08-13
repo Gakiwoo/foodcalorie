@@ -1,6 +1,6 @@
 'use strict'
 // 全局错误处理中间件：统一序列化 ServiceError / 参数错误 / 未知错误
-const { ServiceError, isServiceError } = require('../utils/serviceError')
+const { isServiceError } = require('../utils/serviceError')
 const { INTERNAL_ERROR, MESSAGES } = require('../utils/errors')
 const { logger } = require('../utils/logger')
 

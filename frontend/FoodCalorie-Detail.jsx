@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
+import { ProtectedImage } from './src/ui/ProtectedImage';
 
 // 记录详情页：真实数据（GET /records/:id + 删除 + 编辑入口）
 export default function FoodCalorieDetail() {
@@ -48,11 +49,11 @@ export default function FoodCalorieDetail() {
     </div>
   );
 
-  if (loading) return <div style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="记录详情" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;
+  if (loading) return <div style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="记录详情" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;
 
   if (!record) {
     return (
-      <div data-name="FoodCalorie-Detail" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
+      <div data-name="FoodCalorie-Detail" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
         <StatusBar />
         <NavBar title="记录详情" />
         <div style={{ padding: 60, textAlign: 'center' }}>
@@ -65,14 +66,14 @@ export default function FoodCalorieDetail() {
   }
 
   return (
-    <div data-name="FoodCalorie-Detail" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-Detail" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="记录详情" right={<i className="fas fa-pen-to-square" style={{ fontSize: 15, color: '#1A1A1A', cursor: 'pointer' }} onClick={() => navigate('/editrecord?id=' + id)} />} />
 
       {/* Hero：热量 */}
       <div style={{ margin: '6px 20px 14px' }}>
         {record.image_url && (
-          <img src={record.image_url} alt="记录照片" style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 16, marginBottom: 10, display: 'block' }} />
+          <ProtectedImage src={record.image_url} alt="记录照片" style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 16, marginBottom: 10, display: 'block' }} />
         )}
         <div style={{ borderRadius: 20, padding: '24px 18px', background: 'linear-gradient(135deg,#34C759 0%,#1FA355 100%)', color: '#fff', display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

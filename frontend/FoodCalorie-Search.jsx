@@ -58,7 +58,7 @@ export default function FoodCalorieSearch() {
   }
 
   return (
-    <div data-name="FoodCalorie-Search" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-Search" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="搜索" right={<span style={{ fontSize: 13, color: '#22A85A', fontWeight: 600 }} onClick={() => navigate('/addfood')}>手动添加</span>} />
 

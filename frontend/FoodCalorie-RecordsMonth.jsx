@@ -46,7 +46,7 @@ export default function FoodCalorieRecordsMonth() {
   for (let day = 1; day <= totalDays; day++) cells.push(day);
 
   return (
-    <div data-name="FoodCalorie-RecordsMonth" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-RecordsMonth" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="月历" />
 

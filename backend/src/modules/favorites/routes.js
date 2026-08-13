@@ -61,7 +61,7 @@ router.post('/', requireAuth, validate(addBody), (req, res, next) => {
  * /foodcalorie/favorites:
  *   delete:
  *     tags: [Favorites]
- *     summary: 取消收藏（query: type + ref_id）
+ *     summary: '取消收藏（query: type + ref_id）'
  *     security: [{ BearerAuth: [] }]
  */
 router.delete('/', requireAuth, validate(delQuery, 'query'), (req, res, next) => {

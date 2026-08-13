@@ -69,11 +69,11 @@ export default function FoodCalorieEditRecord() {
     </div>
   );
 
-  if (loading) return <div style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="编辑记录" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;
+  if (loading) return <div style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="编辑记录" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;
 
   if (!id) {
     return (
-      <div data-name="FoodCalorie-EditRecord" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
+      <div data-name="FoodCalorie-EditRecord" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
         <StatusBar /><NavBar title="编辑记录" />
         <div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>缺少记录参数</div>
       </div>
@@ -81,7 +81,7 @@ export default function FoodCalorieEditRecord() {
   }
 
   return (
-    <div data-name="FoodCalorie-EditRecord" style={{ width: 375, minHeight: 812, background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <div data-name="FoodCalorie-EditRecord" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="编辑记录" right={<span style={{ fontSize: 13, color: '#22A85A', fontWeight: 600 }} onClick={save}>保存</span>} />
 

@@ -14,7 +14,7 @@ npm-debug.log*
 *.db-shm
 data/
 backend/uploads/
-uploads/
+/uploads/
 
 # ── 前端构建产物（由源码重建）──
 frontend/dist/
@@ -45,6 +45,9 @@ frontend/android/app/build/
 frontend/android/build/
 frontend/android/capacitor-cordova-android-plugins/build/
 frontend/android/local.properties
+frontend/android/keystore.properties
+*.jks
+*.keystore
 frontend/.npm-cache-tmp/
 
 # ── Gradle 本地缓存（构建环境残留）──

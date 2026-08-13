@@ -74,17 +74,18 @@ backend/
 | M11 前端对接 | Article/Recipe 详情（contents/:id + 真实收藏）、Goal、Search；stats 读用户目标 | ✅ 已上线（E2E 15/15 + 单测 15/15）|
 | M12 AI 识别+通知 | ai/recognize 接口（multer+候选）、Camera/CameraResult 闭环、Notification | ✅ 已上线（E2E 11/11）|
 | M13 AI 视觉模型 | Kimi/Moonshot 视觉识别接入，单测 19/19 | ✅ 已上线并**启用真实识别**（MOONSHOT_API_KEY 已配置）|
-| M14 完善级 | 识别图片持久化（uploads+image_url 落库+详情展示）、模型新食物回灌食物库、Swagger 环境白名单、挑战连续打卡（streak） | ✅ 已上线（E2E 9/9 + 单测 27/27）|
+| M14 完善级 | 私有图片生命周期、受控模型回灌、Swagger 环境白名单、挑战连续打卡（streak） | ✅ 单测覆盖 |
 | M15+ | 推送（非 SPEC 需求） | ⏳ 扩展愿景 |
 
-### 图片持久化（M14）
-- 识别图片经 multer diskStorage 落盘 `/var/www/foodcalorie-api/uploads/`，响应返回 `image_url=/uploads/<文件>`；确认添加记录时随 body 提交落库 `food_records.image_url`
-- 子域 nginx 已加 `location ^~ /uploads/` → alias 静态服务（Cache-Control 1 天）；记录详情页展示识别图
-- 记录创建/更新校验 `image_url` 支持相对路径（`.url()` 会拒绝 `/uploads/...`，已放宽为 max 500）
+### 私有图片生命周期
+- 识别图片落盘后登记到 `uploaded_images`，绑定上传用户并先处于 `pending` 状态。
+- 图片只能通过鉴权接口 `/api/v1/foodcalorie/ai/images/:filename` 读取；nginx 禁止公开 `/uploads/`。
+- 创建记录时原子认领图片；删除或替换记录时清理文件；未确认图片超过 24 小时自动清理。
+- 历史 `/uploads/...` 数据会在数据库初始化时迁移为私有 API 地址。
 
-### 模型数据回灌（M14）
-- Kimi 识别出的「新食物」（食物库无匹配 + 营养有效）自动回灌 `food_items`（`source='model'` 标记，名称幂等去重，每图最多 3 条）
-- 越用越准：下次同食物识别直接命中食物库数据（conf 0.95-）
+### 模型数据回灌
+- 默认 `AI_BACKFILL_ENABLED=false`，模型输出不会污染公共食物库。
+- 只有建立审核和质量监控后才可显式开启受控回灌；仓储层仍保留营养有效性和名称幂等保护。
 
 ### Swagger 环境白名单（M14）
 - 非 production 默认开放 `/api/docs`；production 需 `SWAGGER_ENABLED=true` 显式开启（安全默认关闭）
@@ -125,7 +126,7 @@ backend/
 - `location ^~ /api/v1/foodcalorie/`（反代 127.0.0.1:3001）
 - 备份统一在 `/etc/nginx/backups/`（**不可放 sites-enabled/，否则被 nginx include 加载**）
 - 守护脚本同时**守护 gakiwoo release 白名单**（发布覆盖后自动补回 foodcalorie 并重启 gakiwoo-api）
-- 修复脚本归档：`archive/scripts/foodcalorie-nginx-inject.py`、`foodcalorie-nginx-guard.sh`
+- 运维配置采用 `ops/` 中的无凭据模板；部署密钥只存在于服务器环境或 CI Secrets。
 
 **联调验证（全链路通过）**：
 - API 级：登录捕获 Set-Cookie → Bearer → 记录 CRUD/stats/calendar 全通；`/api/auth/me` 双向认 token；`Cookie: refresh_token` 头 refresh 成功（移动端模式）
@@ -135,7 +136,7 @@ backend/
 **本地开发**：`frontend/vite.config.js` 代理 `/api/auth` → `https://gakiwoo.com`、`/api/v1` → **直连 `http://123.57.102.126:3001`**（不依赖 nginx），含 dev 专用 cookie 重写（剥离 Domain/Secure，localhost 可登录）；`127.0.0.1:5173` 已在 gakiwoo ALLOWED_ORIGINS 白名单，CSRF 不拦截。
 
 > ⚠️ **重要运维提醒**：
-> 1. gakiwoo 发布流程会重写 `/etc/nginx/sites-enabled/gakiwoo.com`，**删除我们的 `/api/v1` location**（2026-08-06 已发生）。恢复脚本：`archive/scripts/nginx_deploy_narrow.py`（**收窄版**）。
+> 1. gakiwoo 发布流程可能重写 nginx 配置。发布后必须验证 `/api/v1/foodcalorie/health`，并通过受控配置管理恢复收窄路由。
 > 2. **必须使用收窄版 location**：`^~ /api/v1/foodcalorie/` → `127.0.0.1:3001`（health 已并入该前缀 `/api/v1/foodcalorie/health`）。**禁止用宽泛前缀 `^~ /api/v1/`**——gakiwoo-api 自身挂载了 `/api/v1/auth/*`（登录接口），宽泛前缀会把它的登录劫持到 3001 导致另一个项目登录失败（2026-08-07 实测事故）。旧宽泛脚本已改名禁用：`nginx_deploy_broad.LEGACY-DO-NOT-USE.py`。
 > 3. 路由归属：`/api/v1/foodcalorie/*`（含 health）→ foodcalorie-api(:3001)；`/api/v1/auth/*`、`/api/auth/*` 及其它 → gakiwoo-api(:3000)。
 

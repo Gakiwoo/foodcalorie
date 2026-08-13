@@ -72,21 +72,12 @@ const PAGES = [
   { path: '/register', Comp: FoodCalorieRegister }
 ];
 
-// ===== 全局 toast 注入（供 src/ui/toast.js 的 toast() 使用）=====
-let toastFn = null;      // 由 App 注入
-function addMsg(name) {
-  const m = name.match(/^food-add-(\d+)$/) || name.match(/^result-(\d+)-add$/);
-  return m ? `已添加第 ${m[1]} 项，正在返回记录页` : '已添加，正在返回记录页';
-}
-
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const stackRef = useRef([]);
   const [toast, setToast] = useState('');
   const toastTimer = useRef(null);
-
-  toastFn = (msg) => showToast(msg);
 
   function showToast(msg) {
     setToast(msg);

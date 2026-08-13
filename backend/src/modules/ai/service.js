@@ -37,7 +37,6 @@ function parseKimiContent(content) {
 
 // 调用 Kimi 视觉模型识别图片中的食物
 async function recognizeWithKimi(buffer, mimetype) {
-  const mime = mimetype === 'image/jpeg' ? 'jpeg' : mimetype === 'image/webp' ? 'webp' : 'png'
   const imageUrl = `data:${mimetype || 'image/png'};base64,${buffer.toString('base64')}`
 
   const systemPrompt =
@@ -116,9 +115,11 @@ async function recognize({ mimetype, size, buffer, image_url }) {
       const foods = await recognizeWithKimi(buffer, mimetype)
       if (foods.length > 0) {
         const candidates = enrich(foods)
-        // 模型识别出的新食物 → 回灌食物库（去重幂等），让库越用越准
-        const backfilled = aiRepo.backfillModelFoods(foods)
-        if (backfilled.length > 0) logger.info({ foods: backfilled.map((f) => f.name) }, '模型新食物已回灌食物库')
+        // 模型输出默认不进入公共食物库；仅在显式开启受控回灌时写入。
+        if (process.env.AI_BACKFILL_ENABLED === 'true') {
+          const backfilled = aiRepo.backfillModelFoods(foods)
+          if (backfilled.length > 0) logger.info({ foods: backfilled.map((f) => f.name) }, '模型新食物已回灌食物库')
+        }
         return { candidates, image_url, message: 'Kimi 识别完成，请确认最接近的一项' }
       }
       return { ...fallbackRecognize('未识别出明确食物，请手动选择'), image_url }
