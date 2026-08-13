@@ -179,3 +179,29 @@ test('生产环境缺少 CORS_ORIGINS 时拒绝启动', () => {
     else process.env.CORS_ORIGINS = previousOrigins
   }
 })
+
+test('生产 CORS 仅允许配置的 Android 原生来源', async () => {
+  const previousNodeEnv = process.env.NODE_ENV
+  const previousOrigins = process.env.CORS_ORIGINS
+  process.env.NODE_ENV = 'production'
+  process.env.CORS_ORIGINS = 'https://localhost,capacitor://localhost'
+  try {
+    const productionApp = createApp()
+    const allowed = await request(productionApp)
+      .options('/api/v1/foodcalorie/health')
+      .set('Origin', 'https://localhost')
+      .set('Access-Control-Request-Method', 'GET')
+    assert.strictEqual(allowed.status, 204)
+    assert.strictEqual(allowed.headers['access-control-allow-origin'], 'https://localhost')
+
+    const denied = await request(productionApp)
+      .options('/api/v1/foodcalorie/health')
+      .set('Origin', 'https://evil.example.com')
+      .set('Access-Control-Request-Method', 'GET')
+    assert.notStrictEqual(denied.headers['access-control-allow-origin'], 'https://evil.example.com')
+  } finally {
+    process.env.NODE_ENV = previousNodeEnv
+    if (previousOrigins === undefined) delete process.env.CORS_ORIGINS
+    else process.env.CORS_ORIGINS = previousOrigins
+  }
+})

@@ -3,11 +3,18 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>食刻 App · React</title>
+    <meta name="theme-color" content="#22A85A" />
+    <title>食刻</title>
     <!-- 图标/样式已本地化：font-awesome 由 vite 打包（main.jsx 引入），不再依赖 CDN；
          tailwind JIT 开发版 CDN 为无用依赖（组件全内联样式），已移除 -->
   </head>
   <body>
+    <div id="boot-fallback" class="boot-fallback" role="status" aria-live="polite">
+      <div class="boot-fallback__logo" aria-hidden="true">食</div>
+      <strong>食刻</strong>
+      <span>正在安全启动…</span>
+      <noscript>请启用 JavaScript 后重新打开应用。</noscript>
+    </div>
     <div id="root"></div>
     <script type="module" src="/main.jsx"></script>
   </body>

@@ -11,6 +11,10 @@ Production uses Node.js 24 Active LTS from `/opt/node-v24/bin`. Install backend 
 The committed PM2 configuration pins the interpreter so a global PM2 daemon cannot silently fall
 back to an end-of-life system Node.js release.
 
+The production CORS allowlist must include the two exact Capacitor origins used by signed mobile
+builds: `https://localhost` for Android and `capacitor://localhost` for iOS. Keep the allowlist
+explicit; do not replace these entries with a wildcard when credentials are enabled.
+
 ## SSH baseline
 
 `sshd/99-foodcalorie-hardening.conf` disables password authentication while retaining public-key

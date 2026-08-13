@@ -1,101 +1,139 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""食刻品牌图标生成：adaptive icon（前景+背景）+ legacy + round + splash
-设计：绿色渐变圆角背景 + 白色餐盘（叉勺简笔），与 App 品牌色一致（#34C759→#22A85A）
-"""
-import os
-from PIL import Image, ImageDraw
+"""Generate deterministic Android launcher and splash assets from the brand master."""
 
-RES = r"E:\00-Vibeo Coding\Foodcalorie\frontend\android\app\src\main\res"
-DENSITIES = {"mdpi": 1, "hdpi": 1.5, "xhdpi": 2, "xxhdpi": 3, "xxxhdpi": 4}
-G1, G2 = (0x34, 0xC7, 0x59), (0x22, 0xA8, 0x5A)  # 品牌渐变
+from pathlib import Path
 
-def lerp(a, b, t):
-    return tuple(int(a[i] + (b[i] - a[i]) * t) for i in range(3))
+from PIL import Image, ImageDraw, ImageFilter
 
-def draw_plate(d, cx, cy, r, s):
-    """白餐盘：外环 + 内碟"""
-    d.ellipse([cx - r, cy - r, cx + r, cy + r], outline="white", width=max(3, int(6 * s)))
-    d.ellipse([cx - r * 0.6, cy - r * 0.6, cx + r * 0.6, cy + r * 0.6], fill="white")
 
-def draw_fork(d, x, y1, y2, s):
-    """叉：柄 + 4 齿"""
-    w = max(3, int(6 * s))
-    d.line([(x, y1 + 8), (x, y2)], fill="white", width=w)
-    for dx in (-13, -4.5, 4.5, 13):
-        d.line([(x + dx * s, y1 - 4), (x, y1 + 6)], fill="white", width=max(2, int(w * 0.85)))
+FRONTEND = Path(__file__).resolve().parents[1]
+MASTER_PATH = FRONTEND / "assets" / "brand" / "app-icon-master.png"
+RES_PATH = FRONTEND / "android" / "app" / "src" / "main" / "res"
+BRAND_GREEN = (34, 168, 90, 255)
+DENSITIES = {
+    "mdpi": 1.0,
+    "hdpi": 1.5,
+    "xhdpi": 2.0,
+    "xxhdpi": 3.0,
+    "xxxhdpi": 4.0,
+}
 
-def draw_spoon(d, x, y1, y2, s):
-    """勺：柄 + 椭圆头"""
-    w = max(3, int(6.5 * s))
-    d.line([(x, y1 + 12), (x, y2)], fill="white", width=w)
-    d.ellipse([x - 9 * s, y1 - 8 * s, x + 9 * s, y1 + 12 * s], fill="white")
 
-def draw_content(img, d, size):
-    """盘 + 叉勺（叉勺交叉于盘上方，盘最后画在前层遮挡交叉点）"""
-    s = size / 108.0
-    # 叉勺（后层）
-    draw_spoon(d, size * 0.35, size * 0.20, size * 0.52, s)
-    draw_fork(d, size * 0.65, size * 0.20, size * 0.52, s)
-    # 盘（前层，遮挡交叉）
-    draw_plate(d, size * 0.5, size * 0.58, size * 0.23, s)
+def clamp(value: float) -> float:
+    return max(0.0, min(1.0, value))
 
-def make_full_icon(size, round_corners=False):
-    """完整图标：渐变背景 + 内容"""
-    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    r = size // 4 if not round_corners else size // 2
+
+def load_master() -> Image.Image:
+    master = Image.open(MASTER_PATH).convert("RGBA")
+    background = Image.new("RGBA", master.size, BRAND_GREEN)
+    background.alpha_composite(master)
+    return background.convert("RGB")
+
+
+def rounded_icon(master: Image.Image, size: int, radius_ratio: float) -> Image.Image:
+    icon = master.resize((size, size), Image.Resampling.LANCZOS).convert("RGBA")
     mask = Image.new("L", (size, size), 0)
-    ImageDraw.Draw(mask).rounded_rectangle([0, 0, size - 1, size - 1], radius=r, fill=255)
-    bg = Image.new("RGBA", (size, size), G1)
-    for y in range(size):
-        t = y / size
-        ImageDraw.Draw(bg).line([(0, y), (size, y)], fill=lerp(G1, G2, t))
-    img.paste(bg, (0, 0), mask)
-    draw_content(img, d, size)
-    return img
+    ImageDraw.Draw(mask).rounded_rectangle(
+        (0, 0, size - 1, size - 1),
+        radius=round(size * radius_ratio),
+        fill=255,
+    )
+    icon.putalpha(mask)
+    return icon
 
-def make_foreground(size):
-    """adaptive 前景：透明底 + 内容（居中安全区）"""
-    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    d = ImageDraw.Draw(img)
-    draw_content(img, d, size)
-    return img
 
-def main():
-    for name, mult in DENSITIES.items():
-        size = int(48 * mult)
-        make_full_icon(size).save(os.path.join(RES, f"mipmap-{name}", "ic_launcher.png"))
-        make_full_icon(size, round_corners=True).save(os.path.join(RES, f"mipmap-{name}", "ic_launcher_round.png"))
-        make_foreground(size).save(os.path.join(RES, f"mipmap-{name}", "ic_launcher_foreground.png"))
-        print(f"[{name}] {size}px 完成")
-    # splash 覆盖
-    splash = make_full_icon(192)
-    for folder in ("drawable", "drawable-land-hdpi", "drawable-land-mdpi", "drawable-land-xhdpi",
-                   "drawable-land-xxhdpi", "drawable-land-xxxhdpi", "drawable-port-hdpi",
-                   "drawable-port-mdpi", "drawable-port-xhdpi", "drawable-port-xxhdpi",
-                   "drawable-port-xxxhdpi", "drawable-hdpi", "drawable-xhdpi", "drawable-xxhdpi",
-                   "drawable-xxxhdpi"):
-        p = os.path.join(RES, folder)
-        if os.path.isdir(p):
-            splash.save(os.path.join(p, "splash.png"))
-    print("splash.png 已覆盖各 density 目录")
-    # adaptive XML
-    os.makedirs(os.path.join(RES, "mipmap-anydpi-v26"), exist_ok=True)
-    xml = ('<?xml version="1.0" encoding="utf-8"?>\n'
-           '<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">\n'
-           '    <background android:drawable="@color/ic_launcher_background"/>\n'
-           '    <foreground android:drawable="@mipmap/ic_launcher_foreground"/>\n'
-           '</adaptive-icon>\n')
-    for f in ("ic_launcher.xml", "ic_launcher_round.xml"):
-        with open(os.path.join(RES, "mipmap-anydpi-v26", f), "w", encoding="utf-8") as fh:
-            fh.write(xml)
-    # 背景色（adaptive icon 背景 = 品牌绿；模板默认 #FFFFFF 是白图标根因）
-    bg_file = os.path.join(RES, "values", "ic_launcher_background.xml")
-    with open(bg_file, "w", encoding="utf-8") as fh:
-        fh.write('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
-                 '    <color name="ic_launcher_background">#22A85A</color>\n</resources>\n')
-    print("ic_launcher_background → #22A85A ✅")
+def extract_symbol(master: Image.Image) -> Image.Image:
+    source = master.convert("RGBA")
+    output = Image.new("RGBA", source.size, (255, 255, 255, 0))
+    source_pixels = source.load()
+    output_pixels = output.load()
+
+    for y in range(source.height):
+        for x in range(source.width):
+            red, green, blue, alpha = source_pixels[x, y]
+            maximum = max(red, green, blue)
+            minimum = min(red, green, blue)
+            saturation = (maximum - minimum) / maximum if maximum else 0.0
+            white_score = clamp((0.42 - saturation) / 0.24) * clamp((maximum - 125) / 95)
+            warm_score = (
+                clamp((red - green + 30) / 75)
+                * clamp((green - blue + 20) / 100)
+                * clamp((red - 175) / 70)
+            )
+            keep = max(white_score, warm_score)
+            output_pixels[x, y] = (red, green, blue, round(alpha * keep))
+
+    alpha = output.getchannel("A").filter(ImageFilter.GaussianBlur(0.6))
+    output.putalpha(alpha)
+    bbox = alpha.point(lambda value: 255 if value > 8 else 0).getbbox()
+    if not bbox:
+        raise RuntimeError("Could not extract the foreground symbol from the app icon master")
+    return output.crop(bbox)
+
+
+def adaptive_foreground(symbol: Image.Image, size: int) -> Image.Image:
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    safe_size = round(size * 0.64)
+    symbol.thumbnail((safe_size, safe_size), Image.Resampling.LANCZOS)
+    x = (size - symbol.width) // 2
+    y = (size - symbol.height) // 2
+    canvas.alpha_composite(symbol, (x, y))
+    return canvas
+
+
+def write_launcher_assets(master: Image.Image, symbol: Image.Image) -> None:
+    for density, scale in DENSITIES.items():
+        legacy_size = round(48 * scale)
+        adaptive_size = round(108 * scale)
+        target = RES_PATH / f"mipmap-{density}"
+        target.mkdir(parents=True, exist_ok=True)
+        rounded_icon(master, legacy_size, 0.23).save(target / "ic_launcher.png", optimize=True)
+        rounded_icon(master, legacy_size, 0.5).save(target / "ic_launcher_round.png", optimize=True)
+        adaptive_foreground(symbol.copy(), adaptive_size).save(
+            target / "ic_launcher_foreground.png", optimize=True
+        )
+        print(f"[android-assets] {density}: legacy={legacy_size}px adaptive={adaptive_size}px")
+
+
+def write_splash_assets(master: Image.Image) -> None:
+    splash = master.resize((192, 192), Image.Resampling.LANCZOS)
+    for target in RES_PATH.glob("drawable*/splash.png"):
+        splash.save(target, optimize=True)
+
+
+def validate_assets() -> None:
+    for density, scale in DENSITIES.items():
+        target = RES_PATH / f"mipmap-{density}"
+        expected = {
+            "ic_launcher.png": round(48 * scale),
+            "ic_launcher_round.png": round(48 * scale),
+            "ic_launcher_foreground.png": round(108 * scale),
+        }
+        for filename, size in expected.items():
+            image = Image.open(target / filename)
+            if image.size != (size, size):
+                raise RuntimeError(f"{target / filename} has invalid dimensions {image.size}")
+            if image.mode != "RGBA":
+                raise RuntimeError(f"{target / filename} must retain an alpha channel")
+
+
+def main() -> None:
+    master = load_master()
+    symbol = extract_symbol(master)
+    write_launcher_assets(master, symbol)
+    write_splash_assets(master)
+    validate_assets()
+
+    background_xml = RES_PATH / "values" / "ic_launcher_background.xml"
+    background_xml.write_text(
+        '<?xml version="1.0" encoding="utf-8"?>\n'
+        '<resources>\n'
+        '    <color name="ic_launcher_background">#22A85A</color>\n'
+        '</resources>\n',
+        encoding="utf-8",
+    )
+    print(f"[android-assets] Generated from {MASTER_PATH}")
+
 
 if __name__ == "__main__":
     main()

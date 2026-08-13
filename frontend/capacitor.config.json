@@ -2,9 +2,19 @@
   "appId": "com.shike.app",
   "appName": "食刻",
   "webDir": "dist-apk",
+  "server": {
+    "hostname": "localhost",
+    "androidScheme": "https"
+  },
   "plugins": {
     "CapacitorHttp": {
       "enabled": true
+    },
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "launchShowDuration": 1200,
+      "backgroundColor": "#22A85AFF",
+      "showSpinner": false
     }
   }
 }
