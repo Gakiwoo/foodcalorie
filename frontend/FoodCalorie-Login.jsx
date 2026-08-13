@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from './src/api/auth';
+import { StatusBar } from './src/ui/common';
 
 // 登录页（真实表单）：邮箱账号密码方式，对接服务器 gakiwoo-api /api/auth/login
 export default function FoodCalorieLogin() {
@@ -50,15 +51,7 @@ export default function FoodCalorieLogin() {
         flexDirection: 'column',
         alignItems: 'stretch'
       }}>
-      {/* 状态栏 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px 8px' }}>
-        <span style={{ fontSize: 15, fontWeight: 600, color: '#1A1A1A' }}>9:41</span>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <i className="fas fa-signal" style={{ fontSize: 14, color: '#1A1A1A' }} />
-          <i className="fas fa-wifi" style={{ fontSize: 14, color: '#1A1A1A' }} />
-          <i className="fas fa-battery-full" style={{ fontSize: 14, color: '#1A1A1A' }} />
-        </div>
-      </div>
+      <StatusBar />
 
       {/* Logo 区 */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '28px 0 20px', gap: 10 }}>

@@ -1,19 +1,9 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from './src/ui/toast';
+import { NavBar, StatusBar } from './src/ui/common';
 
 // 关于我们页：静态内容（数据驱动重构，原 749 行重复 JSX → 数据渲染）
-// 视觉保持设计稿：Logo 渐变圆 / 统计三卡 / 功能列表 / 链接行 / 页脚
-const ICON = {
-  signal: './asset/icons/svg_dafe2afa.svg',
-  wifi: './asset/icons/svg_7d24f493.svg',
-  battery: './asset/icons/svg_c23974ea.svg',
-  back: './asset/icons/svg_e5121903.svg',
-  logo: './asset/icons/svg_acabd864.svg',
-  feat: './asset/icons/svg_42ba747e.svg',
-  arrow: './asset/icons/svg_a35c487a.svg',
-  update: './asset/icons/svg_820a89e2.svg'
-};
+// 视觉保持设计稿：Logo 渐变圆 / 统计三卡 / 功能列表 / 链接行 / 页脚。
 
 const STATS = [
   { val: '128', label: '已记录餐', color: '#34C759' },
@@ -34,39 +24,26 @@ const LINKS = [
   { key: 'contact', text: '联系我们', action: () => toast('联系我们：hello@shike.app') }
 ];
 
+const APP_VERSION = '1.0.2';
+const APP_BUILD = '20260813';
+
 const cardStyle = { width: '100%', background: '#FFFFFF', borderRadius: 16, boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)' };
 const dividerStyle = { width: 'calc(100% - 32px)', height: 1, background: '#EEF0F2', marginLeft: 16 };
 
 export default function FoodCalorieAbout() {
-  const navigate = useNavigate();
-
   return (
     <div data-name="FoodCalorie-About" style={{ width: '100%', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#F7F8FA' }}>
-      {/* 状态栏（设计稿固定样式） */}
-      <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px 8px' }}>
-        <span style={{ color: '#1A1A1A', fontSize: 15, fontWeight: 600 }}>9:41</span>
-        <div style={{ display: 'flex', gap: 6 }}>
-          {[ICON.signal, ICON.wifi, ICON.battery].map((s, i) => (
-            <img key={i} src={s} style={{ width: 14, height: 14 }} alt="" />
-          ))}
-        </div>
-      </div>
-
-      {/* 顶部导航 */}
-      <div style={{ width: '100%', display: 'flex', alignItems: 'center', padding: '10px 20px' }}>
-        <img src={ICON.back} style={{ width: 22, height: 22, cursor: 'pointer' }} alt="返回" onClick={() => navigate(-1)} />
-        <p style={{ flex: 1, textAlign: 'center', color: '#1A1A1A', fontSize: 18, fontWeight: 700, margin: 0 }}>关于我们</p>
-        <div style={{ width: 22, height: 22 }} />
-      </div>
+      <StatusBar />
+      <NavBar title="关于我们" />
 
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12, padding: '4px 20px 8px' }}>
         {/* Logo + 版本 */}
         <div style={{ ...cardStyle, borderRadius: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '24px 20px' }}>
           <div style={{ width: 80, height: 80, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #34C759 0%, #22A85A 100%)', borderRadius: 40 }}>
-            <img src={ICON.logo} style={{ width: 36, height: 36 }} alt="食刻" />
+            <i className="fas fa-utensils" style={{ color: '#FFFFFF', fontSize: 34 }} aria-hidden="true" />
           </div>
           <span style={{ color: '#1A1A1A', fontSize: 24, fontWeight: 700 }}>食刻</span>
-          <span style={{ color: '#9CA3AF', fontSize: 12 }}>Version 1.0.0 · Build 20260805</span>
+          <span style={{ color: '#9CA3AF', fontSize: 12 }}>Version {APP_VERSION} · Build {APP_BUILD}</span>
         </div>
 
         {/* 简介 */}
@@ -91,7 +68,7 @@ export default function FoodCalorieAbout() {
           <span style={{ color: '#1A1A1A', fontSize: 15, fontWeight: 700 }}>核心功能</span>
           {FEATURES.map((f) => (
             <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <img src={ICON.feat} style={{ width: 14, height: 14 }} alt="" />
+              <i className="fas fa-circle-check" style={{ color: '#34C759', fontSize: 13 }} aria-hidden="true" />
               <span style={{ color: '#1A1A1A', fontSize: 13, fontWeight: 500 }}>{f}</span>
             </div>
           ))}
@@ -103,7 +80,7 @@ export default function FoodCalorieAbout() {
             <React.Fragment key={l.key}>
               <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', cursor: 'pointer' }} onClick={l.action}>
                 <span style={{ color: '#1A1A1A', fontSize: 14, fontWeight: 500 }}>{l.text}</span>
-                <img src={ICON.arrow} style={{ width: 12, height: 12 }} alt="" />
+                <i className="fas fa-chevron-right" style={{ color: '#C0C4CC', fontSize: 12 }} aria-hidden="true" />
               </div>
               {i < LINKS.length - 1 && <div style={dividerStyle} />}
             </React.Fragment>
@@ -111,8 +88,8 @@ export default function FoodCalorieAbout() {
         </div>
 
         {/* 检查更新 */}
-        <div style={{ width: '100%', height: 44, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, background: '#F7F8FA', borderRadius: 14, cursor: 'pointer' }} onClick={() => toast('已是最新版本 v1.0.0')}>
-          <img src={ICON.update} style={{ width: 14, height: 14 }} alt="" />
+        <div style={{ width: '100%', height: 44, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 6, background: '#F7F8FA', borderRadius: 14, cursor: 'pointer' }} onClick={() => toast(`已是最新版本 v${APP_VERSION}`)}>
+          <i className="fas fa-arrows-rotate" style={{ color: '#22A85A', fontSize: 13 }} aria-hidden="true" />
           <span style={{ color: '#22A85A', fontSize: 14, fontWeight: 600 }}>检查更新</span>
         </div>
       </div>

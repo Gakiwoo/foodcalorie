@@ -1,19 +1,31 @@
-// 共享 UI 组件：状态栏 / 顶部导航 / 底部导航 / 进度环 / 分段控件
+// 共享 UI 组件：原生系统栏 / 顶部导航 / 底部导航 / 进度环 / 分段控件
 // 视觉规范：页面背景 #F7F8FA、主题绿 #34C759、卡片白色圆角 16px
-import React from 'react';
+import React, { useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar as NativeStatusBar, Style } from '@capacitor/status-bar';
 import { useNavigate } from 'react-router-dom';
 
-export function StatusBar() {
-  return (
-    <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px 8px' }}>
-      <span style={{ fontSize: 15, fontWeight: 600, color: '#1A1A1A' }}>9:41</span>
-      <div style={{ display: 'flex', gap: 6 }}>
-        <i className="fas fa-signal" style={{ fontSize: 13, color: '#1A1A1A' }} />
-        <i className="fas fa-wifi" style={{ fontSize: 13, color: '#1A1A1A' }} />
-        <i className="fas fa-battery-full" style={{ fontSize: 13, color: '#1A1A1A' }} />
-      </div>
-    </div>
-  );
+const SYSTEM_BAR_APPEARANCE = {
+  light: { style: Style.Light, backgroundColor: '#F7F8FA' },
+  dark: { style: Style.Dark, backgroundColor: '#0F0F0F' }
+};
+
+// Native chrome belongs to Android/iOS. Configure it without rendering a fake clock,
+// network indicator or battery icon into the document.
+export function StatusBar({ appearance = 'light' }) {
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const options = SYSTEM_BAR_APPEARANCE[appearance] || SYSTEM_BAR_APPEARANCE.light;
+    void Promise.allSettled([
+      NativeStatusBar.show(),
+      NativeStatusBar.setOverlaysWebView({ overlay: false }),
+      NativeStatusBar.setStyle({ style: options.style }),
+      NativeStatusBar.setBackgroundColor({ color: options.backgroundColor })
+    ]);
+  }, [appearance]);
+
+  return null;
 }
 
 export function NavBar({ title, right, onBack }) {
@@ -28,6 +40,29 @@ export function NavBar({ title, right, onBack }) {
       <p style={{ flex: 1, textAlign: 'center', fontSize: 17, fontWeight: 700, color: '#1A1A1A', margin: 0 }}>{title}</p>
       <div style={{ width: 32, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>{right}</div>
     </div>
+  );
+}
+
+export function ToggleSwitch({ checked, label }) {
+  return (
+    <span
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      style={{
+        width: 42,
+        height: 24,
+        padding: 2,
+        borderRadius: 12,
+        background: checked ? '#34C759' : '#D1D5DB',
+        display: 'flex',
+        justifyContent: checked ? 'flex-end' : 'flex-start',
+        alignItems: 'center',
+        flexShrink: 0,
+        transition: 'background .2s ease'
+      }}>
+      <span style={{ width: 20, height: 20, borderRadius: 10, background: '#FFFFFF', boxShadow: '0 1px 3px rgba(0,0,0,.18)' }} />
+    </span>
   );
 }
 

@@ -15,6 +15,11 @@
       "launchShowDuration": 1200,
       "backgroundColor": "#22A85AFF",
       "showSpinner": false
+    },
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "LIGHT",
+      "backgroundColor": "#F7F8FA"
     }
   }
 }

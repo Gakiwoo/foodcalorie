@@ -64,7 +64,7 @@ export default function FoodCalorieCamera() {
 
   return (
     <div data-name="FoodCalorie-Camera" style={{ width: '100%', minHeight: '100dvh', background: '#111827', display: 'flex', flexDirection: 'column', alignItems: 'stretch', overflow: 'hidden' }}>
-      <StatusBar />
+      <StatusBar appearance="dark" />
       <NavBar title="拍照识别" right={<i className="fas fa-bolt" style={{ fontSize: 15, color: '#fff' }} />} />
       <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFile} />
 

@@ -1,4 +1,5 @@
 import { build } from 'vite'
+import { verifyApkAssets } from './verify-apk-assets.mjs'
 
 const DEFAULT_API_ORIGIN = 'https://foodcalorie.gakiwoo.com'
 
@@ -17,4 +18,5 @@ await build({
   },
 })
 
+await verifyApkAssets()
 console.log(`[android] Embedded API origin: ${apiOrigin.origin}`)
