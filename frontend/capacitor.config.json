@@ -1,5 +1,5 @@
 {
   "appId": "com.shike.app",
   "appName": "食刻",
-  "webDir": "dist"
+  "webDir": "dist-apk"
 }
