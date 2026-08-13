@@ -8,7 +8,7 @@
     "build": "vite build",
     "build:apk": "node scripts/build-apk.mjs",
     "verify:apk-assets": "node scripts/verify-apk-assets.mjs",
-    "android:assets": "python scripts/gen-icons.py",
+    "android:assets": "node scripts/gen-app-icon.mjs",
     "lint": "eslint .",
     "test": "vitest run",
     "preview": "vite preview"

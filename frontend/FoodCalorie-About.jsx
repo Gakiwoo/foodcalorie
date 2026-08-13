@@ -1,6 +1,7 @@
 import React from 'react';
 import { toast } from './src/ui/toast';
 import { NavBar, StatusBar } from './src/ui/common';
+import designLogoSymbol from './assets/brand/design-logo-symbol.svg';
 
 // 关于我们页：静态内容（数据驱动重构，原 749 行重复 JSX → 数据渲染）
 // 视觉保持设计稿：Logo 渐变圆 / 统计三卡 / 功能列表 / 链接行 / 页脚。
@@ -24,7 +25,7 @@ const LINKS = [
   { key: 'contact', text: '联系我们', action: () => toast('联系我们：hello@shike.app') }
 ];
 
-const APP_VERSION = '1.0.2';
+const APP_VERSION = '1.0.3';
 const APP_BUILD = '20260813';
 
 const cardStyle = { width: '100%', background: '#FFFFFF', borderRadius: 16, boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)' };
@@ -40,7 +41,7 @@ export default function FoodCalorieAbout() {
         {/* Logo + 版本 */}
         <div style={{ ...cardStyle, borderRadius: 20, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: '24px 20px' }}>
           <div style={{ width: 80, height: 80, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'linear-gradient(135deg, #34C759 0%, #22A85A 100%)', borderRadius: 40 }}>
-            <i className="fas fa-utensils" style={{ color: '#FFFFFF', fontSize: 34 }} aria-hidden="true" />
+            <img src={designLogoSymbol} width="36" height="36" alt="" aria-hidden="true" />
           </div>
           <span style={{ color: '#1A1A1A', fontSize: 24, fontWeight: 700 }}>食刻</span>
           <span style={{ color: '#9CA3AF', fontSize: 12 }}>Version {APP_VERSION} · Build {APP_BUILD}</span>

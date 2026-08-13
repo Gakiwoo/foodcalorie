@@ -5,6 +5,10 @@ const configPath = new URL('../../capacitor.config.json', import.meta.url)
 const androidBuildPath = new URL('../../android/app/build.gradle', import.meta.url)
 const androidStringsPath = new URL('../../android/app/src/main/res/values/strings.xml', import.meta.url)
 const androidStylesPath = new URL('../../android/app/src/main/res/values/styles.xml', import.meta.url)
+const launcherPath = new URL('../../android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml', import.meta.url)
+const launcherForegroundPath = new URL('../../android/app/src/main/res/drawable-v24/ic_launcher_foreground.xml', import.meta.url)
+const brandSourcePath = new URL('../../assets/brand/app-icon-source.svg', import.meta.url)
+const aboutPagePath = new URL('../../FoodCalorie-About.jsx', import.meta.url)
 const indexPath = new URL('../../index.html', import.meta.url)
 
 describe('Capacitor native networking', () => {
@@ -26,8 +30,8 @@ describe('Capacitor native networking', () => {
     const strings = readFileSync(androidStringsPath, 'utf8')
 
     expect(build).toMatch(/applicationId "com\.shike\.app"/)
-    expect(build).toMatch(/versionCode 3/)
-    expect(build).toMatch(/versionName "1\.0\.2"/)
+    expect(build).toMatch(/versionCode 4/)
+    expect(build).toMatch(/versionName "1\.0\.3"/)
     expect(strings).toContain('<string name="app_name">食刻</string>')
     expect(strings).toContain('<string name="title_activity_main">食刻</string>')
   })
@@ -39,5 +43,19 @@ describe('Capacitor native networking', () => {
     expect(styles).toContain('android:windowOptOutEdgeToEdgeEnforcement')
     expect(styles).toContain('android:windowLightStatusBar')
     expect(index).toContain('viewport-fit=cover')
+  })
+
+  it('uses the exact utensils mark from the product design for the launcher icon', () => {
+    const launcher = readFileSync(launcherPath, 'utf8')
+    const foreground = readFileSync(launcherForegroundPath, 'utf8')
+    const brandSource = readFileSync(brandSourcePath, 'utf8')
+    const aboutPage = readFileSync(aboutPagePath, 'utf8')
+
+    expect(launcher).toContain('@drawable/ic_launcher_foreground')
+    expect(foreground).toContain('M5.0554,1.0127')
+    expect(brandSource).toContain('About 页面 logo-circle 和 logo-icon')
+    expect(brandSource).toContain('#34C759')
+    expect(brandSource).toContain('#22A85A')
+    expect(aboutPage).toContain("./assets/brand/design-logo-symbol.svg")
   })
 })

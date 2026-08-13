@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate deterministic Android launcher and splash assets from the brand master."""
+"""Generate deterministic Android launcher and splash assets from the rendered design master."""
 
 from pathlib import Path
 
@@ -132,7 +132,7 @@ def main() -> None:
         '</resources>\n',
         encoding="utf-8",
     )
-    print(f"[android-assets] Generated from {MASTER_PATH}")
+    print(f"[android-assets] Generated from design master {MASTER_PATH}")
 
 
 if __name__ == "__main__":
