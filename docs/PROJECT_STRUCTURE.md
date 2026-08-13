@@ -55,6 +55,7 @@ WorkBuddy/2026-08-05-10-22-23/
 |------|------|
 | `src/api/client.js` | 封装的 http 客户端（token 注入 / 统一错误 / 401 跳转） |
 | `src/api/auth.js` | 认证辅助（登出等） |
+| `capacitor.config.json` | Android 容器配置；启用 CapacitorHttp，以原生 Cookie 管理器承载 httpOnly 登录会话 |
 | `src/ui/common.jsx` | 通用 UI：StatusBar / NavBar / Card / Seg / 环形进度等 |
 | `src/ui/toast.js` | Toast 提示 + `nowDateTime()` 时间格式化 |
 
