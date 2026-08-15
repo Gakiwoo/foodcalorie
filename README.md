@@ -162,11 +162,11 @@ bash frontend/scripts/build-apk.sh assembleRelease   # → frontend/dist/foodcal
 bash frontend/scripts/build-apk.sh assembleDebug     # → frontend/dist/foodcalorie-debug.apk
 ```
 
-> APK 构建自动注入 `VITE_API_BASE=https://foodcalorie.gakiwoo.com/api`、相对路径资源与 es2015 目标（兼容 Android 5.1+ WebView）；签名使用 `C:/fc-release.keystore`（CN=Shike）。
+> APK 构建自动注入 `VITE_API_BASE=https://foodcalorie.gakiwoo.com/api`、相对路径资源与 es2015 目标（兼容 Android 5.1+ WebView）；签名凭据由环境变量注入（`FC_RELEASE_*`，无凭据时跳过签名）。
 
 ## 部署
 
-生产拓扑：阿里云 ECS（`root@123.57.102.126`）· PM2（`foodcalorie-api`，监听 `127.0.0.1:3001`）· nginx 独立子域 `https://foodcalorie.gakiwoo.com`（前端静态 + `/api/v1/foodcalorie/*` 反代 + `/uploads/` 静态）。
+生产拓扑：阿里云 ECS（`root@<生产服务器>`，见内部部署文档）· PM2（`foodcalorie-api`，监听 `127.0.0.1:3001`）· nginx 独立子域 `https://foodcalorie.gakiwoo.com`（前端静态 + `/api/v1/foodcalorie/*` 反代 + `/uploads/` 静态）。
 
 标准发布流程（详见 [`backend/README.md`](./backend/README.md) 与 [`docs/README.md`](./docs/README.md)）：
 
