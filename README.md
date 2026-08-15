@@ -12,10 +12,20 @@
 ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-success.svg)
 ![Tests](https://img.shields.io/badge/tests-38%20backend%20%2B%20E2E-brightgreen)
 
+## 预览
+
+| 首页（今日摄入） | 我的页（数据/设置） |
+| :---: | :---: |
+| ![Home](./docs/images/home.png) | ![Me](./docs/images/me.png) |
+| **记录页** | **发现页** |
+| ![Records](./docs/images/records.png) | ![Discover](./docs/images/discover.png) |
+
 ## Table of Contents
 
+- [预览](#预览)
 - [功能特性](#功能特性)
 - [技术栈](#技术栈)
+- [架构](#架构)
 - [目录结构](#目录结构)
 - [多端仓库](#多端仓库)
 - [前置条件](#前置条件)
@@ -49,6 +59,47 @@
 | 认证 | 与 gakiwoo-api 共享 users 表 + JWT_SECRET（`/api/auth/*` 复用，token 互通） |
 | AI | Moonshot Kimi 视觉模型（可降级） |
 | 部署 | 阿里云 ECS · PM2 · nginx 独立子域（`https://foodcalorie.gakiwoo.com`）· GitHub Actions CI |
+
+## 架构
+
+```mermaid
+flowchart LR
+  subgraph Client["客户端"]
+    Web["Web SPA<br/>Vite + React 18"]
+    APK["Android APK<br/>Capacitor 7"]
+  end
+  subgraph Frontend["前端（同一份代码）"]
+    Vite["dist/<br/>base './'<br/>es2015"]
+  end
+  subgraph Backend["后端 Express 4 · 127.0.0.1:3001"]
+    App["app.js<br/>限流·魔数·trust proxy·6 段错误码"]
+    Mods["9 模块<br/>ai · challenges · contents<br/>export · favorites · foods<br/>health · profiles · records"]
+    DB[("SQLite<br/>better-sqlite3")]
+  end
+  subgraph Auth["gakiwoo-api :3000"]
+    Users[("users / JWT")]
+    AuthAPI["/api/auth/*"]
+  end
+  subgraph AI["Moonshot Kimi"]
+    Kimi["视觉模型<br/>moonshot-v1-8k-vision-preview"]
+  end
+  subgraph Deploy["生产（阿里云 ECS）"]
+    Nginx["nginx<br/>foodcalorie.gakiwoo.com"]
+    PM2["PM2<br/>foodcalorie-api"]
+  end
+  subgraph CI["GitHub Actions"]
+    Tests["lint + 单测 + 依赖审计 + APK 构建"]
+  end
+
+  Web --> Vite --> Nginx --> PM2 --> App
+  APK --> Vite
+  App --> Mods --> DB
+  Mods <-->|鉴权| AuthAPI
+  Mods <-->|共享 users| Users
+  Mods -->|拍照识别| Kimi
+  CI -->|测试 APK 构建| Web
+  CI -->|单测 lint| Mods
+```
 
 ## 目录结构
 
