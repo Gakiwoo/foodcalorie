@@ -45,7 +45,5 @@ function createRateLimit(limit, windowMs, keyFn) {
   }
 }
 
-// 登录限流：按 email，5 次 / 5 分钟（与 gakiwoo-api loginThrottle 对齐）
-const loginThrottle = createRateLimit(5, 5 * 60 * 1000, (req) => `login:${(req.body?.email || '').toLowerCase().trim()}`)
-
-module.exports = { createRateLimit, loginThrottle, clientIp }
+// 登录限流由 gakiwoo-api 侧处理（食刻复用其 /api/auth/*），此处无登录路由，不再定义 loginThrottle
+module.exports = { createRateLimit, clientIp }

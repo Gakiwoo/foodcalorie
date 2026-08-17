@@ -31,8 +31,6 @@ export default function FoodCalorieRecordsMonth() {
   const [y, m] = month.split('-').map(Number);
   const totalDays = new Date(y, m, 0).getDate();
   const firstDow = new Date(y, m - 1, 1).getDay(); // 0=周日
-  const today = new Date();
-  const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   const total = Object.values(days).reduce((s, v) => s + v, 0);
   // 日均分母：当前月取"今天与月末的较小者"，未来日期不计入，避免月中查看时日均被系统性低估
   const isCurrentMonth = todayStr().slice(0, 7) === month;
