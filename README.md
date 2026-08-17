@@ -10,7 +10,7 @@
 ![Express](https://img.shields.io/badge/Express-4-000000.svg)
 ![Android](https://img.shields.io/badge/Android-Capacitor%207-3ddc84.svg)
 ![CI](https://img.shields.io/badge/CI-GitHub%20Actions-success.svg)
-![Tests](https://img.shields.io/badge/tests-38%20backend%20%2B%20E2E-brightgreen)
+![Tests](https://img.shields.io/badge/tests-45%20backend%20%2B%20E2E-brightgreen)
 
 ## 预览
 
@@ -116,7 +116,7 @@ foodcalorie/
 ├── backend/                  # Express 分层（Controller/Service/DAO）
 │   ├── src/modules/          # 9 模块：ai/challenges/contents/export/favorites/foods/health/profiles/records
 │   ├── src/shared/           # 限流/错误码/中间件
-│   ├── test/                 # node:test 单测（38 用例）
+│   ├── test/                 # node:test 单测（45 用例）
 │   ├── .env.example          # 环境变量模板
 │   ├── SPEC.md               # 需求规格
 │   └── ASSESSMENT.md         # 完成度评估与遗留项
@@ -187,7 +187,7 @@ npm run dev                 # vite dev，/api/* 自动代理到服务器
 ## 测试
 
 ```bash
-# 后端单测（38 用例，需 Node 24）
+# 后端单测（45 用例，需 Node 24）
 cd backend && npm test
 
 # 前端单元（vitest）
@@ -232,6 +232,7 @@ bash frontend/scripts/build-apk.sh assembleDebug     # → frontend/dist/foodcal
 - [`docs/pages-inventory.md`](./docs/pages-inventory.md) — 前端页面清单（路由/组件）
 - [`backend/SPEC.md`](./backend/SPEC.md) — 原始需求规格
 - [`backend/ASSESSMENT.md`](./backend/ASSESSMENT.md) — 完成度评估与遗留项
+- [`docs/bugfix-2026-08-17.md`](./docs/bugfix-2026-08-17.md) — 全栈 Bug 诊断与修复报告（13 处修复 + 7 回归用例）
 - [`ops/`](./ops/) — nginx / sshd 运维配置
 
 ## Contributing
