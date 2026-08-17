@@ -87,7 +87,14 @@ export default function App() {
 
   useEffect(() => {
     const s = stackRef.current;
-    if (s[s.length - 1] !== location.pathname) s.push(location.pathname);
+    // 模拟原生导航栈：目标页已在栈中时截断到该位置（而非重复 push），
+    // 避免 Tab 反复切换后栈内堆积重复项、返回键在相同页面间打转
+    const existing = s.lastIndexOf(location.pathname);
+    if (existing >= 0) {
+      s.length = existing + 1;
+    } else {
+      s.push(location.pathname);
+    }
   }, [location.pathname]);
 
   function goBack() {

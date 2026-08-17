@@ -6,6 +6,7 @@ const { z } = require('zod')
 const { validate } = require('../../shared/middleware/validate')
 const { requireAuth } = require('../../shared/middleware/requireAuth')
 const { ok } = require('../../shared/utils/response')
+const { isValidCnDate } = require('../../shared/utils/date')
 const service = require('./service')
 
 const router = express.Router()
@@ -13,7 +14,7 @@ const router = express.Router()
 const exportQuery = z.object({
   format: z.enum(['csv', 'json']).optional().default('csv'),
   range: z.enum(['day', 'week', 'month', 'all']).optional().default('all'),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional()
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(isValidCnDate, 'date 必须是合法日历日').optional()
 })
 
 /**

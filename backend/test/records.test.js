@@ -135,6 +135,45 @@ test('月历 calendar', async () => {
   assert.ok(res.body.data.days.some((d) => d.day === 5))
 })
 
+// ── 2026-08-17 回归：非法月份/日期必须 400，不得 500（原 2026-13 触发 NaN → RangeError）──
+test('月历非法月份 month=2026-13 → 400 code=10001（不 500）', async () => {
+  const res = await request(app)
+    .get('/api/v1/foodcalorie/records/calendar?month=2026-13')
+    .set('Authorization', `Bearer ${token}`)
+  assert.strictEqual(res.status, 400)
+  assert.strictEqual(res.body.code, 10001)
+})
+
+test('月历月份带 00 → 400', async () => {
+  const res = await request(app)
+    .get('/api/v1/foodcalorie/records/calendar?month=2026-00')
+    .set('Authorization', `Bearer ${token}`)
+  assert.strictEqual(res.status, 400)
+})
+
+test('stats 不存在的日历日 2026-02-30 → 400（原被 Date 静默回滚到 3 月）', async () => {
+  const res = await request(app)
+    .get('/api/v1/foodcalorie/records/stats?range=day&date=2026-02-30')
+    .set('Authorization', `Bearer ${token}`)
+  assert.strictEqual(res.status, 400)
+  assert.strictEqual(res.body.code, 10001)
+})
+
+test('导出非法日期 2027-02-29（非闰年）→ 400', async () => {
+  const res = await request(app)
+    .post('/api/v1/foodcalorie/export?range=day&date=2027-02-29')
+    .set('Authorization', `Bearer ${token}`)
+  assert.strictEqual(res.status, 400)
+  assert.strictEqual(res.body.code, 10001)
+})
+
+test('按日期查询非法日历日 → 400', async () => {
+  const res = await request(app)
+    .get('/api/v1/foodcalorie/records?date=2026-02-31')
+    .set('Authorization', `Bearer ${token}`)
+  assert.strictEqual(res.status, 400)
+})
+
 test('删除记录 → 200，再查 → 不存在', async () => {
   const list = await request(app)
     .get('/api/v1/foodcalorie/records?date=2026-08-05')

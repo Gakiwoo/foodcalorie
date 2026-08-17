@@ -14,10 +14,10 @@ export default function FoodCalorieMe() {
 
   useEffect(() => {
     (async () => {
-      // 用户信息
+      // 用户信息（fetchMe 已返回 user 对象，直接使用）
       try {
         const me = await fetchMe();
-        setUser(me.user);
+        setUser(me);
       } catch {
         setAuthed(false);
       }

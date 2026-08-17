@@ -11,17 +11,21 @@ export default function FoodCalorieRecordsWeek() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  async function loadStats() {
+    setLoading(true);
+    setError('');
+    try {
+      const r = await http.get('/api/v1/foodcalorie/records/stats', { range: 'week' });
+      setStats(r.data);
+    } catch (e) {
+      setError(e.message || '加载失败，请检查登录状态');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   useEffect(() => {
-    (async () => {
-      try {
-        const r = await http.get('/api/v1/foodcalorie/records/stats', { range: 'week' });
-        setStats(r.data);
-      } catch (e) {
-        setError(e.message || '加载失败，请检查登录状态');
-      } finally {
-        setLoading(false);
-      }
-    })();
+    loadStats();
   }, []);
 
   if (loading) return <div style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="周记录" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;
@@ -32,7 +36,7 @@ export default function FoodCalorieRecordsWeek() {
         <StatusBar /><NavBar title="本周记录" />
         <div style={{ padding: 40, textAlign: 'center', color: '#E03131', fontSize: 14 }}>
           {error}
-          <div style={{ marginTop: 12 }}><button onClick={() => location.reload()} style={{ padding: '8px 24px', borderRadius: 12, border: 'none', background: '#34C759', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>重试</button></div>
+          <div style={{ marginTop: 12 }}><button onClick={loadStats} style={{ padding: '8px 24px', borderRadius: 12, border: 'none', background: '#34C759', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>重试</button></div>
         </div>
       </div>
     );

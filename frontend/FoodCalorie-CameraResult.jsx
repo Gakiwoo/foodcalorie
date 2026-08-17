@@ -96,7 +96,7 @@ export default function FoodCalorieCameraResult() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>{c.name} <span style={{ fontSize: 10, color: '#9CA3AF', fontWeight: 400 }}>{c.category}</span></div>
-                <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{c.unit_desc} · 推荐度 {Math.round(c.confidence * 100)}%</div>
+                <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{c.unit_desc} · 推荐度 {Math.round((c.confidence ?? 0) * 100)}%</div>
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#E8590C' }}>{c.calories}<span style={{ fontSize: 10, fontWeight: 400, color: '#9CA3AF' }}> kcal</span></div>
               {on && <i className="fas fa-circle-check" style={{ fontSize: 16, color: '#34C759' }} />}

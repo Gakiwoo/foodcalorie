@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
-import { toast } from './src/ui/toast';
+import { toast, todayStr } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
 
 // 月视图：真实数据（GET calendar?month= 每日摄入点 + 月份切换 + 点某天进记录页）
@@ -34,7 +34,10 @@ export default function FoodCalorieRecordsMonth() {
   const today = new Date();
   const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
   const total = Object.values(days).reduce((s, v) => s + v, 0);
-  const avg = totalDays ? Math.round(total / totalDays) : 0;
+  // 日均分母：当前月取"今天与月末的较小者"，未来日期不计入，避免月中查看时日均被系统性低估
+  const isCurrentMonth = todayStr().slice(0, 7) === month;
+  const elapsedDays = isCurrentMonth ? Number(todayStr().slice(8, 10)) : totalDays;
+  const avg = elapsedDays > 0 ? Math.round(total / elapsedDays) : 0;
 
   function shiftMonth(delta) {
     const d = new Date(y, m - 1 + delta, 1);

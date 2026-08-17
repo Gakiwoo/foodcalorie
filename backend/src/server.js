@@ -50,7 +50,7 @@ installProcessHandlers()
 
 const app = createApp()
 const server = app.listen(PORT, HOST, () => {
-  logger.info(`foodcalorie-api 已启动: http://${HOST}:${PORT}/api/v1/health`)
+  logger.info(`foodcalorie-api 已启动: http://${HOST}:${PORT}/api/v1/foodcalorie/health`)
 })
 
 module.exports = { app, server }

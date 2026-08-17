@@ -108,6 +108,24 @@ async function refreshSession() {
   }
 }
 
+// 401 单飞（single-flight）：并发请求同时 401 时只触发一次刷新，
+// 避免多次 refresh 竞争（若服务端轮换 refresh cookie，后发的刷新会失败导致误踢下线）
+let refreshInFlight = null
+function refreshSessionOnce() {
+  if (!refreshInFlight) {
+    refreshInFlight = refreshSession().finally(() => {
+      refreshInFlight = null
+    })
+  }
+  return refreshInFlight
+}
+
+// 登录/注册页豁免判断：兼容 BrowserRouter（pathname）与 APK HashRouter（hash）
+function onAuthPage(location = window.location) {
+  const p = (location.pathname || '') + (location.hash || '')
+  return /\/(login|register)([/?#]|$)/.test(p)
+}
+
 /**
  * 统一请求封装
  * @param {string} path 以 /api 开头的相对路径（或绝对 URL）
@@ -126,19 +144,18 @@ export async function apiClient(path, options = {}) {
   const url = resolveUrl(path)
   let resp = await fetch(url, { ...fetchOptions, headers, credentials: 'include' })
 
-  // 401 → 尝试 refresh 一次
+  // 401 → 尝试 refresh 一次（单飞，并发共享同一次刷新）
   if (resp.status === 401 && !_retried) {
-    const ok = await refreshSession()
+    const hadSession = !!(tokenStore.getAccess() || tokenStore.getRefresh())
+    const ok = await refreshSessionOnce()
     if (ok) {
       return apiClient(path, { ...options, _retried: true })
     }
     tokenStore.clear()
-    // 刷新失败（未登录/登录过期）：统一跳转登录页（豁免登录/注册页避免循环）
-    if (typeof window !== 'undefined') {
-      const p = window.location.pathname
-      if (!p.endsWith('/login') && !p.endsWith('/register')) {
-        redirectToLogin()
-      }
+    // 仅"曾登录过但会话已失效"的用户跳转登录页；
+    // 游客（从未登录，无任何 token）直接抛 401 由页面渲染游客视图，避免整页跳转打断浏览
+    if (hadSession && typeof window !== 'undefined' && !onAuthPage()) {
+      redirectToLogin()
     }
   }
 

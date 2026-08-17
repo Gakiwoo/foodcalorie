@@ -14,20 +14,24 @@ export default function FoodCalorieSearch() {
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
   const timer = useRef(null);
+  const seq = useRef(0); // 请求序号守卫：仅最新一次请求的结果允许写入 state
 
   useEffect(() => {
     clearTimeout(timer.current);
     if (!keyword.trim()) { setResults([]); setSearched(false); return; }
+    const current = ++seq.current;
     timer.current = setTimeout(async () => {
       setLoading(true);
       try {
         const r = await http.get('/api/v1/foodcalorie/foods', { keyword: keyword.trim(), pageSize: 30 });
+        if (current !== seq.current) return; // 已有更新的关键词，丢弃过期响应
         setResults(r.data.list);
         setSearched(true);
       } catch (e) {
+        if (current !== seq.current) return;
         toast(e.message || '搜索失败');
       } finally {
-        setLoading(false);
+        if (current === seq.current) setLoading(false);
       }
     }, 350);
     return () => clearTimeout(timer.current);

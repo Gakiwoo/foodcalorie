@@ -24,4 +24,13 @@ function tsToCnDate(ts) {
   return new Date(ts + CN_OFFSET_MS).toISOString().slice(0, 10)
 }
 
-module.exports = { cnToday, cnYesterday, cnDateTs, tsToCnDate }
+/** 'YYYY-MM-DD' 是否为真实存在的日历日（拦截 2026-02-31 这类会被 Date 静默回滚的输入） */
+function isValidCnDate(date) {
+  if (typeof date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return false
+  const [y, m, d] = date.split('-').map(Number)
+  if (m < 1 || m > 12 || d < 1) return false
+  const lastDay = new Date(Date.UTC(y, m, 0)).getUTCDate()
+  return d <= lastDay
+}
+
+module.exports = { cnToday, cnYesterday, cnDateTs, tsToCnDate, isValidCnDate }

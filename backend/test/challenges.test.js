@@ -29,6 +29,13 @@ function cnYesterday() {
 const UID = 90001
 const CID = () => getDb().prepare('SELECT id FROM challenges WHERE user_id IS NULL LIMIT 1').get().id
 
+// 种子挑战的 start/end 可能早于当前日期：窗口校验上线后需把窗口拉长到覆盖今天，
+// 原打卡/streak 用例才可继续运行（窗口拦截本身有独立用例验证）
+test.before(() => {
+  getDb().prepare('UPDATE challenges SET start_date = ?, end_date = ? WHERE user_id IS NULL')
+    .run('2020-01-01', '2099-12-31')
+})
+
 test('首次参与挑战 → 打卡 streak=1', () => {
   const cid = CID()
   service.joinChallenge(UID, cid)
@@ -73,4 +80,22 @@ test('listChallenges 返回 streak_days 字段', () => {
   const mine = list.find((c) => c.joined)
   assert.ok(mine, '有已参与挑战')
   assert.ok('streak_days' in mine, '包含连续打卡字段')
+})
+
+// ── 2026-08-17 回归：挑战窗口校验（过期挑战不得再加入/打卡刷积分）──
+test('已结束的挑战 join → 400', () => {
+  const cid = CID()
+  getDb().prepare('UPDATE challenges SET end_date = ? WHERE id = ?').run('2020-01-01', cid)
+  assert.throws(() => service.joinChallenge(UID + 2, cid), (e) => e.status === 400)
+  // 恢复窗口供后续用例
+  getDb().prepare('UPDATE challenges SET end_date = ? WHERE id = ?').run('2099-12-31', cid)
+})
+
+test('未开始的挑战 checkIn → 400', () => {
+  const cid = CID()
+  getDb().prepare('UPDATE challenges SET start_date = ? WHERE id = ?').run('2099-01-01', cid)
+  // 先人为造一条参与记录（绕过 join 的窗口校验），验证 checkIn 层也拦截
+  getDb().prepare('INSERT OR IGNORE INTO challenge_participants (challenge_id, user_id) VALUES (?, ?)').run(cid, UID + 3)
+  assert.throws(() => service.checkInChallenge(UID + 3, cid), (e) => e.status === 400)
+  getDb().prepare('UPDATE challenges SET start_date = ? WHERE id = ?').run('2020-01-01', cid)
 })

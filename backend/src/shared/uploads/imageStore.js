@@ -103,9 +103,10 @@ function cleanupExpiredPending() {
     for (const row of expired) remove.run(row.filename, row.user_id)
   })
   tx()
+  // 逐个清理文件：单文件失败（EPERM/EBUSY 等）只记日志，不得阻断当前用户的上传流程
   for (const row of expired) {
     try { fs.unlinkSync(path.join(getUploadDir(), row.filename)) } catch (error) {
-      if (error.code !== 'ENOENT') throw error
+      if (error.code !== 'ENOENT') console.warn(`[imageStore] 清理过期图片失败 ${row.filename}: ${error.message}`)
     }
   }
 }

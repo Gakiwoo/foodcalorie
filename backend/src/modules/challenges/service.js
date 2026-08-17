@@ -2,8 +2,19 @@
 // Service 层：挑战业务（列表带我的进度 / 参与 / 每日打卡）
 const challengeRepo = require('./repositories/challengeRepo')
 const { ServiceError } = require('../../shared/utils/serviceError')
-const { NOT_FOUND, RATE_LIMITED } = require('../../shared/utils/errors')
+const { NOT_FOUND, RATE_LIMITED, PARAM_INVALID } = require('../../shared/utils/errors')
 const { cnToday, cnYesterday } = require('../../shared/utils/date')
+
+// 挑战窗口校验：今天必须落在 [start_date, end_date] 内（'YYYY-MM-DD' 字符串比较）
+function assertWithinWindow(challenge) {
+  const today = cnToday()
+  if (challenge.start_date && today < challenge.start_date) {
+    throw new ServiceError(400, PARAM_INVALID, '挑战尚未开始')
+  }
+  if (challenge.end_date && today > challenge.end_date) {
+    throw new ServiceError(400, PARAM_INVALID, '挑战已结束，无法操作')
+  }
+}
 
 // 活动列表：系统挑战 + 是否已加入 + 我的打卡进度
 function listChallenges(userId) {
@@ -28,6 +39,7 @@ function listChallenges(userId) {
 function joinChallenge(userId, challengeId) {
   const challenge = challengeRepo.getById(challengeId)
   if (!challenge) throw new ServiceError(404, NOT_FOUND)
+  assertWithinWindow(challenge)
   const { joined } = challengeRepo.join(challengeId, userId)
   return { id: challengeId, joined, message: joined ? '参与成功' : '已参与过该挑战' }
 }
@@ -37,6 +49,7 @@ function joinChallenge(userId, challengeId) {
 function checkInChallenge(userId, challengeId) {
   const challenge = challengeRepo.getById(challengeId)
   if (!challenge) throw new ServiceError(404, NOT_FOUND)
+  assertWithinWindow(challenge)
   const p = challengeRepo.getParticipation(challengeId, userId)
   if (!p) throw new ServiceError(404, NOT_FOUND, '请先参与挑战')
   const today = cnToday()

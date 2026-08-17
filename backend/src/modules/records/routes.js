@@ -6,6 +6,7 @@ const { validate } = require('../../shared/middleware/validate')
 const { requireAuth } = require('../../shared/middleware/requireAuth')
 const { ok, okPage } = require('../../shared/utils/response')
 const { ServiceError } = require('../../shared/utils/serviceError')
+const { isValidCnDate } = require('../../shared/utils/date')
 const service = require('./service')
 const profileRepo = require('../profiles/repositories/profileRepo')
 
@@ -39,19 +40,20 @@ const recordBody = z.object({
 
 const idParam = z.object({ id: z.coerce.number().int().positive() })
 const querySchema = z.object({
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(isValidCnDate, 'date 必须是合法日历日').optional(),
   meal: z.enum(MEAL_TYPES).optional(),
   page: z.coerce.number().int().min(1).optional().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).optional().default(20)
 })
 const statsQuery = z.object({
   range: z.enum(['day', 'week', 'month']).optional().default('day'),
-  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(isValidCnDate, 'date 必须是合法日历日').optional(),
   // target 不设默认值：未传时由路由读用户 profile.target_calories，service 层兜底 1400
   target: z.coerce.number().int().min(100).max(10000).optional()
 })
 const calendarQuery = z.object({
-  month: z.string().regex(/^\d{4}-\d{2}$/).optional()
+  // 月份限制 01-12：2026-13 会让 Date 得到 NaN 抛 RangeError（500）
+  month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'month 格式应为 YYYY-MM 且月份 01-12').optional()
 })
 
 /**
