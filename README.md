@@ -14,11 +14,13 @@
 
 ## 预览
 
-| 首页（今日摄入） | 我的页（数据/设置） |
+> 截图取自生产环境（2026-08-18，v1.0.4 代码，含 MasterGo 设计稿还原）。
+
+| 首页（今日记录） | 我的页（数据/设置） |
 | :---: | :---: |
-| ![Home](./docs/images/home.png) | ![Me](./docs/images/me.png) |
+| ![Home](./docs/images/home-v2.png) | ![Me](./docs/images/me-v2.png) |
 | **记录页** | **发现页** |
-| ![Records](./docs/images/records.png) | ![Discover](./docs/images/discover.png) |
+| ![Records](./docs/images/records-v2.png) | ![Discover](./docs/images/discover-v2.png) |
 
 ## Table of Contents
 
@@ -35,6 +37,7 @@
 - [测试](#测试)
 - [构建](#构建)
 - [部署](#部署)
+- [下载与安装（Android APK）](#下载与安装android-apk)
 - [文档索引](#文档索引)
 - [License](#license)
 
@@ -46,15 +49,15 @@
 - **收藏与内容**：食物/文章/食谱收藏；发现页内容流
 - **挑战打卡**：连续打卡激励（M 里程碑功能）
 - **数据导出**：JSON / CSV 一键导出个人记录
-- **双端交付**：Web SPA（React）+ Android APK（Capacitor，包名 `com.shike.app`，正式签名）
-- **生产安全**：限流（写 30/min · 读 120/min · AI 5/min）、上传魔数校验、密钥守卫、时区统一（北京时间）、`trust proxy`、CORS 白名单
+- **双端交付**：Web SPA（React）+ Android APK（Capacitor，包名 `com.shike.app`；debug 签名构建，release 签名待凭据）
+- **生产安全**：限流（写 30/min · 读 120/min · AI 5/min，Redis 多实例共享，故障回退内存）、上传魔数校验、密钥守卫、时区统一（北京时间）、`trust proxy`、CORS 白名单
 
 ## 技术栈
 
 | 层 | 技术 |
 |---|---|
 | 前端 | Vite 8 · React 18 · react-router-dom 7 · font-awesome 本地打包（零 CDN） |
-| 移动端 | Capacitor 7 Android（`com.shike.app`，debug/release 双签名构建脚本） |
+| 移动端 | Capacitor 7 Android（`com.shike.app`；APK 由 GitHub Actions CI 构建并发布到 Releases） |
 | 后端 | Node 24 · Express 4 · better-sqlite3 · zod 校验 · pino 日志 · multer 2（上传） |
 | 认证 | 与 gakiwoo-api 共享 users 表 + JWT_SECRET（`/api/auth/*` 复用，token 互通） |
 | AI | Moonshot Kimi 视觉模型（可降级） |
@@ -134,7 +137,8 @@ foodcalorie/
 |---|---|
 | GitHub（origin） | `git@github.com:Gakiwoo/foodcalorie.git` |
 | 阿里云 Codeup（codeup） | `git@codeup.aliyun.com:69e30e610d50a0a5d45da9a8/foodcalorie.git` |
-| 生产服务器 | `/var/www/foodcalorie-api` + `/var/www/foodcalorie-web` |
+| 生产后端 | `/var/www/foodcalorie-releases/<release>/backend`（**pm2 实际运行目录**，`pm2 describe foodcalorie-api` 可查） |
+| 生产前端 | `/var/www/foodcalorie-web`（dist 静态） |
 
 > **规约**：变更前先确认四端一致；提交后同时 `git push origin main && git push codeup main`。
 
@@ -142,7 +146,7 @@ foodcalorie/
 
 - **Node.js ≥ 24**（建议 `.nvmrc` = `24.14.0`；`better-sqlite3` 为原生模块，运行时版本必须一致）
 - npm ≥ 10
-- （仅 APK 构建）JDK 17 + Android SDK（`build-tools` 34+/`platforms;android-34`）
+- （仅本机 APK 构建）JDK 21 + Android SDK（`build-tools` 34+/`platforms;android-34`）；**推荐直接使用 GitHub Actions 构建**（见 [构建](#构建)）
 
 ## 本地开发
 
@@ -172,6 +176,7 @@ npm run dev                 # vite dev，/api/* 自动代理到服务器
 | `JWT_SECRET` | **必须与 gakiwoo-api 完全一致**（token 互通） |
 | `DB_PATH` | SQLite 路径（生产与 gakiwoo-api 指向同一库，共享 users 表） |
 | `CORS_ORIGINS` | 逗号分隔白名单（Web/`https://localhost`/`capacitor://localhost`） |
+| `REDIS_URL` | 可选。配置后限流改用 Redis 滑动窗口（多实例共享计数），未配置或故障自动回退内存 |
 | `MOONSHOT_API_KEY` | Kimi 视觉模型 Key（缺失则 AI 降级为候选推荐） |
 | `UPLOAD_DIR` | 私有上传目录（图片仅鉴权 API 可读） |
 | `SWAGGER_ENABLED` | 生产 Swagger 文档开关 |
@@ -193,10 +198,10 @@ cd backend && npm test
 # 前端单元（vitest）
 cd frontend && npm test
 
-# 前端 E2E（连 dev server，14 个脚本：verify_m7/m8/.../m14 + 3b/3c 冒烟 + prod）
+# 前端 E2E（连 dev server，16 个脚本：verify_m7/m8/.../m14 + 3b/3c 冒烟 + prod）
 cd frontend/scripts && node verify_m14.cjs    # 例：AI 识别闭环
 
-# 生产 E2E（连 https://foodcalorie.gakiwoo.com）
+# 生产 E2E（连 https://foodcalorie.gakiwoo.com，8 项断言）
 node verify_prod.cjs
 ```
 
@@ -204,16 +209,29 @@ CI（GitHub Actions `.github/workflows/ci.yml`）覆盖：密钥扫描（`check-
 
 ## 构建
 
-```bash
-# Web 产物（base './'，Web 与 APK 双兼容；dist/ 不入库）
-cd frontend && npm run build
+### Web 产物
 
-# Android APK（正式签名 release / 调试 debug）
-bash frontend/scripts/build-apk.sh assembleRelease   # → frontend/dist/foodcalorie-release.apk
-bash frontend/scripts/build-apk.sh assembleDebug     # → frontend/dist/foodcalorie-debug.apk
+```bash
+# base './'（Web 与 APK 双兼容；dist/ 不入库）
+cd frontend && npm run build
 ```
 
-> APK 构建自动注入 `VITE_API_BASE=https://foodcalorie.gakiwoo.com/api`、相对路径资源与 es2015 目标（兼容 Android 5.1+ WebView）；签名凭据由环境变量注入（`FC_RELEASE_*`，无凭据时跳过签名）。
+### Android APK（推荐：GitHub Actions）
+
+每次推送到 `main`，CI（`.github/workflows/ci.yml` 的 `android-debug` job）自动：
+`npm run build:apk` → `cap sync android` → `gradlew assembleDebug`，并将 APK 上传为 **CI artifact**；发布到 Releases 见下方 [下载与安装](#下载与安装)。
+
+### Android APK（本机可选）
+
+```bash
+cd frontend/android
+# 需 JDK 21（Capacitor 7 必须）与 Android SDK；gradle 缓存用项目内 GRADLE_USER_HOME=.gradle-home
+export JAVA_HOME="C:\Program Files\Microsoft\jdk-21.0.10+7"
+export GRADLE_USER_HOME="<项目根>/.gradle-home"
+./gradlew assembleDebug --no-daemon   # → android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+> 说明：构建脚本 `scripts/build-apk.mjs` 自动注入 `VITE_API_ORIGIN=https://foodcalorie.gakiwoo.com`（纯源站地址，无路径后缀）、相对路径资源与 es2015 目标（兼容 Android 5.1+ WebView）。release 签名需配置 `FC_RELEASE_*` 环境变量（keystore 密码），未配置时跳过签名（仅 debug）。
 
 ## 部署
 
@@ -225,6 +243,22 @@ bash frontend/scripts/build-apk.sh assembleDebug     # → frontend/dist/foodcal
 2. 服务器备份（`cp -r` 至 `*-backup-YYYYMMDD`）
 3. scp 上传 → 解压 → `npm install` → `pm2 restart foodcalorie-api`
 4. 验证：后端单测 + 生产 E2E（`verify_prod.cjs`）+ 关键接口 curl
+
+## 下载与安装（Android APK）
+
+最新 APK 发布在 **GitHub Releases**：[Gakiwoo/foodcalorie Releases](https://github.com/Gakiwoo/foodcalorie/releases)
+
+**下载指引：**
+
+1. 打开 [Releases 页面](https://github.com/Gakiwoo/foodcalorie/releases)，选择最新版本（当前 `v1.0.4`）
+2. 在「Assets」区域下载 APK 文件（命名规范：`foodcalorie-v1.0.4-debug.apk`）
+3. 将 APK 传到 Android 手机（微信/网盘/数据线均可），点击安装
+4. 系统提示「未知来源」时，允许安装来自该来源的应用（设置 → 安全 → 安装未知应用）
+
+> **注意事项**
+> - 当前发布为 **debug 签名** 构建（CI 自动产出），适合功能体验与真机联调；正式上架应用商店需 release 签名（待配置 keystore 凭据）
+> - APK 内置生产 API 地址（`https://foodcalorie.gakiwoo.com`），安装即可使用，登录与 Web 端账号互通
+> - 最小支持 Android 5.1+（minSdk 22）
 
 ## 文档索引
 
