@@ -38,9 +38,7 @@ export default function FoodCalorieCamera() {
     try {
       const fd = new FormData();
       fd.append('image', file, file.name || 'food.jpg');
-      // 统一走 apiClient：自动携带鉴权 + 401 刷新自愈（原原生 fetch 缺这两项）
       const body = await upload.post('/api/v1/foodcalorie/ai/recognize', fd);
-      // 结果页用独立 object URL 回显；后端私有地址仅用于落记录，避免公开图片 URL。
       const resultPreview = URL.createObjectURL(file);
       navigate('/camera-result', {
         state: {
@@ -63,53 +61,119 @@ export default function FoodCalorieCamera() {
   }
 
   return (
-    <div data-name="FoodCalorie-Camera" style={{ width: '100%', minHeight: '100dvh', background: '#111827', display: 'flex', flexDirection: 'column', alignItems: 'stretch', overflow: 'hidden' }}>
+    <div data-name="FoodCalorie-Camera" style={{ width: '100%', minHeight: '100dvh', background: '#0F0F0F', display: 'flex', flexDirection: 'column', alignItems: 'stretch', overflow: 'hidden' }}>
       <StatusBar appearance="dark" />
-      <NavBar title="拍照识别" right={<i className="fas fa-bolt" style={{ fontSize: 15, color: '#fff' }} />} />
+      <NavBar
+        appearance="dark"
+        title="拍照识别"
+        right={<i data-name="nav-flash" className="fas fa-bolt" style={{ fontSize: 20, color: '#fff' }} />}
+      />
       <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFile} />
 
       {/* 取景框 */}
-      <div data-name="viewfinder" style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 20px', borderRadius: 20, overflow: 'hidden', background: '#1F2937' }}>
+      <div
+        data-name="viewfinder"
+        style={{
+          width: '100%',
+          height: 586,
+          display: 'flex',
+          flex: 'none',
+          justifyContent: 'center',
+          alignItems: 'center',
+          flexDirection: 'column',
+          gap: 28,
+          background: preview ? '#000' : 'linear-gradient(167deg, #2E2E2E 0%, #0F0F0F 100%)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
         {preview ? (
           <img src={preview} alt="预览" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          <div style={{ textAlign: 'center', color: '#9CA3AF' }}>
-            <i className="fas fa-bowl-food" style={{ fontSize: 46, opacity: 0.5 }} />
-            <div style={{ marginTop: 14, fontSize: 13 }}>对准食物，点击下方快门拍照</div>
-          </div>
-        )}
-        {/* 对焦框 */}
-        {!preview && (
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 150, height: 150, border: '1.5px dashed rgba(52,199,89,0.6)', borderRadius: 16 }} />
-        )}
-        {preview && (
-          <div style={{ position: 'absolute', top: 12, right: 12 }}>
-            <button onClick={retake} style={{ padding: '7px 14px', borderRadius: 12, border: 'none', background: 'rgba(0,0,0,0.5)', color: '#fff', fontSize: 12, cursor: 'pointer' }}>重拍</button>
-          </div>
+          <>
+            <div
+              data-name="focus-frame"
+              style={{
+                width: 264,
+                height: 264,
+                display: 'flex',
+                flex: 'none',
+                justifyContent: 'center',
+                alignItems: 'center',
+                flexDirection: 'column',
+                gap: 14,
+                border: '3px solid #34C759',
+                borderRadius: 28
+              }}>
+              <i data-name="focus-icon" className="fas fa-camera" style={{ fontSize: 44, color: 'rgba(255,255,255,0.81)' }} />
+              <span data-name="focus-text" style={{ color: 'rgba(255,255,255,0.75)', fontSize: 15, fontWeight: 500, lineHeight: '20px', textAlign: 'center' }}>对准食物</span>
+            </div>
+            <div data-name="hint" style={{ display: 'flex', alignSelf: 'stretch', justifyContent: 'flex-start', alignItems: 'flex-start', flexDirection: 'column', padding: '0 44px' }}>
+              <p
+                data-name="将食物放入框内，点击快门即可自动识别热量与营养"
+                style={{ alignSelf: 'stretch', flexShrink: 0, color: 'rgba(255,255,255,0.55)', fontSize: 13, textAlign: 'center', lineHeight: '18px', margin: 0 }}>
+                将食物放入框内，点击快门即可自动识别热量与营养
+              </p>
+            </div>
+          </>
         )}
       </div>
 
-      {/* 底部操作 */}
-      <div style={{ padding: '20px 20px 30px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+      {/* 底部工具栏 / 预览操作 */}
+      <div
+        data-name="toolbar"
+        style={{
+          width: '100%',
+          display: 'flex',
+          flex: 'none',
+          justifyContent: preview ? 'center' : 'space-between',
+          alignItems: 'center',
+          gap: preview ? 16 : 0,
+          padding: '34px 48px',
+          background: '#0F0F0F'
+        }}>
         {preview ? (
-          <button onClick={recognize} disabled={recognizing} style={{ width: '100%', height: 52, borderRadius: 18, border: 'none', background: '#34C759', color: '#fff', fontSize: 16, fontWeight: 700, cursor: recognizing ? 'wait' : 'pointer' }}>
-            {recognizing ? '识别中…' : '开始识别'}
-          </button>
+          <>
+            <button
+              onClick={retake}
+              style={{
+                width: 140,
+                height: 48,
+                borderRadius: 16,
+                border: '1.5px solid #E5E7EB',
+                background: 'transparent',
+                color: '#FFFFFF',
+                fontSize: 15,
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}>
+              重新拍照
+            </button>
+            <button
+              onClick={recognize}
+              disabled={recognizing}
+              style={{
+                width: 140,
+                height: 48,
+                borderRadius: 16,
+                border: 'none',
+                background: '#34C759',
+                color: '#FFFFFF',
+                fontSize: 15,
+                fontWeight: 700,
+                cursor: recognizing ? 'wait' : 'pointer'
+              }}>
+              {recognizing ? '识别中…' : '开始识别'}
+            </button>
+          </>
         ) : (
-          <div data-name="shutter" onClick={() => pickFile(true)} style={{ width: 76, height: 76, borderRadius: 38, border: '4px solid #fff', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <div style={{ width: 58, height: 58, borderRadius: 29, background: '#fff' }} />
-          </div>
+          <>
+            <i data-name="btn-gallery" className="fas fa-images" style={{ fontSize: 26, color: '#FFFFFF', cursor: 'pointer' }} onClick={() => pickFile(false)} />
+            <div data-name="shutter" onClick={() => pickFile(true)} style={{ width: 74, height: 74, display: 'flex', flex: 'none', justifyContent: 'center', alignItems: 'center', background: '#FFFFFF', borderRadius: 74, cursor: 'pointer' }}>
+              <div data-name="shutter-inner" style={{ width: 62, height: 62, display: 'flex', flex: 'none', justifyContent: 'center', alignItems: 'center', background: '#34C759', borderRadius: 62 }} />
+            </div>
+            <i data-name="btn-flip" className="fas fa-sync-alt" style={{ fontSize: 26, color: '#FFFFFF', cursor: 'pointer' }} onClick={() => toast('切换摄像头功能开发中')} />
+          </>
         )}
-        <div style={{ display: 'flex', gap: 32 }}>
-          <div onClick={() => pickFile(false)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer' }}>
-            <i className="fas fa-images" style={{ fontSize: 18, color: '#fff' }} />
-            <span style={{ fontSize: 10, color: '#D1D5DB' }}>相册</span>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-            <i className="fas fa-camera" style={{ fontSize: 18, color: '#fff' }} />
-            <span style={{ fontSize: 10, color: '#D1D5DB' }}>拍照</span>
-          </div>
-        </div>
       </div>
     </div>
   );

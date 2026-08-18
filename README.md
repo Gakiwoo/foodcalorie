@@ -233,6 +233,8 @@ bash frontend/scripts/build-apk.sh assembleDebug     # → frontend/dist/foodcal
 - [`backend/SPEC.md`](./backend/SPEC.md) — 原始需求规格
 - [`backend/ASSESSMENT.md`](./backend/ASSESSMENT.md) — 完成度评估与遗留项
 - [`docs/bugfix-2026-08-17.md`](./docs/bugfix-2026-08-17.md) — 全栈 Bug 诊断与修复报告（13 处修复 + 7 回归用例）
+- [`docs/design-diff-report-2026-08-18.md`](./docs/design-diff-report-2026-08-18.md) — MasterGo 设计稿与实现差异报告（10 个核心页面）
+- [`docs/design-final-verify-2026-08-18.md`](./docs/design-final-verify-2026-08-18.md) — 设计稿还原最终验证报告
 - [`ops/`](./ops/) — nginx / sshd 运维配置
 
 ## Contributing

@@ -2,165 +2,127 @@ import React, { useCallback, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast, todayStr } from './src/ui/toast';
-import { StatusBar, Ring } from './src/ui/common';
+import { StatusBar, BottomNav } from './src/ui/common';
 
-// 首页：真实数据（GET stats 今日摄入环 + 快捷入口；data-name 保留供全局 NAV 跳转）
-export function normalizeDailyStats(value) {
-  if (!value || typeof value !== 'object') return null;
-
-  const number = (candidate, fallback = 0) =>
-    Number.isFinite(Number(candidate)) ? Number(candidate) : fallback;
-  return {
-    total: number(value.total),
-    target: number(value.target, 1400),
-    percent: number(value.percent),
-    reachedDays: number(value.reachedDays),
-    totalDays: number(value.totalDays, 1)
-  };
-}
+const MEAL_LABEL = { 早餐: '早餐', 午餐: '午餐', 晚餐: '晚餐', 加餐: '加餐' };
 
 export default function FoodCalorieHome() {
   const navigate = useNavigate();
-  const [stats, setStats] = useState(null);
-  const [authed, setAuthed] = useState(true);
+  const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+  const [error, setError] = useState('');
 
-  const loadStats = useCallback(async () => {
+  const loadRecords = useCallback(async () => {
     setLoading(true);
-    setLoadError('');
+    setError('');
     try {
-      const response = await http.get('/api/v1/foodcalorie/records/stats', {
-        range: 'day',
-        date: todayStr()
-      });
-      const nextStats = normalizeDailyStats(response?.data);
-      if (!nextStats) throw new Error('今日统计数据暂不可用');
-      setStats(nextStats);
-      setAuthed(true);
-    } catch (error) {
-      setStats(null);
-      if (error.status === 401) {
-        setAuthed(false);
-      } else {
-        const message = error.message || '加载失败，请检查网络';
-        setLoadError(message);
-        toast(message);
-      }
+      const r = await http.get('/api/v1/foodcalorie/records', { date: todayStr(), pageSize: 3 });
+      setList(r.data.list || []);
+    } catch (e) {
+      setError(e.message || '加载失败');
+      toast(e.message || '加载失败');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    loadStats();
-  }, [loadStats]);
-
-  const hour = new Date().getHours();
-  const greet = hour < 6 ? '夜深了' : hour < 12 ? '早上好' : hour < 14 ? '中午好' : hour < 18 ? '下午好' : '晚上好';
-  const today = todayStr();
+    loadRecords();
+  }, [loadRecords]);
 
   return (
     <div data-name="FoodCalorie-Home" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
 
-      {/* 顶部：问候 + 设置 */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px' }}>
-        <div>
-          <div style={{ fontSize: 11, color: '#9CA3AF' }}>{greet}，{today.slice(5)}</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: '#1A1A1A' }}>食刻</div>
-        </div>
-        <div onClick={() => navigate('/settings')} style={{ width: 36, height: 36, borderRadius: 18, background: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
-          <i className="fas fa-gear" style={{ fontSize: 15, color: '#1A1A1A' }} />
-        </div>
+      {/* 顶部导航：左"今日" / 中"食刻" / 右设置图标 */}
+      <div data-name="top-nav" style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', padding: '10px 20px' }}>
+        <span data-name="nav-date" style={{ color: '#1A1A1A', fontSize: 16, fontWeight: 600, lineHeight: '22px' }}>今日</span>
+        <p data-name="nav-title" style={{ flex: 1, color: '#1A1A1A', fontSize: 18, fontWeight: 700, lineHeight: '24px', textAlign: 'center', margin: 0 }}>食刻</p>
+        <i data-name="nav-settings" className="fas fa-gear" style={{ fontSize: 20, color: '#1A1A1A', cursor: 'pointer' }} onClick={() => navigate('/settings')} />
       </div>
 
-      {/* 拍照识别卡 */}
-      <div style={{ margin: '6px 20px 14px' }}>
-        <div onClick={() => navigate('/camera')} style={{ borderRadius: 20, padding: '18px 20px', background: 'linear-gradient(135deg,#34C759 0%,#1FA355 100%)', color: '#fff', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
-          <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <i className="fas fa-camera" style={{ fontSize: 22 }} />
+      {/* 拍照识别大卡 */}
+      <div data-name="camera-section" style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', flexDirection: 'column', padding: '12px 20px' }}>
+        <div
+          data-name="camera-card"
+          onClick={() => navigate('/camera')}
+          style={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'flex-start',
+            alignItems: 'center',
+            gap: 18,
+            padding: 28,
+            background: 'linear-gradient(129deg, #34C759 0%, #22A85A 100%)',
+            borderRadius: 24,
+            boxShadow: '0 14px 32px rgba(52,199,89,0.35)',
+            cursor: 'pointer'
+          }}>
+          <div data-name="camera-icon-wrap" style={{ width: 76, height: 76, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(255,255,255,0.22)', borderRadius: 76 }}>
+            <i data-name="camera-icon" className="fas fa-camera" style={{ fontSize: 34, color: '#FFFFFF' }} />
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 17, fontWeight: 800 }}>拍照识别</div>
-            <div style={{ fontSize: 11, opacity: 0.85, marginTop: 3 }}>拍一拍，自动识别食物与热量</div>
+          <div data-name="camera-text" style={{ display: 'flex', alignSelf: 'stretch', justifyContent: 'flex-start', alignItems: 'center', flexDirection: 'column', gap: 6 }}>
+            <p data-name="camera-title" style={{ alignSelf: 'stretch', flexShrink: 0, color: '#FFFFFF', fontSize: 20, fontWeight: 700, lineHeight: '26px', textAlign: 'center', margin: 0 }}>拍照识别食物</p>
+            <p data-name="camera-sub" style={{ alignSelf: 'stretch', flexShrink: 0, color: 'rgba(255,255,255,0.92)', fontSize: 14, lineHeight: '20px', textAlign: 'center', margin: 0 }}>一键识别热量与营养</p>
           </div>
-          <i className="fas fa-chevron-right" style={{ fontSize: 14, opacity: 0.8 }} />
+          <div data-name="camera-cta" style={{ width: '100%', maxWidth: 279, height: 52, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, background: '#FFFFFF', borderRadius: 26, boxShadow: '0 6px 16px rgba(0,0,0,0.12)' }}>
+            <i data-name="cta-icon" className="fas fa-camera" style={{ fontSize: 18, color: '#34C759' }} />
+            <span data-name="cta-text" style={{ color: '#34C759', fontSize: 16, fontWeight: 700, lineHeight: '22px', textAlign: 'center' }}>拍照识别</span>
+          </div>
         </div>
       </div>
 
-      {/* 今日摄入卡（真实数据） */}
-      <div style={{ margin: '0 20px 14px' }}>
-        <div onClick={() => navigate('/today')} style={{ borderRadius: 20, background: '#FFFFFF', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', padding: '20px 18px', display: 'flex', alignItems: 'center', gap: 18, cursor: 'pointer' }}>
-          {loading ? (
-            <div style={{ padding: '24px 0', flex: 1, textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>加载中…</div>
-          ) : !authed ? (
-            <div style={{ flex: 1, textAlign: 'center', padding: '8px 0' }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A' }}>登录后查看今日摄入</div>
-              <button onClick={() => navigate('/login')} style={{ marginTop: 10, padding: '8px 26px', borderRadius: 12, border: 'none', background: '#34C759', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>去登录</button>
-            </div>
-          ) : loadError || !stats ? (
-            <div style={{ flex: 1, textAlign: 'center', padding: '8px 0' }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A' }}>今日数据暂未加载</div>
-              <div style={{ marginTop: 4, fontSize: 12, color: '#9CA3AF' }}>{loadError || '请稍后重试'}</div>
-              <button
-                onClick={(event) => {
-                  event.stopPropagation();
-                  loadStats();
-                }}
-                style={{ marginTop: 10, padding: '8px 26px', borderRadius: 12, border: 'none', background: '#34C759', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
-                重新加载
-              </button>
-            </div>
-          ) : (
-            <>
-              <Ring size={110} stroke={11} percent={stats.percent} label={stats.total} sub="已摄入 kcal" />
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div>
-                  <div style={{ fontSize: 12, color: '#9CA3AF' }}>今日目标</div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: '#1A1A1A' }}>{stats.target}<span style={{ fontSize: 12, fontWeight: 500, color: '#9CA3AF' }}> kcal</span></div>
-                </div>
-                <div style={{ fontSize: 12, color: stats.total <= stats.target ? '#22A85A' : '#E8590C', fontWeight: 600 }}>
-                  {stats.total <= stats.target ? `还可摄入 ${stats.target - stats.total} kcal` : `已超出 ${stats.total - stats.target} kcal`}
-                </div>
-                <div style={{ fontSize: 11, color: '#9CA3AF' }}>达标 {stats.reachedDays}/{stats.totalDays} 天 · 点击查看今日记录</div>
-              </div>
-            </>
-          )}
+      {/* 今日记录 */}
+      <div data-name="history-section" style={{ width: '100%', display: 'flex', flex: 1, flexDirection: 'column', gap: 12, padding: '12px 20px', overflow: 'hidden' }}>
+        <div data-name="history-header" style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span data-name="history-title" style={{ color: '#1A1A1A', fontSize: 17, fontWeight: 700, lineHeight: '22px' }}>今日记录</span>
+          <span data-name="history-more" style={{ color: '#34C759', fontSize: 13, fontWeight: 500, lineHeight: '18px', cursor: 'pointer' }} onClick={() => navigate('/today')}>查看全部</span>
         </div>
-      </div>
 
-      {/* 快捷宫格 */}
-      <div style={{ margin: '0 20px 14px' }}>
-        <div style={{ borderRadius: 20, background: '#FFFFFF', boxShadow: '0 2px 12px rgba(0,0,0,0.05)', padding: '18px 14px' }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A', marginBottom: 12 }}>快捷入口</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-            {[
-              { to: '/records', icon: 'fa-clipboard-list', label: '记录' },
-              { to: '/discover', icon: 'fa-compass', label: '发现' },
-              { to: '/me', icon: 'fa-user', label: '我的' },
-              { to: '/camera', icon: 'fa-camera', label: '拍照' }
-            ].map((g) => (
-              <div key={g.label} onClick={() => navigate(g.to)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 0', borderRadius: 14, cursor: 'pointer' }}>
-                <div style={{ width: 44, height: 44, borderRadius: 14, background: '#E8F5EC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <i className={'fas ' + g.icon} style={{ fontSize: 17, color: '#22A85A' }} />
+        {loading ? (
+          <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div>
+        ) : error ? (
+          <div style={{ padding: 32, textAlign: 'center', color: '#E03131', fontSize: 14 }}>
+            {error}
+            <div style={{ marginTop: 12 }}><button onClick={loadRecords} style={{ padding: '8px 24px', borderRadius: 12, border: 'none', background: '#34C759', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>重试</button></div>
+          </div>
+        ) : list.length === 0 ? (
+          <div style={{ padding: 32, textAlign: 'center', background: '#FFFFFF', borderRadius: 16, boxShadow: '0 4px 14px rgba(0,0,0,0.05)' }}>
+            <i className="fas fa-utensils" style={{ fontSize: 28, color: '#D1D5DB' }} />
+            <div style={{ marginTop: 8, fontSize: 13, color: '#9CA3AF' }}>今天还没有记录</div>
+            <button onClick={() => navigate('/addfood')} style={{ marginTop: 14, padding: '9px 28px', borderRadius: 14, border: 'none', background: '#34C759', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>+ 添加记录</button>
+          </div>
+        ) : (
+          <div data-name="history-list" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {list.map((r) => (
+              <div
+                key={r.id}
+                data-name={'food-card-' + r.id}
+                onClick={() => navigate('/detail?id=' + r.id)}
+                style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 12, padding: 12, background: '#FFFFFF', borderRadius: 16, boxShadow: '0 4px 14px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+                <div data-name={'food-thumb-' + r.id} style={{ width: 56, height: 56, display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: '#F3F4F6' }}>
+                  {r.image_url ? (
+                    <img data-name={'food-img-' + r.id} src={r.image_url} alt="" style={{ width: 56, height: 56, objectFit: 'cover' }} />
+                  ) : (
+                    <i className="fas fa-utensils" style={{ fontSize: 20, color: '#D1D5DB' }} />
+                  )}
                 </div>
-                <span style={{ fontSize: 11, color: '#4B5563', fontWeight: 600 }}>{g.label}</span>
+                <div data-name={'food-info-' + r.id} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', gap: 4, minWidth: 0 }}>
+                  <p data-name={'food-name-' + r.id} style={{ alignSelf: 'stretch', flexShrink: 0, color: '#1A1A1A', fontSize: 15, fontWeight: 600, lineHeight: '20px', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.food_name}</p>
+                  <span data-name={'food-time-' + r.id} style={{ flexShrink: 0, color: '#9CA3AF', fontSize: 12, lineHeight: '16px' }}>{r.record_time.slice(11, 16)} · {MEAL_LABEL[r.meal_type] || r.meal_type}</span>
+                </div>
+                <div data-name={'food-cal-' + r.id} style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', flexDirection: 'column', gap: 2 }}>
+                  <span data-name={'food-cal-value-' + r.id} style={{ color: '#34C759', fontSize: 16, fontWeight: 700, lineHeight: '22px', textAlign: 'right' }}>{r.calories} kcal</span>
+                  <span data-name={'food-cal-proto-' + r.id} style={{ color: '#9CA3AF', fontSize: 11, lineHeight: '15px', textAlign: 'right' }}>蛋白 {Math.round(r.protein_g || 0)}g</span>
+                </div>
               </div>
             ))}
           </div>
-        </div>
+        )}
       </div>
 
-      {/* 底部导航 */}
-      <div style={{ marginTop: 'auto', width: '100%', display: 'flex', justifyContent: 'space-around', alignItems: 'center', background: '#FFFFFF', borderTop: '1px solid #F0F2F5', padding: '8px 0 20px' }}>
-        {[{ k: '/', i: 'fa-house', l: '首页' }, { k: '/discover', i: 'fa-compass', l: '发现' }, { k: '/records', i: 'fa-clipboard-list', l: '记录' }, { k: '/me', i: 'fa-user', l: '我的' }].map((n) => (
-          <div key={n.k} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, cursor: 'pointer' }} onClick={() => navigate(n.k)}>
-            <i className={'fas ' + n.i} style={{ fontSize: 18, color: n.k === '/' ? '#34C759' : '#C0C4CC' }} />
-            <span style={{ fontSize: 10, color: n.k === '/' ? '#34C759' : '#9CA3AF' }}>{n.l}</span>
-          </div>
-        ))}
-      </div>
+      <BottomNav active="/" />
     </div>
   );
 }

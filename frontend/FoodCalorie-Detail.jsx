@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
-import { StatusBar, NavBar, Card } from './src/ui/common';
+import { StatusBar, NavBar } from './src/ui/common';
 import { ProtectedImage } from './src/ui/ProtectedImage';
 
 // 记录详情页：真实数据（GET /records/:id + 删除 + 编辑入口）
@@ -42,12 +42,7 @@ export default function FoodCalorieDetail() {
   }
 
   const mealIcon = { 早餐: 'fa-mug-hot', 午餐: 'fa-bowl-food', 晚餐: 'fa-moon', 加餐: 'fa-apple-whole' };
-  const nutr = (label, val, unit = 'g') => (
-    <div style={{ flex: 1, textAlign: 'center', padding: '12px 4px' }}>
-      <div style={{ fontSize: 18, fontWeight: 800, color: '#1A1A1A' }}>{val || 0}</div>
-      <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{label} {unit}</div>
-    </div>
-  );
+  const cardShadow = '0px 4px 14px 0px rgba(0,0,0,0.05)';
 
   if (loading) return <div style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="记录详情" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;
 
@@ -65,57 +60,111 @@ export default function FoodCalorieDetail() {
     );
   }
 
+  const totalMacro = (record.carbs_g || 0) + (record.protein_g || 0) + (record.fat_g || 0);
+  const carbPct = totalMacro ? Math.round(((record.carbs_g || 0) / totalMacro) * 100) : 0;
+  const proPct = totalMacro ? Math.round(((record.protein_g || 0) / totalMacro) * 100) : 0;
+  const fatPct = totalMacro ? Math.round(((record.fat_g || 0) / totalMacro) * 100) : 0;
+  const sum = carbPct + proPct + fatPct;
+  const diff = 100 - sum;
+  let adjustedCarb = carbPct;
+  let adjustedPro = proPct;
+  let adjustedFat = fatPct;
+  if (diff !== 0 && totalMacro > 0) {
+    const maxKey = adjustedCarb >= adjustedPro && adjustedCarb >= adjustedFat ? 'carb' : adjustedPro >= adjustedFat ? 'pro' : 'fat';
+    if (maxKey === 'carb') adjustedCarb += diff;
+    else if (maxKey === 'pro') adjustedPro += diff;
+    else adjustedFat += diff;
+  }
+
+  const dateText = record.created_at ? (record.created_at.slice(5, 7) + '月' + record.created_at.slice(8, 10) + '日') : '';
+
   return (
     <div data-name="FoodCalorie-Detail" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
-      <NavBar title="记录详情" right={<i className="fas fa-pen-to-square" style={{ fontSize: 15, color: '#1A1A1A', cursor: 'pointer' }} onClick={() => navigate('/editrecord?id=' + id)} />} />
+      <NavBar title="记录详情" right={<i className="fas fa-pen" style={{ fontSize: 20, color: '#1A1A1A', cursor: 'pointer' }} onClick={() => navigate('/editrecord?id=' + id)} />} />
 
-      {/* Hero：热量 */}
-      <div style={{ margin: '6px 20px 14px' }}>
+      {/* Hero */}
+      <div style={{ padding: '8px 20px' }}>
         {record.image_url && (
           <ProtectedImage src={record.image_url} alt="记录照片" style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 16, marginBottom: 10, display: 'block' }} />
         )}
-        <div style={{ borderRadius: 20, padding: '24px 18px', background: 'linear-gradient(135deg,#34C759 0%,#1FA355 100%)', color: '#fff', display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 52, height: 52, borderRadius: 16, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <i className={'fas ' + (mealIcon[record.meal_type] || 'fa-bowl-food')} style={{ fontSize: 22 }} />
+        <div style={{ width: '100%', padding: '24px', borderRadius: 20, background: '#FFFFFF', boxShadow: cardShadow, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 96, height: 96, borderRadius: 24, background: 'linear-gradient(135deg,#FFE0B2 0%,#FFCC80 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <i className={'fas ' + (mealIcon[record.meal_type] || 'fa-bowl-food')} style={{ fontSize: 40, color: '#FFFFFF' }} />
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 19, fontWeight: 800 }}>{record.food_name}</div>
-            <div style={{ fontSize: 12, opacity: 0.85, marginTop: 4 }}>{record.category || '未分类'} · {record.meal_type} · {record.record_time}</div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+            <span style={{ fontSize: 20, lineHeight: '26px', fontWeight: 700, color: '#1A1A1A', textAlign: 'center' }}>{record.food_name}</span>
+            <span style={{ fontSize: 13, lineHeight: '18px', fontWeight: 400, color: '#9CA3AF', textAlign: 'center' }}>{record.record_time} · {record.meal_type} · {dateText}</span>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 30, fontWeight: 800, lineHeight: 1 }}>{record.calories}</div>
-            <div style={{ fontSize: 11, opacity: 0.85 }}>kcal</div>
+          <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'baseline', gap: 6 }}>
+            <span style={{ fontSize: 32, lineHeight: '38px', fontWeight: 800, color: '#34C759', textAlign: 'center' }}>{record.calories}</span>
+            <span style={{ fontSize: 15, lineHeight: '20px', fontWeight: 600, color: '#34C759', textAlign: 'center' }}>kcal</span>
           </div>
         </div>
       </div>
 
-      {/* 营养 */}
-      <Card style={{ margin: '0 20px 14px', padding: '6px 8px', display: 'flex' }}>
-        {nutr('蛋白质', record.protein_g)}
-        {nutr('碳水', record.carbs_g)}
-        {nutr('脂肪', record.fat_g)}
-        {nutr('膳食纤维', record.fiber_g)}
-      </Card>
-
-      {/* 信息 */}
-      <Card style={{ margin: '0 20px 14px', padding: '0 16px' }}>
-        {[
-          ['来源', record.source === 'AI识别' ? 'AI 拍照识别' : record.source === 'search' ? '食物库搜索' : '手动添加'],
-          ['份量', record.portion || '1 份'],
-          ['记录时间', record.record_time],
-          ['创建时间', record.created_at ? record.created_at.replace('T', ' ').slice(0, 19) : '—']
-        ].map(([k, v]) => (
-          <div key={k} style={{ display: 'flex', justifyContent: 'space-between', padding: '13px 0', borderBottom: '1px solid #F3F4F6', fontSize: 13 }}>
-            <span style={{ color: '#9CA3AF' }}>{k}</span><span style={{ color: '#1A1A1A', fontWeight: 600 }}>{v}</span>
+      {/* 营养卡片 */}
+      <div style={{ padding: '8px 20px' }}>
+        <div style={{ width: '100%', padding: 16, borderRadius: 16, background: '#FFFFFF', boxShadow: cardShadow, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <span style={{ fontSize: 15, lineHeight: '20px', fontWeight: 700, color: '#1A1A1A' }}>营养成分</span>
+          <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 16, lineHeight: '20px', fontWeight: 700, color: '#1A1A1A' }}>{record.protein_g || 0}g</span>
+              <span style={{ fontSize: 12, lineHeight: '16px', fontWeight: 400, color: '#9CA3AF' }}>蛋白质</span>
+            </div>
+            <div style={{ width: 1, height: 28, background: '#EEF0F2' }} />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 16, lineHeight: '20px', fontWeight: 700, color: '#1A1A1A' }}>{record.carbs_g || 0}g</span>
+              <span style={{ fontSize: 12, lineHeight: '16px', fontWeight: 400, color: '#9CA3AF' }}>碳水</span>
+            </div>
+            <div style={{ width: 1, height: 28, background: '#EEF0F2' }} />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 16, lineHeight: '20px', fontWeight: 700, color: '#1A1A1A' }}>{record.fat_g || 0}g</span>
+              <span style={{ fontSize: 12, lineHeight: '16px', fontWeight: 400, color: '#9CA3AF' }}>脂肪</span>
+            </div>
+            <div style={{ width: 1, height: 28, background: '#EEF0F2' }} />
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
+              <span style={{ fontSize: 16, lineHeight: '20px', fontWeight: 700, color: '#1A1A1A' }}>{record.fiber_g || 0}g</span>
+              <span style={{ fontSize: 12, lineHeight: '16px', fontWeight: 400, color: '#9CA3AF' }}>膳食纤维</span>
+            </div>
           </div>
-        ))}
-      </Card>
+          <div style={{ width: '100%', height: 10, borderRadius: 10, overflow: 'hidden', display: 'flex', flexDirection: 'row' }}>
+            <div style={{ height: '100%', width: adjustedCarb + '%', background: '#34C759' }} />
+            <div style={{ height: '100%', width: adjustedPro + '%', background: '#FFB020' }} />
+            <div style={{ height: '100%', width: adjustedFat + '%', background: '#5B8DEF' }} />
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'row', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 8, height: 8, borderRadius: 8, background: '#34C759' }} />
+              <span style={{ fontSize: 11, lineHeight: '14px', fontWeight: 400, color: '#9CA3AF' }}>碳水 {adjustedCarb}%</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 8, height: 8, borderRadius: 8, background: '#FFB020' }} />
+              <span style={{ fontSize: 11, lineHeight: '14px', fontWeight: 400, color: '#9CA3AF' }}>蛋白 {adjustedPro}%</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <div style={{ width: 8, height: 8, borderRadius: 8, background: '#5B8DEF' }} />
+              <span style={{ fontSize: 11, lineHeight: '14px', fontWeight: 400, color: '#9CA3AF' }}>脂肪 {adjustedFat}%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 来源 */}
+      <div style={{ padding: '8px 20px' }}>
+        <div style={{ width: '100%', padding: '14px 16px', borderRadius: 16, background: '#FFFFFF', boxShadow: cardShadow, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+          <i className="fas fa-camera" style={{ fontSize: 20, color: '#34C759', flexShrink: 0 }} />
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontSize: 14, lineHeight: '18px', fontWeight: 600, color: '#1A1A1A' }}>AI 图像识别</span>
+            <span style={{ fontSize: 12, lineHeight: '16px', fontWeight: 400, color: '#9CA3AF' }}>数据来自照片识别，仅供参考</span>
+          </div>
+        </div>
+      </div>
 
       {/* 操作 */}
-      <div style={{ padding: '6px 20px 24px', display: 'flex', gap: 12 }}>
-        <button onClick={() => navigate('/editrecord?id=' + id)} style={{ flex: 1, height: 48, borderRadius: 16, border: '1.5px solid #34C759', background: '#fff', color: '#22A85A', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>编辑记录</button>
-        <button onClick={() => setConfirmDel(true)} style={{ flex: 1, height: 48, borderRadius: 16, border: 'none', background: '#FFE8EC', color: '#E03131', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>删除记录</button>
+      <div style={{ padding: '8px 20px 20px', display: 'flex', flexDirection: 'row', gap: 12 }}>
+        <button onClick={() => setConfirmDel(true)} style={{ flex: 1, height: 48, borderRadius: 24, border: '1px solid #FF3B30', background: '#FFFFFF', color: '#FF3B30', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>删除记录</button>
+        <button onClick={() => navigate('/editrecord?id=' + id)} style={{ flex: 1, height: 48, borderRadius: 24, border: 'none', background: '#34C759', boxShadow: '0px 6px 16px 0px rgba(52,199,89,0.3)', color: '#FFFFFF', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>编辑</button>
       </div>
 
       {/* 删除确认 */}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { normalizeDailyStats } from '../../FoodCalorie-Home.jsx'
+import { normalizeDailyStats } from './common.jsx'
 
 describe('home statistics resilience', () => {
   it('does not expose a renderable value for absent API data', () => {
