@@ -270,6 +270,7 @@ export GRADLE_USER_HOME="<项目根>/.gradle-home"
 - [`docs/design-diff-report-2026-08-18.md`](./docs/design-diff-report-2026-08-18.md) — MasterGo 设计稿与实现差异报告（10 个核心页面）
 - [`docs/design-final-verify-2026-08-18.md`](./docs/design-final-verify-2026-08-18.md) — 设计稿还原最终验证报告
 - [`docs/project-assessment-2026-08-18.md`](./docs/project-assessment-2026-08-18.md) — 项目全面评估（bug/功能/性能/质量/构建标准）
+- [`docs/release-notes-v1.0.4.md`](./docs/release-notes-v1.0.4.md) — v1.0.4 发布说明（对应 GitHub Release）
 - [`ops/`](./ops/) — nginx / sshd 运维配置
 
 ## Contributing

@@ -55,3 +55,6 @@ frontend/.npm-cache-tmp/
 
 # ── 临时构建产物（CI 下载 APK 等）──
 tmp-apk*
+
+# ── 本地 APK 产物（发布版在 GitHub Releases，不入库）──
+*.apk
