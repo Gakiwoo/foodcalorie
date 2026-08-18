@@ -30,8 +30,8 @@ describe('Capacitor native networking', () => {
     const strings = readFileSync(androidStringsPath, 'utf8')
 
     expect(build).toMatch(/applicationId "com\.shike\.app"/)
-    expect(build).toMatch(/versionCode 4/)
-    expect(build).toMatch(/versionName "1\.0\.3"/)
+    expect(build).toMatch(/versionCode 5/)
+    expect(build).toMatch(/versionName "1\.0\.4"/)
     expect(strings).toContain('<string name="app_name">食刻</string>')
     expect(strings).toContain('<string name="title_activity_main">食刻</string>')
   })

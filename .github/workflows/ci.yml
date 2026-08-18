@@ -76,7 +76,7 @@ jobs:
       - run: ./gradlew assembleDebug --no-daemon
         working-directory: frontend/android
       - name: Upload debug APK
-        uses: actions/upload-artifact@65a4ed15f5e4d9b8a4f9c5d6e7f8a9b0c1d2e3f4 # v4
+        uses: actions/upload-artifact@v4
         with:
           name: foodcalorie-debug-apk
           path: frontend/android/app/build/outputs/apk/debug/app-debug.apk
