@@ -52,3 +52,6 @@ frontend/.npm-cache-tmp/
 
 # ── Gradle 本地缓存（构建环境残留）──
 .gradle-home/
+
+# ── 临时构建产物（CI 下载 APK 等）──
+tmp-apk*
