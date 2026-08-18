@@ -293,6 +293,7 @@ export default function FoodCalorieAddFood() {
           <span style={{ fontSize: 13, color: '#34C759', fontWeight: 600 }}>{totalCal} kcal</span>
         </div>
         <div
+          data-name="save-records-btn"
           onClick={saveSelected}
           style={{
             width: '100%',
