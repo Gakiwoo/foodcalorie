@@ -22,7 +22,9 @@ export async function verifyApkAssets() {
     if (!passed) throw new Error(`APK asset verification failed: missing ${label}`)
   }
 
-  for (const forbidden of ['./asset/', '9:41']) {
+  // './asset/' 为设计稿导出资源（未打包进 dist），必须禁止；
+  // '9:41' 自 2026-08-18 起为设计稿要求的 Web 伪状态栏文案（StatusBar 组件渲染），不再禁止。
+  for (const forbidden of ['./asset/']) {
     if (bundleText.includes(forbidden)) {
       throw new Error(`APK asset verification failed: forbidden prototype artifact ${forbidden}`)
     }
