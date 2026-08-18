@@ -1,6 +1,8 @@
 'use strict'
-// 单实例内存限流。扩展为多实例部署时需替换为共享存储实现。
+// 限流中间件：默认单实例内存滑窗；配置 REDIS_URL 后切换为 Redis 共享滑窗（多实例）。
+// 内存路径保持同步（既有测试兼容）；Redis 路径异步执行，故障时自动回退内存，不阻断请求。
 const { ServiceError } = require('../utils/serviceError')
+const rateLimitStore = require('./rateLimitStore')
 
 const buckets = new Map() // `${scope}:${key}` -> number[]
 const CLEANUP_MS = 60 * 1000
@@ -21,6 +23,19 @@ function clientIp(req) {
   return req.ip || req.socket?.remoteAddress || 'unknown'
 }
 
+const TOO_MANY = () => new ServiceError(429, 10003, '请求过于频繁，请稍后再试')
+
+// 内存滑窗（同步，单实例/降级路径）
+function checkMemory(bucket, key, limit, windowMs) {
+  const now = Date.now()
+  const arr = bucket.get(key) || []
+  const fresh = arr.filter((t) => t > now - windowMs)
+  if (fresh.length >= limit) return false
+  fresh.push(now)
+  bucket.set(key, fresh)
+  return true
+}
+
 /**
  * 创建限流中间件
  * @param {number} limit 窗口内最大次数
@@ -29,19 +44,30 @@ function clientIp(req) {
  */
 function createRateLimit(limit, windowMs, keyFn) {
   const scope = `limiter-${++scopeSequence}`
+  const bucketKey = `bucket:${scope}` // 内存桶 key（仅内存路径用）
   return function rateLimit(req, res, next) {
     if (process.env.NODE_ENV === 'test') return next()
     const identity = keyFn ? keyFn(req) : clientIp(req)
     const key = `${scope}:${identity}`
-    const now = Date.now()
-    const arr = buckets.get(key) || []
-    const fresh = arr.filter((t) => t > now - windowMs)
-    if (fresh.length >= limit) {
-      return next(new ServiceError(429, 10003, '请求过于频繁，请稍后再试'))
+
+    // 未启用 Redis → 同步内存路径（行为与既有版本一致）
+    if (!rateLimitStore.usesRedis()) {
+      if (!checkMemory(buckets, key, limit, windowMs)) return next(TOO_MANY())
+      return next()
     }
-    fresh.push(now)
-    buckets.set(key, fresh)
-    return next()
+
+    // Redis 路径（异步）：故障/超时回退内存，保证请求不因限流存储故障而被阻断
+    rateLimitStore
+      .checkRedis(key, limit, windowMs)
+      .then((ok) => {
+        if (!ok) return next(TOO_MANY())
+        return next()
+      })
+      .catch((err) => {
+        console.warn('[rateLimit] redis 检查失败，使用内存兜底:', err.message)
+        if (!checkMemory(buckets, bucketKey + key, limit, windowMs)) return next(TOO_MANY())
+        return next()
+      })
   }
 }
 
