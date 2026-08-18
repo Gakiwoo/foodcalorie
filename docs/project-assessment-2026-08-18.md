@@ -145,16 +145,24 @@
 
 ### ⚠️ 建议正式发布/迭代前处理（按优先级）
 
-- **P1-1 必修**：`RecordsMonth` 今日高亮失效（一行修复）；Home/Today 的 `record_time` 空值防护（一行修复）。
-- **P1-2 建议**：401 会话失效跳转逻辑（`hadSession` 恒 false）；APK 登录态持久化需**真机联调**验证。
-- **P2 批次**：multer 错误码映射、CSV `\t\r` 注入、JWT algorithms 加固、SIGTERM、body 日期校验（约半天工作量，可并入下次修复轮）。
+> **2026-08-18 补充：本轮评估发现的问题已全部修复并部署（commit `f9fbead`）**，详见下方「修复记录」。
+
+- ~~**P1-1 必修**：`RecordsMonth` 今日高亮失效；Home/Today 的 `record_time` 空值防护~~ ✅ 已修复
+- ~~**P1-2 建议**：401 会话失效跳转逻辑（`hadSession` 恒 false）~~ ✅ 已修复（markSession/hasSession）；APK 登录态持久化仍需**真机联调**验证
+- ~~**P2 批次**：multer 错误码映射、CSV `\t\r` 注入、JWT algorithms 加固、SIGTERM、body 日期校验~~ ✅ 已修复
 
 ### 风险摘要
 
 | 级别 | 数量 | 说明 |
 | --- | --- | --- |
 | P0 | 0 | 无安全/数据损坏级问题 |
-| P1 | 4 | 2 个崩溃防护 + 1 个功能失效 + 1 个 APK 待验证 |
-| P2 | 22 | 12 后端 + 10 前端，多为加固与优化项 |
+| P1 | 4 | 3 个已修复 + 1 个 APK 待真机验证 |
+| P2 | 22 | 全部已修复（后端 12 + 前端 10） |
 
-> 结论：**可以发布**；建议在下一个版本迭代中优先修复 2 个 P1 崩溃防护问题（成本极低），并规划真机联调与 Redis 限流。
+### 修复记录（2026-08-18，commit `f9fbead`）
+
+- **前端 P1**：RecordsMonth isToday、Home/Today record_time 防护、client 会话标记（markSession/hasSession）、auth 同步标记
+- **后端 P2**：multer 错误映射 413/400、CSV `\t\r` 注入、JWT algorithms HS256、SIGTERM 优雅关闭、body 日期校验、page 上限、imageStore 目录一次性创建 + pending 6h 清理 + 单用户 30 上限、删除死代码
+- **前端 P2**：Settings 真实数据、Profile 保存失败提示、DataExport 本地日期 + 延迟 revoke、NaN 防护、normalizeDailyStats 接入、触控热区、AddFood safe-area、Switch 收敛、**路由级 React.lazy 代码分割（主包 362KB→200KB / gzip 66KB）**
+
+> 结论：**可以发布**；剩余待办仅 APK 登录态真机联调与 Redis 多实例限流。
