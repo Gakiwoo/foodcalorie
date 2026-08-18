@@ -148,7 +148,7 @@
 > **2026-08-18 补充：本轮评估发现的问题已全部修复并部署（commit `f9fbead`）**，详见下方「修复记录」。
 
 - ~~**P1-1 必修**：`RecordsMonth` 今日高亮失效；Home/Today 的 `record_time` 空值防护~~ ✅ 已修复
-- ~~**P1-2 建议**：401 会话失效跳转逻辑（`hadSession` 恒 false）~~ ✅ 已修复（markSession/hasSession）；APK 登录态持久化仍需**真机联调**验证
+- ~~**P1-2 建议**：401 会话失效跳转逻辑（`hadSession` 恒 false）~~ ✅ 已修复（markSession/hasSession）；APK 登录态已通过 CapacitorHttp + MainActivity 第三方 Cookie 兜底加固，**待真机安装 `食刻-app-debug-v1.0.4.apk` 验证**
 - ~~**P2 批次**：multer 错误码映射、CSV `\t\r` 注入、JWT algorithms 加固、SIGTERM、body 日期校验~~ ✅ 已修复
 
 ### 风险摘要
@@ -156,7 +156,7 @@
 | 级别 | 数量 | 说明 |
 | --- | --- | --- |
 | P0 | 0 | 无安全/数据损坏级问题 |
-| P1 | 4 | 3 个已修复 + 1 个 APK 待真机验证 |
+| P1 | 4 | 3 个已修复 + 1 个 APK 已加固待真机确认 |
 | P2 | 22 | 全部已修复（后端 12 + 前端 10） |
 
 ### 修复记录（2026-08-18，commit `f9fbead`）
@@ -164,5 +164,17 @@
 - **前端 P1**：RecordsMonth isToday、Home/Today record_time 防护、client 会话标记（markSession/hasSession）、auth 同步标记
 - **后端 P2**：multer 错误映射 413/400、CSV `\t\r` 注入、JWT algorithms HS256、SIGTERM 优雅关闭、body 日期校验、page 上限、imageStore 目录一次性创建 + pending 6h 清理 + 单用户 30 上限、删除死代码
 - **前端 P2**：Settings 真实数据、Profile 保存失败提示、DataExport 本地日期 + 延迟 revoke、NaN 防护、normalizeDailyStats 接入、触控热区、AddFood safe-area、Switch 收敛、**路由级 React.lazy 代码分割（主包 362KB→200KB / gzip 66KB）**
+
+### 剩余待办处理（2026-08-18 下午，commit `306cc00` / `71dc090` / `a182455` / `1d5e8d6`）
+
+1. **Redis 多实例限流** ✅ 已实现并部署：
+   - `rateLimitStore.js`：REDIS_URL 配置时使用 Redis 原子 Lua 滑动窗口（多实例共享计数），未配置/故障自动回退内存
+   - 生产已启用 `REDIS_URL=redis://127.0.0.1:6379`，单测 45/45、Redis 路径实测 429 正常
+2. **APK v1.0.4** ✅ 已产出（CI 构建 `食刻-app-debug-v1.0.4.apk`）：
+   - MainActivity 显式允许第三方 Cookie（跨源登录态持久化兜底）；versionCode 5
+   - 内置最新代码（设计稿还原 + 修复 + 代码分割）；CI android-debug 增加 artifact 上传
+   - 本机 gradle 因文件锁无法启动，改由 GitHub Actions 构建（全部 4 job 通过）
+3. **服务器旧备份清理** ✅：删除 20260811/20260817 系列 5 个旧备份，保留今日 4 份（释放约 380MB）
+4. **未覆盖页面设计稿还原**（Settings/Login/Register 等 21 页）：未做，可后续按同一模式批量处理
 
 > 结论：**可以发布**；剩余待办仅 APK 登录态真机联调与 Redis 多实例限流。
