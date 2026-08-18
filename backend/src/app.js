@@ -51,7 +51,9 @@ function setupSwagger(app) {
 function createApp() {
   const app = express()
 
-  // 信任 loopback 反代（nginx）：保证 req.ip / 限流键取到真实客户端 IP
+  // 信任 loopback 反代（nginx）：保证 req.ip / 限流键取到真实客户端 IP（B2）
+  // 注意：'loopback' 仅当反代与本服务同机（当前生产拓扑 127.0.0.1:3001）时正确；
+  // 若未来反代部署到异机，需改为 trust proxy: 1 或指定代理 IP 段，否则所有用户共享同一限流桶。
   app.set('trust proxy', 'loopback')
 
   // 安全头
@@ -67,6 +69,8 @@ function createApp() {
   }
   app.use(
     cors({
+      // 非生产（dev/测试）无白名单时 origin:true 反射任意源（B6）——仅限开发联调；
+      // 生产必须显式配置 CORS_ORIGINS（上方已 fail-closed），不会出现该回退。
       origin: origins.length
         ? (origin, callback) => callback(null, !origin || origins.includes(origin))
         : true,

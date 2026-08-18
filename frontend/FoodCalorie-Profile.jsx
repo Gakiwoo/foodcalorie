@@ -50,9 +50,9 @@ export default function FoodCalorieProfile() {
     if (!nickname.trim()) return toast('昵称不能为空');
     setSaving(true);
     try {
-      // 昵称走 gakiwoo /api/auth/me；其余走 profile
+      // 昵称走 gakiwoo /api/auth/me；其余走 profile（F2：昵称失败必须中断并提示，不得静默吞错）
       if (nickname !== '') {
-        await apiClient('/api/auth/me', { method: 'PUT', body: JSON.stringify({ nickname: nickname.trim() }) }).catch(() => null);
+        await apiClient('/api/auth/me', { method: 'PUT', body: JSON.stringify({ nickname: nickname.trim() }) });
       }
       await http.put('/api/v1/foodcalorie/profile', {
         gender: gender || null,

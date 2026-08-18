@@ -77,7 +77,7 @@ export default function FoodCalorieRecordsMonth() {
               if (!day) return <div key={'e' + i} />;
               const date = `${month}-${String(day).padStart(2, '0')}`;
               const cal = days[day] || 0;
-              const isToday = date === todayStr;
+              const isToday = date === todayStr().slice(0, 10);
               const has = cal > 0;
               return (
                 <div key={day} onClick={() => navigate('/records?date=' + date)} style={{ aspectRatio: '1', borderRadius: 10, background: isToday ? '#34C759' : has ? '#E8F5EC' : '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid ' + (isToday ? '#34C759' : '#EEF0F2') }}>

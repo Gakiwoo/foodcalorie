@@ -59,15 +59,15 @@ export default function FoodCalorieRecordsWeek() {
       <Card style={{ margin: '6px 20px 14px', display: 'flex', alignItems: 'center', gap: 16 }}>
         <div style={{ width: 84, height: 84, borderRadius: 42, background: 'linear-gradient(135deg,#34C759,#1FA355)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <div style={{ textAlign: 'center', color: '#fff' }}>
-            <div style={{ fontSize: 20, fontWeight: 800, lineHeight: 1 }}>{stats.percent}%</div>
+            <div style={{ fontSize: 20, fontWeight: 800, lineHeight: 1 }}>{stats.percent ?? 0}%</div>
             <div style={{ fontSize: 9, opacity: 0.85 }}>达标比例</div>
           </div>
         </div>
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}><span style={{ color: '#9CA3AF' }}>周总摄入</span><span style={{ fontWeight: 700, color: '#1A1A1A' }}>{stats.total} kcal</span></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}><span style={{ color: '#9CA3AF' }}>日均摄入</span><span style={{ fontWeight: 700, color: '#1A1A1A' }}>{stats.average} kcal</span></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}><span style={{ color: '#9CA3AF' }}>达标天数</span><span style={{ fontWeight: 700, color: '#34C759' }}>{stats.reachedDays}/{stats.totalDays}</span></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}><span style={{ color: '#9CA3AF' }}>周目标</span><span style={{ fontWeight: 700, color: '#1A1A1A' }}>{stats.target * 7} kcal</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}><span style={{ color: '#9CA3AF' }}>周总摄入</span><span style={{ fontWeight: 700, color: '#1A1A1A' }}>{stats.total ?? 0} kcal</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}><span style={{ color: '#9CA3AF' }}>日均摄入</span><span style={{ fontWeight: 700, color: '#1A1A1A' }}>{stats.average ?? 0} kcal</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}><span style={{ color: '#9CA3AF' }}>达标天数</span><span style={{ fontWeight: 700, color: '#34C759' }}>{stats.reachedDays ?? 0}/{stats.totalDays ?? 0}</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}><span style={{ color: '#9CA3AF' }}>周目标</span><span style={{ fontWeight: 700, color: '#1A1A1A' }}>{(stats.target ?? 0) * 7} kcal</span></div>
         </div>
       </Card>
 
@@ -75,9 +75,9 @@ export default function FoodCalorieRecordsWeek() {
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         <span style={{ fontSize: 15, fontWeight: 700, color: '#1A1A1A' }}>本周记录</span>
         {days.map((d) => {
-          const cal = stats.daily[d.date] || 0;
+          const cal = (stats.daily && stats.daily[d.date]) || 0;
           const isToday = d.date === today;
-          const over = cal > stats.target;
+          const over = cal > (stats.target ?? 0);
           return (
             <Card key={d.date} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, cursor: 'pointer', border: isToday ? '1.5px solid #34C759' : '1.5px solid transparent' }} onClick={() => navigate('/records?date=' + d.date)}>
               <div style={{ width: 40, height: 40, borderRadius: 12, background: isToday ? '#34C759' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

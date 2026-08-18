@@ -64,8 +64,8 @@ export default function FoodCalorieChallenge() {
     );
   }
 
-  const totalDays = challenge.tasks.reduce((s, t) => s + (t.target || 0), 0) || 21;
-  const pct = Math.min(100, Math.round((challenge.check_in_days / totalDays) * 100));
+  const totalDays = (challenge.tasks || []).reduce((s, t) => s + (t.target || 0), 0) || 21;
+  const pct = Math.min(100, Math.round(((challenge.check_in_days || 0) / totalDays) * 100));
 
   const getTaskProgress = (t, i) => {
     if (i === 0) return challenge.check_in_days || 0;

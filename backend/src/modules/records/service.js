@@ -51,11 +51,6 @@ async function createRecord(userId, data) {
   return recordRepo.findById(id, userId)
 }
 
-function listRecords(userId, { date, mealType }) {
-  const rows = recordRepo.listByDate(userId, date || today())
-  return mealType ? rows.filter((r) => r.meal_type === mealType) : rows
-}
-
 async function updateRecord(userId, id, data) {
   const exists = recordRepo.findById(id, userId)
   if (!exists) throw new ServiceError(404, RECORD_NOT_FOUND)
@@ -141,7 +136,6 @@ function getCalendar(userId, { month = today().slice(0, 7) }) {
 
 module.exports = {
   createRecord,
-  listRecords,
   updateRecord,
   deleteRecord,
   getStats,

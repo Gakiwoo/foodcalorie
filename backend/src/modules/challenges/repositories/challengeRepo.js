@@ -39,9 +39,5 @@ module.exports = {
        WHERE challenge_id = ? AND user_id = ?`
     ).run(streakDays, today, challengeId, userId)
     return db.prepare('SELECT * FROM challenge_participants WHERE challenge_id = ? AND user_id = ?').get(challengeId, userId)
-  },
-
-  updateLastCheckIn: (challengeId, userId, today) => {
-    getDb().prepare('UPDATE challenge_participants SET last_check_in = ? WHERE challenge_id = ? AND user_id = ?').run(today, challengeId, userId)
   }
 }

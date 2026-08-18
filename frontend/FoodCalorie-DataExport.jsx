@@ -22,14 +22,18 @@ export default function FoodCalorieDataExport() {
         throw new Error(body?.message || '导出失败');
       }
       if (format === 'csv') {
-        // 触发浏览器下载
+        // 触发浏览器下载（F3：本地日期命名，避免 UTC 跨日差一天；延迟 revoke 避免中断下载）
         const blob = await resp.blob();
         const a = document.createElement('a');
+        const localDate = new Date();
+        const y = localDate.getFullYear();
+        const m = String(localDate.getMonth() + 1).padStart(2, '0');
+        const d = String(localDate.getDate()).padStart(2, '0');
         a.href = URL.createObjectURL(blob);
-        a.download = `foodcalorie-records-${range}-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.download = `foodcalorie-records-${range}-${y}-${m}-${d}.csv`;
         document.body.appendChild(a);
         a.click();
-        URL.revokeObjectURL(a.href);
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
         a.remove();
         toast('CSV 已导出并下载');
       } else {

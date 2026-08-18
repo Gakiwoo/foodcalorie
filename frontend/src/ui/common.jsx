@@ -87,12 +87,13 @@ export function NavBar({ title, right, onBack, appearance = 'light', showBack = 
   );
 }
 
-export function ToggleSwitch({ checked, label }) {
+export function ToggleSwitch({ checked, label, onChange }) {
   return (
     <span
       role="switch"
       aria-checked={checked}
       aria-label={label}
+      onClick={onChange ? () => onChange(!checked) : undefined}
       style={{
         width: 42,
         height: 24,
@@ -103,6 +104,7 @@ export function ToggleSwitch({ checked, label }) {
         justifyContent: checked ? 'flex-end' : 'flex-start',
         alignItems: 'center',
         flexShrink: 0,
+        cursor: onChange ? 'pointer' : 'default',
         transition: 'background .2s ease'
       }}>
       <span style={{ width: 20, height: 20, borderRadius: 10, background: '#FFFFFF', boxShadow: '0 1px 3px rgba(0,0,0,.18)' }} />

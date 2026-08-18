@@ -38,7 +38,9 @@ export default function FoodCalorieHome() {
       <div data-name="top-nav" style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', padding: '10px 20px' }}>
         <span data-name="nav-date" style={{ color: '#1A1A1A', fontSize: 16, fontWeight: 600, lineHeight: '22px' }}>今日</span>
         <p data-name="nav-title" style={{ flex: 1, color: '#1A1A1A', fontSize: 18, fontWeight: 700, lineHeight: '24px', textAlign: 'center', margin: 0 }}>食刻</p>
-        <i data-name="nav-settings" className="fas fa-gear" style={{ fontSize: 20, color: '#1A1A1A', cursor: 'pointer' }} onClick={() => navigate('/settings')} />
+        <div data-name="nav-settings-wrap" onClick={() => navigate('/settings')} style={{ padding: 8, margin: -8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <i data-name="nav-settings" className="fas fa-gear" style={{ fontSize: 20, color: '#1A1A1A' }} />
+        </div>
       </div>
 
       {/* 拍照识别大卡 */}
@@ -110,7 +112,7 @@ export default function FoodCalorieHome() {
                 </div>
                 <div data-name={'food-info-' + r.id} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', gap: 4, minWidth: 0 }}>
                   <p data-name={'food-name-' + r.id} style={{ alignSelf: 'stretch', flexShrink: 0, color: '#1A1A1A', fontSize: 15, fontWeight: 600, lineHeight: '20px', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.food_name}</p>
-                  <span data-name={'food-time-' + r.id} style={{ flexShrink: 0, color: '#9CA3AF', fontSize: 12, lineHeight: '16px' }}>{r.record_time.slice(11, 16)} · {MEAL_LABEL[r.meal_type] || r.meal_type}</span>
+                  <span data-name={'food-time-' + r.id} style={{ flexShrink: 0, color: '#9CA3AF', fontSize: 12, lineHeight: '16px' }}>{r.record_time ? r.record_time.slice(11, 16) : '--:--'} · {MEAL_LABEL[r.meal_type] || r.meal_type}</span>
                 </div>
                 <div data-name={'food-cal-' + r.id} style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', flexDirection: 'column', gap: 2 }}>
                   <span data-name={'food-cal-value-' + r.id} style={{ color: '#34C759', fontSize: 16, fontWeight: 700, lineHeight: '22px', textAlign: 'right' }}>{r.calories} kcal</span>

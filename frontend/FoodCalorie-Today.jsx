@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { todayStr } from './src/ui/toast';
-import { StatusBar, NavBar, Ring, Card, BottomNav } from './src/ui/common';
+import { StatusBar, NavBar, Ring, Card, BottomNav, normalizeDailyStats } from './src/ui/common';
 
 // 今日记录页：真实数据（GET stats + GET records 当日列表）
 export default function FoodCalorieToday() {
@@ -21,7 +21,7 @@ export default function FoodCalorieToday() {
         http.get('/api/v1/foodcalorie/records/stats', { range: 'day', date: today }),
         http.get('/api/v1/foodcalorie/records', { date: today })
       ]);
-      setStats(s.data);
+      setStats(normalizeDailyStats(s.data));
       setList(r.data.list);
     } catch (e) {
       setError(e.message || '加载失败，请检查登录状态');
@@ -128,7 +128,7 @@ export default function FoodCalorieToday() {
                         </div>
                         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
                           <div style={{ fontSize: 15, fontWeight: 600, color: '#1A1A1A' }}>{r.food_name}</div>
-                          <div style={{ fontSize: 12, color: '#9CA3AF' }}>{r.record_time.slice(11, 16)}</div>
+                          <div style={{ fontSize: 12, color: '#9CA3AF' }}>{r.record_time ? r.record_time.slice(11, 16) : '--:--'}</div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
                           <span style={{ fontSize: 16, fontWeight: 700, color: '#34C759' }}>{r.calories} kcal</span>

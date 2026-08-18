@@ -40,10 +40,21 @@ function installProcessHandlers() {
   process.on('unhandledRejection', (reason) => {
     logger.error({ reason }, 'unhandledRejection')
   })
-  process.on('SIGINT', () => {
-    closeDb()
-    process.exit(0)
-  })
+  // SIGINT / SIGTERM 统一优雅关闭：停止接收新连接 + 关闭 DB（WAL checkpoint），再退出（B7）
+  const gracefulShutdown = (signal) => {
+    logger.info(`收到 ${signal}，开始优雅关闭`)
+    server.close(() => {
+      closeDb()
+      process.exit(0)
+    })
+    // 兜底：5 秒内未能优雅退出则强制结束
+    setTimeout(() => {
+      logger.warn('优雅关闭超时，强制退出')
+      process.exit(1)
+    }, 5000).unref()
+  }
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'))
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'))
 }
 
 installProcessHandlers()

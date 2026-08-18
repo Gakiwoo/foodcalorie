@@ -24,7 +24,8 @@ function requireAuth(req, res, next) {
     return next(new ServiceError(401, 20001, '未登录，请先登录'))
   }
   try {
-    const payload = jwt.verify(token, JWT_SECRET)
+    // 显式限定 HS256，防止算法混淆攻击（B5）
+    const payload = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] })
     // payload: { id, email, role, iat, exp }
     req.user = { id: payload.id, email: payload.email, role: payload.role }
     return next()

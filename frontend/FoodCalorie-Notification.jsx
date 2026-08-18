@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
-import { StatusBar, NavBar, Card } from './src/ui/common';
+import { StatusBar, NavBar, Card, ToggleSwitch } from './src/ui/common';
 
 // 通知设置页：真实数据（GET/PUT profile.notif_* + quiet 时段）
 const SWITCHES = [
@@ -12,14 +12,6 @@ const SWITCHES = [
   { key: 'notif_weekly', label: '每周报告', desc: '每周日发送本周饮食总结' },
   { key: 'notif_activity', label: '活动通知', desc: '挑战活动、运营活动通知' }
 ];
-
-function Switch({ on, onChange }) {
-  return (
-    <div onClick={() => onChange(!on)} style={{ width: 46, height: 26, borderRadius: 13, background: on ? '#34C759' : '#D1D5DB', position: 'relative', cursor: 'pointer', flexShrink: 0, transition: 'background .2s' }}>
-      <div style={{ position: 'absolute', top: 3, left: on ? 23 : 3, width: 20, height: 20, borderRadius: 10, background: '#fff', transition: 'left .2s' }} />
-    </div>
-  );
-}
 
 export default function FoodCalorieNotification() {
   const navigate = useNavigate();
@@ -83,7 +75,7 @@ export default function FoodCalorieNotification() {
                   <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>{s.label}</div>
                   <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{s.desc}</div>
                 </div>
-                <Switch on={!!flags[s.key]} onChange={(v) => setFlags((f) => ({ ...f, [s.key]: v ? 1 : 0 }))} />
+                <ToggleSwitch checked={!!flags[s.key]} label={s.label} onChange={(v) => setFlags((f) => ({ ...f, [s.key]: v ? 1 : 0 }))} />
               </div>
             ))}
           </Card>

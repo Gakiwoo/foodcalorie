@@ -1,40 +1,38 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import FoodCalorieHome from './FoodCalorie-Home.jsx';
-import FoodCalorieSettings from './FoodCalorie-Settings.jsx';
-import FoodCalorieCamera from './FoodCalorie-Camera.jsx';
-import FoodCalorieRecords from './FoodCalorie-Records.jsx';
-import FoodCalorieToday from './FoodCalorie-Today.jsx';
-import FoodCalorieDetail from './FoodCalorie-Detail.jsx';
-import FoodCalorieDiscover from './FoodCalorie-Discover.jsx';
-import FoodCalorieMe from './FoodCalorie-Me.jsx';
-import FoodCalorieAddFood from './FoodCalorie-AddFood.jsx';
-import FoodCalorieCameraResult from './FoodCalorie-CameraResult.jsx';
-import FoodCalorieGoal from './FoodCalorie-Goal.jsx';
-import FoodCalorieArticle from './FoodCalorie-Article.jsx';
-import FoodCalorieRecipe from './FoodCalorie-Recipe.jsx';
-import FoodCalorieSearch from './FoodCalorie-Search.jsx';
-import FoodCalorieFavorites from './FoodCalorie-Favorites.jsx';
-import FoodCalorieDataExport from './FoodCalorie-DataExport.jsx';
-import FoodCalorieNotification from './FoodCalorie-Notification.jsx';
-import FoodCaloriePrivacy from './FoodCalorie-Privacy.jsx';
-import FoodCalorieAbout from './FoodCalorie-About.jsx';
-// 本轮新增 10 页
-import FoodCalorieProfile from './FoodCalorie-Profile.jsx';
-import FoodCalorieHelp from './FoodCalorie-Help.jsx';
-import FoodCalorieDietPref from './FoodCalorie-DietPref.jsx';
-import FoodCalorieUnit from './FoodCalorie-Unit.jsx';
-import FoodCaloriePrecision from './FoodCalorie-Precision.jsx';
-import FoodCalorieBurst from './FoodCalorie-Burst.jsx';
-import FoodCalorieChallenge from './FoodCalorie-Challenge.jsx';
-import FoodCalorieEditRecord from './FoodCalorie-EditRecord.jsx';
-import FoodCalorieRecordsWeek from './FoodCalorie-RecordsWeek.jsx';
-import FoodCalorieRecordsMonth from './FoodCalorie-RecordsMonth.jsx';
-// 登录注册
-import FoodCalorieLogin from './FoodCalorie-Login.jsx';
-import FoodCalorieRegister from './FoodCalorie-Register.jsx';
-// 真实后端对接
-// (logout 已内聚到 Settings 组件内部处理，不再需要全局注入)
+
+// 路由级代码分割（F7）：首页保持静态加载保证首屏，其余页面按需懒加载
+const FoodCalorieHome = lazy(() => import('./FoodCalorie-Home.jsx'));
+const FoodCalorieSettings = lazy(() => import('./FoodCalorie-Settings.jsx'));
+const FoodCalorieCamera = lazy(() => import('./FoodCalorie-Camera.jsx'));
+const FoodCalorieRecords = lazy(() => import('./FoodCalorie-Records.jsx'));
+const FoodCalorieToday = lazy(() => import('./FoodCalorie-Today.jsx'));
+const FoodCalorieDetail = lazy(() => import('./FoodCalorie-Detail.jsx'));
+const FoodCalorieDiscover = lazy(() => import('./FoodCalorie-Discover.jsx'));
+const FoodCalorieMe = lazy(() => import('./FoodCalorie-Me.jsx'));
+const FoodCalorieAddFood = lazy(() => import('./FoodCalorie-AddFood.jsx'));
+const FoodCalorieCameraResult = lazy(() => import('./FoodCalorie-CameraResult.jsx'));
+const FoodCalorieGoal = lazy(() => import('./FoodCalorie-Goal.jsx'));
+const FoodCalorieArticle = lazy(() => import('./FoodCalorie-Article.jsx'));
+const FoodCalorieRecipe = lazy(() => import('./FoodCalorie-Recipe.jsx'));
+const FoodCalorieSearch = lazy(() => import('./FoodCalorie-Search.jsx'));
+const FoodCalorieFavorites = lazy(() => import('./FoodCalorie-Favorites.jsx'));
+const FoodCalorieDataExport = lazy(() => import('./FoodCalorie-DataExport.jsx'));
+const FoodCalorieNotification = lazy(() => import('./FoodCalorie-Notification.jsx'));
+const FoodCaloriePrivacy = lazy(() => import('./FoodCalorie-Privacy.jsx'));
+const FoodCalorieAbout = lazy(() => import('./FoodCalorie-About.jsx'));
+const FoodCalorieProfile = lazy(() => import('./FoodCalorie-Profile.jsx'));
+const FoodCalorieHelp = lazy(() => import('./FoodCalorie-Help.jsx'));
+const FoodCalorieDietPref = lazy(() => import('./FoodCalorie-DietPref.jsx'));
+const FoodCalorieUnit = lazy(() => import('./FoodCalorie-Unit.jsx'));
+const FoodCaloriePrecision = lazy(() => import('./FoodCalorie-Precision.jsx'));
+const FoodCalorieBurst = lazy(() => import('./FoodCalorie-Burst.jsx'));
+const FoodCalorieChallenge = lazy(() => import('./FoodCalorie-Challenge.jsx'));
+const FoodCalorieEditRecord = lazy(() => import('./FoodCalorie-EditRecord.jsx'));
+const FoodCalorieRecordsWeek = lazy(() => import('./FoodCalorie-RecordsWeek.jsx'));
+const FoodCalorieRecordsMonth = lazy(() => import('./FoodCalorie-RecordsMonth.jsx'));
+const FoodCalorieLogin = lazy(() => import('./FoodCalorie-Login.jsx'));
+const FoodCalorieRegister = lazy(() => import('./FoodCalorie-Register.jsx'));
 
 // 路由注册
 const PAGES = [
@@ -121,11 +119,13 @@ export default function App() {
   return (
     <div className="app-shell">
       <div className="page-frame">
-        <Routes>
-          {PAGES.map((p) => (
-            <Route key={p.path} path={p.path} element={<p.Comp />} />
-          ))}
-        </Routes>
+        <Suspense fallback={<div style={{ minHeight: '100dvh', background: '#F7F8FA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF', fontSize: 13 }}>加载中…</div>}>
+          <Routes>
+            {PAGES.map((p) => (
+              <Route key={p.path} path={p.path} element={<p.Comp />} />
+            ))}
+          </Routes>
+        </Suspense>
         {fromSettings && (
           <button
             className="records-back-btn"

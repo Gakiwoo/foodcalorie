@@ -17,11 +17,12 @@ function resolveRange(range, date) {
   throw new ServiceError(400, RANGE_INVALID)
 }
 
-// CSV 转义 + 公式注入防护：以 = + - @ 开头的单元格前置单引号，
+// CSV 转义 + 公式注入防护：以 = + - @ 或 \t \r 开头的单元格前置单引号，
 // 防止 Excel/WPS 打开时将用户输入当作公式执行（CSV Formula Injection）
 function escapeCsv(v) {
   const s = v == null ? '' : String(v)
-  const guarded = /^[=+\-@]/.test(s) ? "'" + s : s
+  // Excel 除行首 =+-@ 外，制表符 / 回车前缀也会触发公式解析，一并防护（B4）
+  const guarded = /^[=+\-@\t\r]/.test(s) ? "'" + s : s
   return /[",\n]/.test(guarded) ? '"' + guarded.replace(/"/g, '""') + '"' : guarded
 }
 

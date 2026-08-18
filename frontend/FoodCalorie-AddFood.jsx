@@ -286,8 +286,8 @@ export default function FoodCalorieAddFood() {
         </Card>
       </div>
 
-      {/* 底部保存栏 */}
-      <div style={{ position: 'sticky', bottom: 0, background: '#FFFFFF', padding: '12px 20px 20px', borderTop: '1px solid #F3F4F6' }}>
+      {/* 底部保存栏（F8：safe-area 适配全面屏手势条） */}
+      <div style={{ position: 'sticky', bottom: 0, background: '#FFFFFF', padding: '12px 20px calc(20px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid #F3F4F6' }}>
         <div style={{ display: 'flex', alignSelf: 'stretch', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 10 }}>
           <span style={{ fontSize: 13, color: '#9CA3AF' }}>已选 {selected.length} 项</span>
           <span style={{ fontSize: 13, color: '#34C759', fontWeight: 600 }}>{totalCal} kcal</span>

@@ -24,7 +24,13 @@ const recordBody = z.object({
   fat_g: z.number().min(0).optional().default(0),
   fiber_g: z.number().min(0).optional().default(0),
   portion: z.string().optional().default('1 份'),
-  record_time: z.string().regex(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/, 'record_time 格式应为 YYYY-MM-DD HH:mm'),
+  record_time: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/, 'record_time 格式应为 YYYY-MM-DD HH:mm')
+    // body 侧日历校验（B8）：2026-02-31 99:99 之类非法值禁止入库，避免统计被静默排除
+    .refine((s) => isValidCnDate(s.slice(0, 10)) && Number(s.slice(11, 13)) <= 23 && Number(s.slice(14, 16)) <= 59, {
+      message: 'record_time 必须是合法日期时间'
+    }),
   source: z.enum(['AI识别', 'manual', 'search']).optional().default('manual'),
   // image_url 白名单：仅允许本服务签发的鉴权图片路径（或空）。
   image_url: z
@@ -42,7 +48,8 @@ const idParam = z.object({ id: z.coerce.number().int().positive() })
 const querySchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(isValidCnDate, 'date 必须是合法日历日').optional(),
   meal: z.enum(MEAL_TYPES).optional(),
-  page: z.coerce.number().int().min(1).optional().default(1),
+  // page 上限 10000：防巨型 OFFSET 全表偏移扫描（B9）
+  page: z.coerce.number().int().min(1).max(10000).optional().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).optional().default(20)
 })
 const statsQuery = z.object({

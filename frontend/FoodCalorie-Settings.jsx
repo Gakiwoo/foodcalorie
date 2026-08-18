@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { http } from './src/api/client';
 import { logout } from './src/api/auth';
 import { toast } from './src/ui/toast';
 import { NavBar, StatusBar, ToggleSwitch } from './src/ui/common';
@@ -7,11 +8,12 @@ import { NavBar, StatusBar, ToggleSwitch } from './src/ui/common';
 // 设置页：统一使用可离线打包的 Font Awesome 图标，不再依赖设计稿导出的散列资源名。
 
 // 分组与设置项（value 为右侧文案；switch 为演示开关；to 为跳转目标）
+// target 行 value 由真实 profile 数据动态填充（F1）
 const GROUPS = [
   {
     title: '目标与偏好',
     rows: [
-      { key: 'target', icon: 'fa-bullseye', label: '每日目标热量', value: '2000 kcal', to: '/goal' },
+      { key: 'target', icon: 'fa-bullseye', label: '每日目标热量', to: '/goal' },
       { key: 'diet', icon: 'fa-leaf', label: '饮食偏好', to: '/dietpref' },
       { key: 'unit', icon: 'fa-scale-balanced', label: '单位设置', value: '千卡(kcal)', to: '/unit' }
     ]
@@ -49,6 +51,22 @@ const dividerStyle = { width: 'calc(100% - 32px)', height: 1, background: '#EEF0
 
 export default function FoodCalorieSettings() {
   const navigate = useNavigate();
+  // F1：真实数据（目标热量 + 记录总数），加载失败时回退占位
+  const [targetCal, setTargetCal] = useState(null);
+  const [recordCount, setRecordCount] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const p = await http.get('/api/v1/foodcalorie/profile');
+        setTargetCal(p.data?.target_calories ?? null);
+      } catch { /* 未登录忽略 */ }
+      try {
+        const r = await http.get('/api/v1/foodcalorie/records', { page: 1, pageSize: 1 });
+        setRecordCount(r.data?.total ?? null);
+      } catch { /* 未登录忽略 */ }
+    })();
+  }, []);
 
   function handleLogout() {
     logout()
@@ -88,7 +106,7 @@ export default function FoodCalorieSettings() {
             <span style={{ color: '#1A1A1A', fontSize: 14, fontWeight: 600 }}>我的记录</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ color: '#9CA3AF', fontSize: 12 }}>128 条记录</span>
+            <span style={{ color: '#9CA3AF', fontSize: 12 }}>{recordCount != null ? recordCount + ' 条记录' : '--'}</span>
             <i className="fas fa-chevron-right" style={{ color: '#C0C4CC', fontSize: 12 }} aria-hidden="true" />
           </div>
         </div>
@@ -112,6 +130,8 @@ export default function FoodCalorieSettings() {
                     ) : (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         {r.value && <span style={valueStyle}>{r.value}</span>}
+                        {r.key === 'target' && targetCal != null && <span style={valueStyle}>{targetCal} kcal</span>}
+                        {r.key === 'target' && targetCal == null && <span style={valueStyle}>--</span>}
                         <i className="fas fa-chevron-right" style={{ color: '#C0C4CC', fontSize: 12 }} aria-hidden="true" />
                       </div>
                     )}

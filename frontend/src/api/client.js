@@ -56,6 +56,7 @@ export const resolveUrl = (path) => resolveApiUrl(path, API_ORIGIN)
 
 const TOKEN_KEY = 'fc_access_token'
 const REFRESH_KEY = 'fc_refresh_token'
+const SESSION_KEY = 'fc_has_session'
 
 export const tokenStore = {
   getAccess: () => localStorage.getItem(TOKEN_KEY),
@@ -67,6 +68,27 @@ export const tokenStore = {
   clear: () => {
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(REFRESH_KEY)
+  }
+}
+
+// 会话标记：登录走 gakiwoo httpOnly Cookie，前端不持有 token，
+// 因此用独立标记记录"是否曾登录"，供 401 刷新失败时决定是否跳转登录页。
+// sessionStorage + 内存兜底（隐私模式/异常环境不可用时静默降级）。
+let memorySession = false
+export function markSession(has) {
+  memorySession = !!has
+  try {
+    if (has) sessionStorage.setItem(SESSION_KEY, '1')
+    else sessionStorage.removeItem(SESSION_KEY)
+  } catch { /* 隐私模式忽略 */ }
+}
+
+export function hasSession() {
+  if (memorySession) return true
+  try {
+    return sessionStorage.getItem(SESSION_KEY) === '1'
+  } catch {
+    return memorySession
   }
 }
 
@@ -146,12 +168,13 @@ export async function apiClient(path, options = {}) {
 
   // 401 → 尝试 refresh 一次（单飞，并发共享同一次刷新）
   if (resp.status === 401 && !_retried) {
-    const hadSession = !!(tokenStore.getAccess() || tokenStore.getRefresh())
+    const hadSession = !!(tokenStore.getAccess() || tokenStore.getRefresh() || hasSession())
     const ok = await refreshSessionOnce()
     if (ok) {
       return apiClient(path, { ...options, _retried: true })
     }
     tokenStore.clear()
+    markSession(false)
     // 仅"曾登录过但会话已失效"的用户跳转登录页；
     // 游客（从未登录，无任何 token）直接抛 401 由页面渲染游客视图，避免整页跳转打断浏览
     if (hadSession && typeof window !== 'undefined' && !onAuthPage()) {

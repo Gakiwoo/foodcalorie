@@ -5,6 +5,7 @@ const { z } = require('zod')
 const { validate } = require('../../shared/middleware/validate')
 const { requireAuth } = require('../../shared/middleware/requireAuth')
 const { ok } = require('../../shared/utils/response')
+const { isValidCnDate } = require('../../shared/utils/date')
 const service = require('./service')
 
 const router = express.Router()
@@ -22,7 +23,12 @@ const DIET_PREF_CHOICES = [
 // 资料/设置可更新字段（全可选 = 部分更新）
 const profileBody = z.object({
   gender: z.enum(['女', '男']).optional(),
-  birthday: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
+  birthday: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .refine(isValidCnDate, 'birthday 必须是合法日历日')
+    .optional()
+    .nullable(),
   height_cm: z.number().int().min(80).max(250).optional().nullable(),
   weight_kg: z.number().min(20).max(300).optional().nullable(),
   goal_type: z.enum(GOALS).optional(),

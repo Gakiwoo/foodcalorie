@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { http } from './src/api/client';
 import { todayStr } from './src/ui/toast';
-import { StatusBar, NavBar, BottomNav, Ring, Card } from './src/ui/common';
+import { StatusBar, NavBar, BottomNav, Ring, Card, normalizeDailyStats } from './src/ui/common';
 
 const SHADOW_CARD = '0 4px 14px rgba(0,0,0,0.05)';
 const SEG_OPTIONS = [
@@ -84,7 +84,7 @@ export default function FoodCalorieRecords() {
         http.get('/api/v1/foodcalorie/records/stats', { range: 'day', date }),
         http.get('/api/v1/foodcalorie/records', { date })
       ]);
-      setStats(s.data);
+      setStats(normalizeDailyStats(s.data));
       setList(r.data.list);
     } catch (e) {
       setError(e.message || '加载失败，请检查登录状态');

@@ -9,10 +9,12 @@ const { NOT_FOUND, PARAM_INVALID } = require('../utils/errors')
 const IMAGE_ROUTE_PREFIX = '/api/v1/foodcalorie/ai/images/'
 const FILENAME_PATTERN = /^food_\d+_[0-9a-f]{8}\.(?:jpg|png|webp|heic|heif)$/i
 
+// 上传目录：模块加载时创建一次，避免每个请求重复同步 mkdir（B10）
+const UPLOAD_DIR = path.resolve(process.env.UPLOAD_DIR || path.join(__dirname, '..', '..', '..', 'uploads'))
+fs.mkdirSync(UPLOAD_DIR, { recursive: true })
+
 function getUploadDir() {
-  const dir = process.env.UPLOAD_DIR || path.join(__dirname, '..', '..', '..', 'uploads')
-  fs.mkdirSync(dir, { recursive: true })
-  return path.resolve(dir)
+  return UPLOAD_DIR
 }
 
 function validateFilename(filename) {
@@ -50,9 +52,19 @@ function assertOwnedUrl(url, userId) {
 
 function register(filename, userId) {
   validateFilename(filename)
-  getDb()
-    .prepare("INSERT INTO uploaded_images (filename, user_id, status) VALUES (?, ?, 'pending')")
-    .run(filename, userId)
+  const db = getDb()
+  // 单用户 pending 上限守护（B3）：超过 30 张未确认图片时，先清理该用户最旧的 pending
+  const pendingCount = db.prepare("SELECT COUNT(*) AS c FROM uploaded_images WHERE user_id = ? AND status = 'pending'").get(userId).c
+  if (pendingCount >= 30) {
+    const oldest = db.prepare("SELECT filename FROM uploaded_images WHERE user_id = ? AND status = 'pending' ORDER BY created_at ASC LIMIT 1").get(userId)
+    if (oldest) {
+      db.prepare('DELETE FROM uploaded_images WHERE filename = ? AND user_id = ?').run(oldest.filename, userId)
+      try { fs.unlinkSync(path.join(UPLOAD_DIR, oldest.filename)) } catch (error) {
+        if (error.code !== 'ENOENT') console.warn(`[imageStore] 清理超出上限图片失败 ${oldest.filename}: ${error.message}`)
+      }
+    }
+  }
+  db.prepare("INSERT INTO uploaded_images (filename, user_id, status) VALUES (?, ?, 'pending')").run(filename, userId)
   cleanupExpiredPending()
   return imageUrl(filename)
 }
@@ -95,8 +107,9 @@ function removeOwnedUrl(url, userId) {
 }
 
 function cleanupExpiredPending() {
+  // 清理周期从 1 天缩短到 6 小时（B3），配合单用户 pending 上限守护
   const expired = getDb()
-    .prepare("SELECT filename, user_id FROM uploaded_images WHERE status = 'pending' AND created_at < datetime('now', '-1 day') LIMIT 100")
+    .prepare("SELECT filename, user_id FROM uploaded_images WHERE status = 'pending' AND created_at < datetime('now', '-6 hours') LIMIT 100")
     .all()
   const remove = getDb().prepare('DELETE FROM uploaded_images WHERE filename = ? AND user_id = ?')
   const tx = getDb().transaction(() => {

@@ -81,7 +81,7 @@ export default function FoodCalorieCameraResult() {
     <div data-name="FoodCalorie-CameraResult" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
       <NavBar title="识别结果" right={
-        <i className="fas fa-share-nodes" style={{ fontSize: 18, color: '#1A1A1A', cursor: 'pointer' }} onClick={() => {}} />
+        <i className="fas fa-share-nodes" style={{ fontSize: 18, color: '#1A1A1A', cursor: 'pointer' }} onClick={() => toast('分享功能开发中')} />
       } />
 
       {/* 照片展示区：335x200 渐变卡片 + 64px 食物图标，有 preview 时上半部分展示图片 */}

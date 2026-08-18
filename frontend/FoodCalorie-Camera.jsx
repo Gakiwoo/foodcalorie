@@ -167,11 +167,15 @@ export default function FoodCalorieCamera() {
           </>
         ) : (
           <>
-            <i data-name="btn-gallery" className="fas fa-images" style={{ fontSize: 26, color: '#FFFFFF', cursor: 'pointer' }} onClick={() => pickFile(false)} />
+            <div data-name="btn-gallery-wrap" onClick={() => pickFile(false)} style={{ padding: 12, margin: -12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <i data-name="btn-gallery" className="fas fa-images" style={{ fontSize: 26, color: '#FFFFFF' }} />
+            </div>
             <div data-name="shutter" onClick={() => pickFile(true)} style={{ width: 74, height: 74, display: 'flex', flex: 'none', justifyContent: 'center', alignItems: 'center', background: '#FFFFFF', borderRadius: 74, cursor: 'pointer' }}>
               <div data-name="shutter-inner" style={{ width: 62, height: 62, display: 'flex', flex: 'none', justifyContent: 'center', alignItems: 'center', background: '#34C759', borderRadius: 62 }} />
             </div>
-            <i data-name="btn-flip" className="fas fa-sync-alt" style={{ fontSize: 26, color: '#FFFFFF', cursor: 'pointer' }} onClick={() => toast('切换摄像头功能开发中')} />
+            <div data-name="btn-flip-wrap" onClick={() => toast('切换摄像头功能开发中')} style={{ padding: 12, margin: -12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <i data-name="btn-flip" className="fas fa-sync-alt" style={{ fontSize: 26, color: '#FFFFFF' }} />
+            </div>
           </>
         )}
       </div>
