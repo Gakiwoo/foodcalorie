@@ -87,7 +87,7 @@ jobs:
           retention-days: 7
 
   # 发布签名 APK：推 tag（v*）时触发；未配置 FC_RELEASE_* Secrets 时
-  # 第一步即跳过（注意：job-level if 不能访问 secrets 上下文，故用 step 级判断）。
+  # 第一步即跳过（注意：if 条件不能直接访问 secrets 上下文，须经 env 映射）。
   # 需要的 Secrets：
   #   FC_KEYSTORE_BASE64        keystore 文件 base64（生成：base64 -w0 fc-release.keystore）
   #   FC_RELEASE_STORE_PASSWORD keystore 口令
@@ -98,31 +98,33 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write # 创建 Release 与上传附件
+    env:
+      HAS_RELEASE_SECRETS: ${{ secrets.FC_RELEASE_STORE_PASSWORD != '' }}
     defaults:
       run:
         working-directory: frontend
     steps:
       - name: Skip when release secrets missing
-        if: secrets.FC_RELEASE_STORE_PASSWORD == ''
+        if: env.HAS_RELEASE_SECRETS == 'false'
         run: echo "FC_RELEASE_* Secrets 未配置，跳过签名发布"; exit 0
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-        if: secrets.FC_RELEASE_STORE_PASSWORD != ''
+        if: env.HAS_RELEASE_SECRETS == 'true'
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        if: secrets.FC_RELEASE_STORE_PASSWORD != ''
+        if: env.HAS_RELEASE_SECRETS == 'true'
         with:
           node-version: 24.14.0
           cache: npm
           cache-dependency-path: frontend/package-lock.json
       - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
-        if: secrets.FC_RELEASE_STORE_PASSWORD != ''
+        if: env.HAS_RELEASE_SECRETS == 'true'
         with:
           distribution: temurin
           java-version: 21
           cache: gradle
       - run: npm ci
-        if: secrets.FC_RELEASE_STORE_PASSWORD != ''
+        if: env.HAS_RELEASE_SECRETS == 'true'
       - name: Write release keystore from secrets
-        if: secrets.FC_RELEASE_STORE_PASSWORD != ''
+        if: env.HAS_RELEASE_SECRETS == 'true'
         run: |
           echo "${{ secrets.FC_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/fc-release.keystore"
           echo "FC_RELEASE_STORE_FILE=$RUNNER_TEMP/fc-release.keystore" >> "$GITHUB_ENV"
@@ -130,14 +132,14 @@ jobs:
           echo "FC_RELEASE_KEY_ALIAS=${{ secrets.FC_RELEASE_KEY_ALIAS }}" >> "$GITHUB_ENV"
           echo "FC_RELEASE_KEY_PASSWORD=${{ secrets.FC_RELEASE_KEY_PASSWORD }}" >> "$GITHUB_ENV"
       - run: VITE_API_ORIGIN=https://foodcalorie.gakiwoo.com npm run build:apk
-        if: secrets.FC_RELEASE_STORE_PASSWORD != ''
+        if: env.HAS_RELEASE_SECRETS == 'true'
       - run: npx cap sync android
-        if: secrets.FC_RELEASE_STORE_PASSWORD != ''
+        if: env.HAS_RELEASE_SECRETS == 'true'
       - run: ./gradlew assembleRelease --no-daemon
-        if: secrets.FC_RELEASE_STORE_PASSWORD != ''
+        if: env.HAS_RELEASE_SECRETS == 'true'
         working-directory: frontend/android
       - name: Upload signed APK to GitHub Release
-        if: secrets.FC_RELEASE_STORE_PASSWORD != ''
+        if: env.HAS_RELEASE_SECRETS == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
