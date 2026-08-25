@@ -41,7 +41,7 @@ jobs:
           node-version: 24.14.0
           cache: npm
           cache-dependency-path: '**/package-lock.json'
-      - uses: webfactory/ssh-agent@f13b64705d45199f527eb17f0888bd81e09fbe2a # v0.9.0
+      - uses: webfactory/ssh-agent@dc588b651fe13675774614f8e6a936a468676387 # v0.9.0
         if: env.HAS_DEPLOY_SECRETS == 'true'
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
