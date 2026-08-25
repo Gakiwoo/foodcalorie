@@ -1,6 +1,7 @@
 # 生产部署流水线（模板）：后端打包 + 前端构建 → scp 上传 → 备份 → pm2 重启 → 冒烟
 #
-# 触发：push v* tag 或手动 dispatch；未配置 DEPLOY_SSH_KEY / DEPLOY_HOST Secrets 时自动跳过。
+# 触发：push v* tag 或手动 dispatch；未配置 DEPLOY_SSH_KEY / DEPLOY_HOST Secrets 时
+# 第一步即跳过（注意：job-level if 不能访问 secrets 上下文，故用 step 级判断）。
 # 前置（一次性，见 ops/README.md）：
 #   1. 服务器安装 Node 24（/opt/node-v24/bin/node）与 pm2
 #   2. 在 Actions Secrets 配置：
@@ -25,27 +26,32 @@ permissions:
 
 jobs:
   deploy:
-    if: secrets.DEPLOY_HOST != ''
     runs-on: ubuntu-latest
     steps:
+      - name: Skip when deploy secrets missing
+        if: secrets.DEPLOY_HOST == ''
+        run: echo "DEPLOY_SSH_KEY / DEPLOY_HOST Secrets 未配置，跳过部署"; exit 0
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        if: secrets.DEPLOY_HOST != ''
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        if: secrets.DEPLOY_HOST != ''
         with:
           node-version: 24.14.0
           cache: npm
-          cache-dependency-path: |
-            backend/package-lock.json
-            frontend/package-lock.json
+          cache-dependency-path: '**/package-lock.json'
       - uses: webfactory/ssh-agent@f13b64705d45199f527eb17f0888bd81e09fbe2a # v0.9.0
+        if: secrets.DEPLOY_HOST != ''
         with:
           ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
 
       - name: Build backend (deps + tarball)
+        if: secrets.DEPLOY_HOST != ''
         run: |
           cd backend
           npm ci --omit=dev
           tar czf ../deploy-backend.tgz --exclude=node_modules --exclude=test --exclude=.env .
       - name: Build frontend (dist)
+        if: secrets.DEPLOY_HOST != ''
         run: |
           cd frontend
           npm ci
@@ -53,10 +59,12 @@ jobs:
           tar czf ../deploy-frontend.tgz dist
 
       - name: Upload artifacts
+        if: secrets.DEPLOY_HOST != ''
         run: |
           scp -o StrictHostKeyChecking=accept-new deploy-backend.tgz deploy-frontend.tgz "${{ secrets.DEPLOY_HOST }}:/tmp/"
 
       - name: Backup → install → restart → smoke
+        if: secrets.DEPLOY_HOST != ''
         run: |
           ssh "${{ secrets.DEPLOY_HOST }}" 'bash -s' <<'REMOTE'
           set -euo pipefail
@@ -87,5 +95,5 @@ jobs:
           REMOTE
 
       - name: Cleanup remote temp files
-        if: always()
+        if: always() && secrets.DEPLOY_HOST != ''
         run: ssh "${{ secrets.DEPLOY_HOST }}" 'rm -f /tmp/deploy-backend.tgz /tmp/deploy-frontend.tgz'
