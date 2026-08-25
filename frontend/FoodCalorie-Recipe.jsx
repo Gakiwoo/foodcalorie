@@ -3,14 +3,18 @@ import { useSearchParams } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
+import { useBusy } from './src/ui/useBusy';
+import { useUnits } from './src/ui/units';
 
 // 食谱详情页：真实数据（GET /contents/:id 营养/食材/步骤 + 收藏/取消收藏）
 export default function FoodCalorieRecipe() {
   const [params] = useSearchParams();
   const id = params.get('id');
+  const { unitCalorie, unitWeight, kcal, g } = useUnits();
   const [recipe, setRecipe] = useState(null);
   const [faved, setFaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { run: runFav } = useBusy();
 
   const loadFav = useCallback(async () => {
     try {
@@ -37,19 +41,22 @@ export default function FoodCalorieRecipe() {
   }, [id, loadFav]);
 
   async function toggleFav() {
-    try {
-      if (faved) {
-        await http.del('/api/v1/foodcalorie/favorites?type=recipe&ref_id=' + id);
-        setFaved(false);
-        toast('已取消收藏');
-      } else {
-        await http.post('/api/v1/foodcalorie/favorites', { type: 'recipe', ref_id: Number(id) });
-        setFaved(true);
-        toast('已收藏食谱');
+    // runFav：同步闩锁防双击连点（连续两次 POST 收藏会触发后端唯一约束冲突）
+    await runFav(async () => {
+      try {
+        if (faved) {
+          await http.del('/api/v1/foodcalorie/favorites?type=recipe&ref_id=' + id);
+          setFaved(false);
+          toast('已取消收藏');
+        } else {
+          await http.post('/api/v1/foodcalorie/favorites', { type: 'recipe', ref_id: Number(id) });
+          setFaved(true);
+          toast('已收藏食谱');
+        }
+      } catch (e) {
+        toast(e.message || '操作失败');
       }
-    } catch (e) {
-      toast(e.message || '操作失败');
-    }
+    });
   }
 
   const nutr = (label, val, unit = 'g') => (
@@ -92,12 +99,12 @@ export default function FoodCalorieRecipe() {
       {/* 营养 */}
       <Card style={{ margin: '0 20px 14px', padding: '6px 8px', display: 'flex' }}>
         <div style={{ flex: 1, textAlign: 'center', padding: '10px 2px' }}>
-          <div style={{ fontSize: 16, fontWeight: 800, color: '#E8590C' }}>{recipe.calories || 0}</div>
-          <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>热量 kcal</div>
+          <div style={{ fontSize: 16, fontWeight: 800, color: '#E8590C' }}>{kcal(recipe.calories)}</div>
+          <div style={{ fontSize: 10, color: '#9CA3AF', marginTop: 2 }}>热量 {unitCalorie}</div>
         </div>
-        {nutr('蛋白质', recipe.protein_g)}
-        {nutr('碳水', recipe.carbs_g)}
-        {nutr('脂肪', recipe.fat_g)}
+        {nutr('蛋白质', g(recipe.protein_g), unitWeight)}
+        {nutr('碳水', g(recipe.carbs_g), unitWeight)}
+        {nutr('脂肪', g(recipe.fat_g), unitWeight)}
       </Card>
 
       {/* 食材 */}

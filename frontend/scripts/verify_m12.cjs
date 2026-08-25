@@ -1,15 +1,14 @@
 // M12 E2E：拍照识别闭环（选图→识别→确认→记录）+ 通知设置保存
 const puppeteer = require('puppeteer-core');
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const BASE = 'http://127.0.0.1:5173/';
-const SHOT = 'C:/Users/Administrator/WorkBuddy/2026-08-05-10-22-23/archive/verify-screenshots/verify11';
-const IMG = 'C:/Users/Administrator/WorkBuddy/2026-08-05-10-22-23/archive/verify-screenshots/verify6/01-records.png';
+const path = require('path');
+const { CHROME, BASE, SHOT_DIR } = require('./e2e-config');
+const SHOT = SHOT_DIR + '/verify11';
+const IMG = process.env.FC_TEST_IMG || path.join(__dirname, '..', '..', 'archive', 'food-test', 'rice.jpg');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const fs = require('fs');
 fs.mkdirSync(SHOT, { recursive: true });
 
-const EMAIL = 't_fc_test@x.com';
-const PWD = 'Test123456!';
+const { EMAIL, PWD } = require('./test-credentials');
 const results = [];
 const ok = (n, p, x = '') => results.push(`${p ? '✅' : '❌'} ${n}${x ? ' → ' + x : ''}`);
 const clickByText = (page, text) =>
@@ -55,7 +54,7 @@ const clickByText = (page, text) =>
 
     // 2) 结果页：候选列表 → 确认添加
     const crText = await page.evaluate(() => document.body.innerText);
-    ok('结果页候选列表(≥5)', crText.includes('选择食物') && crText.includes('推荐度'), '');
+    ok('结果页候选列表(≥5)', crText.includes('其他候选') && crText.includes('推荐度'), '');
     ok('结果页图片回显', await page.evaluate(() => !!document.querySelector('img[alt="识别照片"]')), '');
     await page.screenshot({ path: SHOT + '/02-camerresult.png' });
     const confirmBtn = await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find((x) => x.textContent.includes('确认添加')); return b ? b.textContent : null; });
@@ -73,9 +72,9 @@ const clickByText = (page, text) =>
     const notifText = await page.evaluate(() => document.body.innerText);
     ok('通知页真实加载(5 开关+免打扰)', notifText.includes('记录提醒') && notifText.includes('每周报告') && notifText.includes('免打扰时段'), '');
     await page.screenshot({ path: SHOT + '/04-notification.png' });
-    // 切换「社区互动」开关（第 3 个 Switch）
+    // 切换「社区互动」开关（第 3 个 Switch；ToggleSwitch 宽 42px）
     await page.evaluate(() => {
-      const switches = [...document.querySelectorAll('div')].filter((d) => d.style?.width === '46px' && d.style?.cursor === 'pointer');
+      const switches = [...document.querySelectorAll('div')].filter((d) => d.style?.width === '42px' && d.style?.cursor === 'pointer');
       const s = switches[2];
       if (s) s.click();
     });
@@ -87,7 +86,7 @@ const clickByText = (page, text) =>
     await page.goto(BASE + 'notification', { waitUntil: 'networkidle2' });
     await sleep(2500);
     await page.evaluate(() => {
-      const switches = [...document.querySelectorAll('div')].filter((d) => d.style?.width === '46px' && d.style?.cursor === 'pointer');
+      const switches = [...document.querySelectorAll('div')].filter((d) => d.style?.width === '42px' && d.style?.cursor === 'pointer');
       const s = switches[2];
       if (s) s.click();
     });

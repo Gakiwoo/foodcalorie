@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { http } from './src/api/client';
 import { todayStr } from './src/ui/toast';
 import { StatusBar, NavBar, BottomNav, Ring, Card, normalizeDailyStats } from './src/ui/common';
+import { useUnits } from './src/ui/units';
+import { Loading, ErrorRetry, EmptyState } from './src/ui/PageState';
 
 const SHADOW_CARD = '0 4px 14px rgba(0,0,0,0.05)';
 const SEG_OPTIONS = [
@@ -34,13 +36,8 @@ function computeMacros(items) {
     fat += Number(r.fat_g) || 0;
   });
   const totalCal = carbs * 4 + protein * 4 + fat * 9;
-  if (totalCal <= 0) {
-    return [
-      { label: '碳水', value: 45 },
-      { label: '蛋白', value: 30 },
-      { label: '脂肪', value: 25 }
-    ];
-  }
+  // 无营养数据时不渲染假比例（原返回固定 45/30/25 示意值，误导用户）
+  if (totalCal <= 0) return [];
   return [
     { label: '碳水', value: Math.round((carbs * 4 / totalCal) * 100) },
     { label: '蛋白', value: Math.round((protein * 4 / totalCal) * 100) },
@@ -67,6 +64,7 @@ function groupByDate(list) {
 // 记录页：真实数据（GET stats + GET records 列表 + 删除 + 支持 ?date= 指定日期）
 export default function FoodCalorieRecords() {
   const navigate = useNavigate();
+  const { unitCalorie, unitWeight, kcal, g } = useUnits();
   const [params] = useSearchParams();
   const dateParam = params.get('date');
   const date = dateParam || todayStr();
@@ -129,12 +127,9 @@ export default function FoodCalorieRecords() {
       />
 
       {loading ? (
-        <div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div>
+        <Loading text="加载中…" padding={60} />
       ) : error ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#E03131', fontSize: 14 }}>
-          {error}
-          <div style={{ marginTop: 12 }}><button onClick={load} style={{ padding: '8px 24px', borderRadius: 12, border: 'none', background: '#34C759', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>重试</button></div>
-        </div>
+        <ErrorRetry error={error} onRetry={load} padding={40} />
       ) : (
         <>
           {/* 汇总卡 */}
@@ -142,8 +137,8 @@ export default function FoodCalorieRecords() {
             <Card style={{ display: 'flex', alignItems: 'center', gap: 16, padding: 20, borderRadius: 20, boxShadow: SHADOW_CARD }} data-name="summary-card">
               <Ring size={96} stroke={12} percent={percent} label={percent + '%'} sub="已摄入" labelSize={18} labelWeight={700} />
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <span style={{ fontSize: 15, fontWeight: 700, color: '#1A1A1A' }}>今日摄入 {totalIntake} kcal</span>
-                <span style={{ fontSize: 13, color: '#9CA3AF' }}>日均 {avgIntake} kcal</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: '#1A1A1A' }}>今日摄入 {kcal(totalIntake)} {unitCalorie}</span>
+                <span style={{ fontSize: 13, color: '#9CA3AF' }}>日均 {kcal(avgIntake)} {unitCalorie}</span>
                 <div style={{ display: 'flex', gap: 8, paddingTop: 4, flexWrap: 'wrap' }}>
                   {macros.map((m) => (
                     <span
@@ -170,13 +165,22 @@ export default function FoodCalorieRecords() {
 
           {/* 日/周/月 */}
           <div style={{ padding: '8px 20px' }}>
-            <div style={{ display: 'flex', height: 40, background: '#FFFFFF', borderRadius: 20, padding: 4, boxShadow: SHADOW_CARD, gap: 4 }}>
+            <div role="tablist" aria-label="记录范围切换" style={{ display: 'flex', height: 40, background: '#FFFFFF', borderRadius: 20, padding: 4, boxShadow: SHADOW_CARD, gap: 4 }}>
               {SEG_OPTIONS.map((o) => {
                 const selected = o.value === 'day';
                 return (
                   <div
                     key={o.value}
+                    role="tab"
+                    aria-selected={selected}
+                    tabIndex={selected ? 0 : -1}
                     onClick={() => o.value === 'week' ? navigate('/records-week') : o.value === 'month' && navigate('/records-month')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        o.value === 'week' ? navigate('/records-week') : o.value === 'month' && navigate('/records-month');
+                      }
+                    }}
                     style={{
                       flex: 1,
                       display: 'flex',
@@ -200,19 +204,15 @@ export default function FoodCalorieRecords() {
           {/* 记录列表 */}
           <div style={{ padding: '8px 20px 16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
             {list.length === 0 ? (
-              <Card style={{ textAlign: 'center', padding: '28px 16px', boxShadow: SHADOW_CARD }}>
-                <i className="fas fa-utensils" style={{ fontSize: 28, color: '#D1D5DB' }} />
-                <div style={{ marginTop: 8, fontSize: 13, color: '#9CA3AF' }}>{isToday ? '今天还没有记录' : '这一天没有记录'}</div>
-                <button onClick={() => navigate('/addfood')} style={{ marginTop: 14, padding: '9px 28px', borderRadius: 14, border: 'none', background: '#34C759', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>+ 添加记录</button>
-              </Card>
+              <EmptyState icon="fa-utensils" text={isToday ? '今天还没有记录' : '这一天没有记录'} actionText="+ 添加记录" onAction={() => navigate('/addfood')} padding={28} />
             ) : (
-              groups.map((g) => (
-                <div key={g.date} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div data-name={'group-header-' + g.date} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 15, fontWeight: 700, color: '#1A1A1A' }}>{formatGroupHeader(g.date)}</span>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#34C759' }}>{g.total} kcal</span>
+              groups.map((grp) => (
+                <div key={grp.date} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <div data-name={'group-header-' + grp.date} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: '#1A1A1A' }}>{formatGroupHeader(grp.date)}</span>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#34C759' }}>{kcal(grp.total)} {unitCalorie}</span>
                   </div>
-                  {g.items.map((r) => (
+                  {grp.items.map((r) => (
                     <Card key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, cursor: 'pointer', boxShadow: SHADOW_CARD }} data-name={'food-card-' + r.id} onClick={() => navigate('/detail?id=' + r.id)}>
                       <div style={{ width: 56, height: 56, borderRadius: 12, background: mealGradient[r.meal_type] || '#E8F5EC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <i className={'fas ' + (mealIcon[r.meal_type] || 'fa-bowl-food')} style={{ fontSize: 24, color: '#FFFFFF' }} />
@@ -222,8 +222,8 @@ export default function FoodCalorieRecords() {
                         <div style={{ fontSize: 12, color: '#9CA3AF' }}>{r.record_time ? r.record_time.slice(11, 16) : '--:--'} · {r.meal_type}</div>
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
-                        <span style={{ fontSize: 16, fontWeight: 700, color: '#34C759' }}>{r.calories} kcal</span>
-                        <span style={{ fontSize: 11, color: '#9CA3AF' }}>蛋白 {Math.round(r.protein_g || 0)}g</span>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: '#34C759' }}>{kcal(r.calories)} {unitCalorie}</span>
+                        <span style={{ fontSize: 11, color: '#9CA3AF' }}>蛋白 {g(r.protein_g)} {unitWeight}</span>
                       </div>
                     </Card>
                   ))}

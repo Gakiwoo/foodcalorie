@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast, todayStr } from './src/ui/toast';
 import { StatusBar, BottomNav } from './src/ui/common';
-
-const MEAL_LABEL = { 早餐: '早餐', 午餐: '午餐', 晚餐: '晚餐', 加餐: '加餐' };
+import { ProtectedImage } from './src/ui/ProtectedImage';
+import { useUnits } from './src/ui/units';
+import { Loading, ErrorRetry, EmptyState } from './src/ui/PageState';
 
 export default function FoodCalorieHome() {
   const navigate = useNavigate();
+  const { unitCalorie, unitWeight, kcal, g } = useUnits();
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -83,18 +85,11 @@ export default function FoodCalorieHome() {
         </div>
 
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div>
+          <Loading text="加载中…" padding={40} />
         ) : error ? (
-          <div style={{ padding: 32, textAlign: 'center', color: '#E03131', fontSize: 14 }}>
-            {error}
-            <div style={{ marginTop: 12 }}><button onClick={loadRecords} style={{ padding: '8px 24px', borderRadius: 12, border: 'none', background: '#34C759', color: '#fff', fontWeight: 600, cursor: 'pointer' }}>重试</button></div>
-          </div>
+          <ErrorRetry error={error} onRetry={loadRecords} padding={32} />
         ) : list.length === 0 ? (
-          <div style={{ padding: 32, textAlign: 'center', background: '#FFFFFF', borderRadius: 16, boxShadow: '0 4px 14px rgba(0,0,0,0.05)' }}>
-            <i className="fas fa-utensils" style={{ fontSize: 28, color: '#D1D5DB' }} />
-            <div style={{ marginTop: 8, fontSize: 13, color: '#9CA3AF' }}>今天还没有记录</div>
-            <button onClick={() => navigate('/addfood')} style={{ marginTop: 14, padding: '9px 28px', borderRadius: 14, border: 'none', background: '#34C759', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>+ 添加记录</button>
-          </div>
+          <EmptyState icon="fa-utensils" text="今天还没有记录" actionText="+ 添加记录" onAction={() => navigate('/addfood')} />
         ) : (
           <div data-name="history-list" style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 12 }}>
             {list.map((r) => (
@@ -105,18 +100,18 @@ export default function FoodCalorieHome() {
                 style={{ width: '100%', display: 'flex', justifyContent: 'flex-start', alignItems: 'center', gap: 12, padding: 12, background: '#FFFFFF', borderRadius: 16, boxShadow: '0 4px 14px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
                 <div data-name={'food-thumb-' + r.id} style={{ width: 56, height: 56, display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 12, overflow: 'hidden', flexShrink: 0, background: '#F3F4F6' }}>
                   {r.image_url ? (
-                    <img data-name={'food-img-' + r.id} src={r.image_url} alt="" style={{ width: 56, height: 56, objectFit: 'cover' }} />
+                    <ProtectedImage data-name={'food-img-' + r.id} src={r.image_url} alt="" style={{ width: 56, height: 56, objectFit: 'cover' }} />
                   ) : (
                     <i className="fas fa-utensils" style={{ fontSize: 20, color: '#D1D5DB' }} />
                   )}
                 </div>
                 <div data-name={'food-info-' + r.id} style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', gap: 4, minWidth: 0 }}>
                   <p data-name={'food-name-' + r.id} style={{ alignSelf: 'stretch', flexShrink: 0, color: '#1A1A1A', fontSize: 15, fontWeight: 600, lineHeight: '20px', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.food_name}</p>
-                  <span data-name={'food-time-' + r.id} style={{ flexShrink: 0, color: '#9CA3AF', fontSize: 12, lineHeight: '16px' }}>{r.record_time ? r.record_time.slice(11, 16) : '--:--'} · {MEAL_LABEL[r.meal_type] || r.meal_type}</span>
+                  <span data-name={'food-time-' + r.id} style={{ flexShrink: 0, color: '#9CA3AF', fontSize: 12, lineHeight: '16px' }}>{r.record_time ? r.record_time.slice(11, 16) : '--:--'} · {r.meal_type}</span>
                 </div>
                 <div data-name={'food-cal-' + r.id} style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-end', flexDirection: 'column', gap: 2 }}>
-                  <span data-name={'food-cal-value-' + r.id} style={{ color: '#34C759', fontSize: 16, fontWeight: 700, lineHeight: '22px', textAlign: 'right' }}>{r.calories} kcal</span>
-                  <span data-name={'food-cal-proto-' + r.id} style={{ color: '#9CA3AF', fontSize: 11, lineHeight: '15px', textAlign: 'right' }}>蛋白 {Math.round(r.protein_g || 0)}g</span>
+                  <span data-name={'food-cal-value-' + r.id} style={{ color: '#34C759', fontSize: 16, fontWeight: 700, lineHeight: '22px', textAlign: 'right' }}>{kcal(r.calories)} {unitCalorie}</span>
+                  <span data-name={'food-cal-proto-' + r.id} style={{ color: '#9CA3AF', fontSize: 11, lineHeight: '15px', textAlign: 'right' }}>蛋白 {g(r.protein_g)} {unitWeight}</span>
                 </div>
               </div>
             ))}

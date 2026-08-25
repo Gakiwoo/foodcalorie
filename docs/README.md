@@ -19,7 +19,7 @@
 
 ```
 2026-08-05-10-22-23/
-├── frontend/          # Vite + React 18 + react-router-dom 6
+├── frontend/          # Vite + React 18 + react-router-dom 7
 │   ├── App.jsx        # 路由表 + 全局 NAV 委托（静态/遗留页）
 │   ├── main.jsx       # 入口（BrowserRouter，生产 basename 环境切换）
 │   ├── FoodCalorie-*.jsx  # 31 个页面组件（真实数据组件）
@@ -56,6 +56,6 @@ npm run build        # 生产构建
 ## 关键链接
 
 - 生产入口：https://foodcalorie.gakiwoo.com
-- 测试账号：`t_fc_test@x.com` / `Test123456!`
+- 测试账号：`t_fc_test@x.com`（密码通过环境变量 `FC_TEST_PASSWORD` 注入，不落仓库；见 `frontend/scripts/test-credentials.cjs`）
 - 后端文档：`backend/README.md`、`backend/ASSESSMENT.md`
 - 文件索引：`docs/PROJECT_STRUCTURE.md`

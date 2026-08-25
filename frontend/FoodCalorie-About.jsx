@@ -1,15 +1,16 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { toast } from './src/ui/toast';
+import { http } from './src/api/client';
 import { NavBar, StatusBar } from './src/ui/common';
+import { APP_VERSION, APP_BUILD } from './src/version';
 import designLogoSymbol from './assets/brand/design-logo-symbol.svg';
 
-// 关于我们页：静态内容（数据驱动重构，原 749 行重复 JSX → 数据渲染）
-// 视觉保持设计稿：Logo 渐变圆 / 统计三卡 / 功能列表 / 链接行 / 页脚。
+// 关于我们页：统计三卡接真实数据（记录总数/本月达标天数/收藏数），未登录保持 0。
 
 const STATS = [
-  { val: '128', label: '已记录餐', color: '#34C759' },
-  { val: '23', label: '坚持天数', color: '#1677FF' },
-  { val: '18', label: '收藏项', color: '#FA8C16' }
+  { key: 'records', label: '已记录餐', color: '#34C759' },
+  { key: 'streak', label: '坚持天数', color: '#1677FF' },
+  { key: 'favorites', label: '收藏项', color: '#FA8C16' }
 ];
 
 const FEATURES = [
@@ -25,13 +26,29 @@ const LINKS = [
   { key: 'contact', text: '联系我们', action: () => toast('联系我们：hello@shike.app') }
 ];
 
-const APP_VERSION = '1.0.3';
-const APP_BUILD = '20260813';
-
 const cardStyle = { width: '100%', background: '#FFFFFF', borderRadius: 16, boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)' };
 const dividerStyle = { width: 'calc(100% - 32px)', height: 1, background: '#EEF0F2', marginLeft: 16 };
 
 export default function FoodCalorieAbout() {
+  const [counts, setCounts] = useState({ records: 0, streak: 0, favorites: 0 });
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [r, s, f] = await Promise.all([
+          http.get('/api/v1/foodcalorie/records', { page: 1, pageSize: 1 }),
+          http.get('/api/v1/foodcalorie/records/stats', { range: 'month' }),
+          http.get('/api/v1/foodcalorie/favorites')
+        ]);
+        setCounts({
+          records: r.data?.total ?? 0,
+          streak: s.data?.reachedDays ?? 0,
+          favorites: Array.isArray(f.data) ? f.data.length : 0
+        });
+      } catch { /* 未登录/游客保持 0，不打扰浏览 */ }
+    })();
+  }, []);
+
   return (
     <div data-name="FoodCalorie-About" style={{ width: '100%', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#F7F8FA' }}>
       <StatusBar />
@@ -54,11 +71,11 @@ export default function FoodCalorieAbout() {
           </p>
         </div>
 
-        {/* 统计三卡 */}
+        {/* 统计三卡（真实数据） */}
         <div style={{ width: '100%', display: 'flex', gap: 10 }}>
           {STATS.map((s) => (
             <div key={s.label} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '14px 0', ...cardStyle }}>
-              <span style={{ color: s.color, fontSize: 20, fontWeight: 700 }}>{s.val}</span>
+              <span style={{ color: s.color, fontSize: 20, fontWeight: 700 }}>{counts[s.key]}</span>
               <span style={{ color: '#9CA3AF', fontSize: 11 }}>{s.label}</span>
             </div>
           ))}

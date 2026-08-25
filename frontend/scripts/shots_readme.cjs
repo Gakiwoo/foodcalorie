@@ -1,10 +1,8 @@
 // README 截图：登录测试账号 → 截取关键页面（375x812 手机视口）
 const puppeteer = require('puppeteer-core');
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const BASE = 'http://127.0.0.1:5173';
-const OUT = 'E:/00-Vibeo Coding/Foodcalorie/docs/images';
-const EMAIL = 't_fc_test@x.com';
-const PWD = 'Test123456!';
+const { CHROME, ROOT: BASE } = require('./e2e-config');
+const OUT = process.env.FC_SHOT_DIR || require('path').join(__dirname, '..', '..', 'docs', 'images');
+const { EMAIL, PWD } = require('./test-credentials');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 (async () => {

@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
+import { useBusy } from './src/ui/useBusy';
 
 // 文章详情页：真实数据（GET /contents/:id 正文 + 收藏/取消收藏）
 export default function FoodCalorieArticle() {
@@ -11,6 +12,7 @@ export default function FoodCalorieArticle() {
   const [article, setArticle] = useState(null);
   const [faved, setFaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { run: runFav } = useBusy();
 
   const loadFav = useCallback(async () => {
     try {
@@ -37,19 +39,22 @@ export default function FoodCalorieArticle() {
   }, [id, loadFav]);
 
   async function toggleFav() {
-    try {
-      if (faved) {
-        await http.del('/api/v1/foodcalorie/favorites?type=article&ref_id=' + id);
-        setFaved(false);
-        toast('已取消收藏');
-      } else {
-        await http.post('/api/v1/foodcalorie/favorites', { type: 'article', ref_id: Number(id) });
-        setFaved(true);
-        toast('已收藏文章');
+    // runFav：同步闩锁防双击连点（连续两次 POST 收藏会触发后端唯一约束冲突）
+    await runFav(async () => {
+      try {
+        if (faved) {
+          await http.del('/api/v1/foodcalorie/favorites?type=article&ref_id=' + id);
+          setFaved(false);
+          toast('已取消收藏');
+        } else {
+          await http.post('/api/v1/foodcalorie/favorites', { type: 'article', ref_id: Number(id) });
+          setFaved(true);
+          toast('已收藏文章');
+        }
+      } catch (e) {
+        toast(e.message || '操作失败');
       }
-    } catch (e) {
-      toast(e.message || '操作失败');
-    }
+    });
   }
 
   if (loading) return <div style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="文章" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;

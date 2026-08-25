@@ -44,14 +44,24 @@ module.exports = {
       `INSERT INTO food_items (name, category, calories, protein_g, carbs_g, fat_g, unit_desc, source)
        VALUES (?, ?, ?, ?, ?, ?, '100g', 'model')`
     )
+    // 入库前逐字段钳制：负数/NaN/Infinity → 0，杜绝模型幻觉污染共享食物库
+    const clamp = (v, max = 5000) => {
+      const n = Number(v)
+      if (!Number.isFinite(n) || n <= 0) return 0
+      return Math.min(n, max)
+    }
     const tx = db.transaction((list) => {
       for (const f of list) {
         const name = String(f.name || '').trim().slice(0, 50)
         if (!name) continue
-        if (!(f.calories > 0) && !(f.protein_g > 0) && !(f.carbs_g > 0) && !(f.fat_g > 0)) continue // 营养全 0 不污染库
+        const calories = clamp(f.calories)
+        const proteinG = clamp(f.protein_g)
+        const carbsG = clamp(f.carbs_g)
+        const fatG = clamp(f.fat_g)
+        if (!calories && !proteinG && !carbsG && !fatG) continue // 营养全 0 不污染库
         const exists = db.prepare('SELECT id FROM food_items WHERE name = ?').get(name)
         if (exists) continue
-        const r = ins.run(name, f.category || '未分类', Math.round(Number(f.calories) || 0), Number(f.protein_g) || 0, Number(f.carbs_g) || 0, Number(f.fat_g) || 0)
+        const r = ins.run(name, f.category || '未分类', Math.round(calories), proteinG, carbsG, fatG)
         inserted.push({ id: r.lastInsertRowid, name })
         if (inserted.length >= limit) break
       }

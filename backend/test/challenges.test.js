@@ -4,11 +4,14 @@ const { test, after } = require('node:test')
 const assert = require('node:assert')
 
 process.env.NODE_ENV = 'test'
+// 测试隔离：避免 dotenv 从本机 .env 注入 REDIS_URL
+process.env.REDIS_URL = ''
 process.env.DB_PATH = require('path').join(require('os').tmpdir(), 'fc-challenge-test.db')
 const fs = require('fs')
 try { fs.unlinkSync(process.env.DB_PATH) } catch {}
 const { getDb, closeDb } = require('../src/db')
 const service = require('../src/modules/challenges/service')
+const challengeRepo = require('../src/modules/challenges/repositories/challengeRepo')
 
 after(() => { try { fs.unlinkSync(process.env.DB_PATH) } catch {}; closeDb() })
 
@@ -73,6 +76,21 @@ test('同日重复打卡 → 429', () => {
 test('未参与挑战 → 404', () => {
   const cid = CID()
   assert.throws(() => service.checkInChallenge(UID + 1, cid), (e) => e.status === 404)
+})
+
+test('并发重复打卡 → 原子条件拦截（repo 层 changes=0）', () => {
+  const cid = CID()
+  const uid = UID + 100
+  service.joinChallenge(uid, cid)
+  const today = cnToday()
+  // 绕过 service 读判定，直接并发两次 repo.checkIn，验证原子防重
+  const first = challengeRepo.checkIn(cid, uid, today, 1)
+  assert.ok(first, '第一次打卡成功')
+  const second = challengeRepo.checkIn(cid, uid, today, 1)
+  assert.strictEqual(second, null, '同日第二次打卡被原子条件拦截')
+  const p = challengeRepo.getParticipation(cid, uid)
+  assert.strictEqual(p.check_in_days, 1, '总天数只累加一次')
+  assert.strictEqual(p.points, 10, '积分只累加一次')
 })
 
 test('listChallenges 返回 streak_days 字段', () => {

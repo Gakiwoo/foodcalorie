@@ -1,8 +1,7 @@
 const puppeteer = require('puppeteer-core');
 
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const BASE = 'http://127.0.0.1:5173/';
-const SHOT_DIR = 'C:/Users/Administrator/WorkBuddy/2026-08-05-10-22-23/archive/verify-screenshots/verify2';
+const { CHROME, BASE, SHOT_DIR } = require('./e2e-config');
+const SHOT_DIR_LEGACY = SHOT_DIR + '/verify2';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -49,20 +48,20 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
     await page.goto(BASE + 'records', { waitUntil: 'networkidle2' });
     await sleep(2500);
     await clickText('记录→周视图', '周', '/records-week');
-    await page.screenshot({ path: `${SHOT_DIR}/01-records-week.png` });
+    await page.screenshot({ path: `${SHOT_DIR_LEGACY}/01-records-week.png` });
     await assertText('周视图页面加载', '本周记录');
 
     // 2. 记录 → 月视图
     await page.goto(BASE + 'records', { waitUntil: 'networkidle2' });
     await sleep(2000);
     await clickText('记录→月视图', '月', '/records-month');
-    await page.screenshot({ path: `${SHOT_DIR}/02-records-month.png` });
+    await page.screenshot({ path: `${SHOT_DIR_LEGACY}/02-records-month.png` });
 
     // 3. 详情/编辑（无 id 兜底态；真实详情/编辑/删除链路见 verify_m9 登录态）
     await page.goto(BASE + 'detail', { waitUntil: 'networkidle2' });
     await sleep(2000);
     await assertText('详情页无id兜底', '记录不存在或已删除');
-    await page.screenshot({ path: `${SHOT_DIR}/03-editrecord.png` });
+    await page.screenshot({ path: `${SHOT_DIR_LEGACY}/03-editrecord.png` });
     await page.goto(BASE + 'editrecord', { waitUntil: 'networkidle2' });
     await sleep(2000);
     await assertText('编辑页无id兜底', '缺少记录参数');
@@ -82,7 +81,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       const path = await page.evaluate(() => location.pathname);
       log.push(`${path === '/challenge' ? '✅' : '❌'} 发现→挑战活动 → ${path} (期望 /challenge)`);
     }
-    await page.screenshot({ path: `${SHOT_DIR}/05-challenge.png` });
+    await page.screenshot({ path: `${SHOT_DIR_LEGACY}/05-challenge.png` });
 
     // 6. 发现 → 搜索框存在（数据需登录，交互层断言；数据断言见 verify_m8）
     await page.goto(BASE + 'discover', { waitUntil: 'networkidle2' });
@@ -94,31 +93,31 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
       await searchBox.type('沙拉');
       await sleep(1000);
       log.push('✅ 发现→搜索框可输入');
-      await page.screenshot({ path: `${SHOT_DIR}/06-discover-search.png` });
+      await page.screenshot({ path: `${SHOT_DIR_LEGACY}/06-discover-search.png` });
     }
 
     // 7. 我的 → 帮助反馈 / 个人信息
     await page.goto(BASE + 'me', { waitUntil: 'networkidle2' });
     await sleep(800);
     await step('我的→帮助反馈', '[data-name="s-icon-3"]', '/help');
-    await page.screenshot({ path: `${SHOT_DIR}/06-help.png` });
+    await page.screenshot({ path: `${SHOT_DIR_LEGACY}/06-help.png` });
     await page.goto(BASE + 'me', { waitUntil: 'networkidle2' });
     await sleep(800);
     await step('我的→个人信息', '[data-name="profile-arrow"]', '/profile');
-    await page.screenshot({ path: `${SHOT_DIR}/07-profile.png` });
+    await page.screenshot({ path: `${SHOT_DIR_LEGACY}/07-profile.png` });
 
     // 8. 设置 → 各设置子页
     await page.goto(BASE + 'settings', { waitUntil: 'networkidle2' });
     await sleep(1000);
     await step('设置→饮食偏好', '[data-name="label-diet"]', '/dietpref');
-    await page.screenshot({ path: `${SHOT_DIR}/08-dietpref.png` });
+    await page.screenshot({ path: `${SHOT_DIR_LEGACY}/08-dietpref.png` });
     await page.goto(BASE + 'settings', { waitUntil: 'networkidle2' });
     await sleep(800);
     await step('设置→单位设置', '[data-name="label-unit"]', '/unit');
     await page.goto(BASE + 'settings', { waitUntil: 'networkidle2' });
     await sleep(800);
     await step('设置→识别精度', '[data-name="label-precision"]', '/precision');
-    await page.screenshot({ path: `${SHOT_DIR}/09-precision.png` });
+    await page.screenshot({ path: `${SHOT_DIR_LEGACY}/09-precision.png` });
     await page.goto(BASE + 'settings', { waitUntil: 'networkidle2' });
     await sleep(800);
     await step('设置→连拍模式', '[data-name="label-burst"]', '/burst');

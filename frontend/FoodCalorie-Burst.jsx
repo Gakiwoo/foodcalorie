@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
+import { useBusy } from './src/ui/useBusy';
 
 // 连拍模式页：真实数据（GET/PUT profile.burst_enabled + burst_count）
 export default function FoodCalorieBurst() {
@@ -10,7 +11,7 @@ export default function FoodCalorieBurst() {
   const [enabled, setEnabled] = useState(false);
   const [count, setCount] = useState(3);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { busy: saving, run: runSaving } = useBusy();
 
   useEffect(() => {
     (async () => {
@@ -27,15 +28,16 @@ export default function FoodCalorieBurst() {
   }, []);
 
   async function save() {
-    setSaving(true);
-    try {
-      await http.put('/api/v1/foodcalorie/profile', { burst_enabled: enabled, burst_count: count });
-      toast('设置已保存');
-      navigate('/settings');
-    } catch (e) {
-      toast(e.message || '保存失败');
-      setSaving(false);
-    }
+    // runSaving：同步闩锁防双击重复保存
+    await runSaving(async () => {
+      try {
+        await http.put('/api/v1/foodcalorie/profile', { burst_enabled: enabled, burst_count: count });
+        toast('设置已保存');
+        navigate('/settings');
+      } catch (e) {
+        toast(e.message || '保存失败');
+      }
+    });
   }
 
   return (

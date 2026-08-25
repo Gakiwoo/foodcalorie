@@ -53,11 +53,16 @@ function checkInChallenge(userId, challengeId) {
   const p = challengeRepo.getParticipation(challengeId, userId)
   if (!p) throw new ServiceError(404, NOT_FOUND, '请先参与挑战')
   const today = cnToday()
+  // 快速判定（友好提示）；真正的防重由 repo 层原子 UPDATE 兜底（并发场景）
   if (p.last_check_in === today) {
     throw new ServiceError(429, RATE_LIMITED, '今日已打卡，明天再来吧')
   }
   const streak = p.last_check_in === cnYesterday() ? (p.streak_days || 0) + 1 : 1
   const updated = challengeRepo.checkIn(challengeId, userId, today, streak)
+  if (!updated) {
+    // 并发下另一请求已抢先打卡：按同日重复处理
+    throw new ServiceError(429, RATE_LIMITED, '今日已打卡，明天再来吧')
+  }
   return {
     id: challengeId,
     check_in_days: updated.check_in_days,

@@ -31,7 +31,7 @@ WorkBuddy/2026-08-05-10-22-23/
 | `App.jsx` | 路由表 + 全局点击委托 NAV（仅静态/遗留页用，真实数据页组件内自理） |
 | `vite.config.js` | dev 代理（`/api/auth` → gakiwoo.com、`/api/v1` → gakiwoo.com 同域）、生产 base |
 | `styles.css` | 全局样式 |
-| `package.json` | 依赖：react 18 / react-router-dom 6 / **puppeteer-core**（E2E） |
+| `package.json` | 依赖：react 18 / react-router-dom 7 / **puppeteer-core**（E2E） |
 
 ### 2.2 页面组件（`FoodCalorie-*.jsx`，31 个）
 

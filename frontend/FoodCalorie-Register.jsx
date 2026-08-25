@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { register } from './src/api/auth';
+import { toast } from './src/ui/toast';
 import { StatusBar } from './src/ui/common';
 
 // 注册页（真实表单）：邮箱 + 密码 + 确认密码，对接服务器 gakiwoo-api /api/auth/register
@@ -23,7 +24,7 @@ export default function FoodCalorieRegister() {
     setLoading(true);
     try {
       await register({ email: email.trim(), password, nickname: email.split('@')[0] });
-      alert('注册成功，请登录');
+      toast('注册成功，请登录');
       navigate('/login');
     } catch (e) {
       setError(e.message || '注册失败，请稍后再试');
@@ -78,13 +79,14 @@ export default function FoodCalorieRegister() {
       <div style={{ display: 'flex', flexDirection: 'column', padding: '4px 20px', gap: 12 }}>
         <div style={fieldStyle}>
           <i className="fas fa-envelope" style={{ fontSize: 14, color: '#9CA3AF' }} />
-          <input type="email" placeholder="请输入邮箱地址" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} autoComplete="email" />
+          <input type="email" placeholder="请输入邮箱地址" aria-label="邮箱" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} autoComplete="email" />
         </div>
         <div style={fieldStyle}>
           <i className="fas fa-lock" style={{ fontSize: 14, color: '#9CA3AF' }} />
           <input
             type={showPwd ? 'text' : 'password'}
             placeholder="设置密码（6-20 位字母数字）"
+            aria-label="设置密码"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             style={inputStyle}
@@ -97,6 +99,7 @@ export default function FoodCalorieRegister() {
           <input
             type={showPwd ? 'text' : 'password'}
             placeholder="再次输入密码"
+            aria-label="再次输入密码"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleRegister()}
@@ -138,8 +141,8 @@ export default function FoodCalorieRegister() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 20px 8px' }}>
         <i className="fas fa-check" style={{ fontSize: 10, color: '#FFFFFF', background: '#34C759', borderRadius: 8, width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
         <span style={{ fontSize: 11, color: '#9CA3AF' }}>我已阅读并同意</span>
-        <span style={{ fontSize: 11, fontWeight: 500, color: '#22A85A' }}>《用户协议》</span>
-        <span style={{ fontSize: 11, fontWeight: 500, color: '#22A85A' }}>《隐私政策》</span>
+        <span style={{ fontSize: 11, fontWeight: 500, color: '#22A85A', cursor: 'pointer' }} onClick={() => toast('《用户协议》（开发中）')}>《用户协议》</span>
+        <span style={{ fontSize: 11, fontWeight: 500, color: '#22A85A', cursor: 'pointer' }} onClick={() => navigate('/privacy')}>《隐私政策》</span>
       </div>
 
       {/* 去登录 */}

@@ -45,27 +45,24 @@ module.exports = {
 
   getByUserId: (userId) => parseRow(getDb().prepare('SELECT * FROM user_profiles WHERE user_id = ?').get(userId)),
 
-  // 存在则更新，不存在则按默认值创建（UPSERT）
+  // 原子 UPSERT：INSERT OR IGNORE（user_id PRIMARY KEY）防并发首次访问重复建档，
+  // 再 UPDATE 应用 patch——替代原 check-then-insert（并发下抛 SQLITE_CONSTRAINT → 500）
   upsert: (userId, patch = {}) => {
     const db = getDb()
-    const existing = db.prepare('SELECT * FROM user_profiles WHERE user_id = ?').get(userId)
-    if (existing) {
-      const sets = Object.keys(patch)
-        .filter((k) => PROFILE_FIELDS.includes(k))
-        .map((k) => `${k} = @${k}`)
-        .join(', ')
-      if (sets) {
-        db.prepare(`UPDATE user_profiles SET ${sets}, updated_at = datetime('now') WHERE user_id = @user_id`).run({
-          ...patch,
-          user_id: userId
-        })
-      }
-    } else {
-      const row = { user_id: userId, ...DEFAULTS, ...patch }
-      const keys = Object.keys(row)
-      db.prepare(
-        `INSERT INTO user_profiles (${keys.join(', ')}) VALUES (${keys.map((k) => '@' + k).join(', ')})`
-      ).run(row)
+    const row = { user_id: userId, ...DEFAULTS, ...patch }
+    const keys = Object.keys(row)
+    db.prepare(
+      `INSERT OR IGNORE INTO user_profiles (${keys.join(', ')}) VALUES (${keys.map((k) => '@' + k).join(', ')})`
+    ).run(row)
+    const sets = Object.keys(patch)
+      .filter((k) => PROFILE_FIELDS.includes(k))
+      .map((k) => `${k} = @${k}`)
+      .join(', ')
+    if (sets) {
+      db.prepare(`UPDATE user_profiles SET ${sets}, updated_at = datetime('now') WHERE user_id = @user_id`).run({
+        ...patch,
+        user_id: userId
+      })
     }
     return parseRow(db.prepare('SELECT * FROM user_profiles WHERE user_id = ?').get(userId))
   },

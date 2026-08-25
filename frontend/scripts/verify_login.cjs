@@ -1,8 +1,8 @@
 // 登录注册链路回归（适配真实表单组件）：登录↔注册互跳、登录提交、注册提交、退出登录
 const puppeteer = require('puppeteer-core');
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const BASE = 'http://127.0.0.1:5173/';
-const SHOT = 'C:/Users/Administrator/WorkBuddy/2026-08-05-10-22-23/archive/verify-screenshots/verify3';
+const { EMAIL, PWD } = require('./test-credentials');
+const { CHROME, BASE, SHOT_DIR } = require('./e2e-config');
+const SHOT = SHOT_DIR + '/verify3';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const fs = require('fs');
 fs.mkdirSync(SHOT, { recursive: true });
@@ -42,8 +42,8 @@ async function waitPath(page, expect) {
     ok('注册→登录', toLogin && (await page.evaluate(() => location.pathname)) === '/login', 'path=' + (await page.evaluate(() => location.pathname)));
 
     // 登录提交（真实 API）
-    await page.type('input[placeholder="请输入邮箱地址"]', 't_fc_test@x.com');
-    await page.type('input[placeholder="请输入密码"]', 'Test123456!');
+    await page.type('input[placeholder="请输入邮箱地址"]', EMAIL);
+    await page.type('input[placeholder="请输入密码"]', PWD);
     await page.click('button');
     const pLogin = await waitPath(page, '/');
     ok('登录→提交(首页)', pLogin === '/', 'path=' + pLogin);

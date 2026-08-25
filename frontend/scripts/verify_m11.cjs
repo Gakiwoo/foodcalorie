@@ -1,14 +1,12 @@
 // M11 E2E：食谱/文章详情（contents/:id + 收藏）、目标设置（profile）、搜索页（foods）
 const puppeteer = require('puppeteer-core');
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const BASE = 'http://127.0.0.1:5173/';
-const SHOT = 'C:/Users/Administrator/WorkBuddy/2026-08-05-10-22-23/archive/verify-screenshots/verify10';
+const { CHROME, BASE, SHOT_DIR } = require('./e2e-config');
+const SHOT = SHOT_DIR + '/verify10';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const fs = require('fs');
 fs.mkdirSync(SHOT, { recursive: true });
 
-const EMAIL = 't_fc_test@x.com';
-const PWD = 'Test123456!';
+const { EMAIL, PWD } = require('./test-credentials');
 const results = [];
 const ok = (n, p, x = '') => results.push(`${p ? '✅' : '❌'} ${n}${x ? ' → ' + x : ''}`);
 const clickByText = (page, text) =>

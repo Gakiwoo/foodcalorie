@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card, Seg } from './src/ui/common';
+import { useBusy } from './src/ui/useBusy';
 
 // 编辑记录页：真实数据（GET 填充 → PUT 部分更新）
 export default function FoodCalorieEditRecord() {
@@ -10,7 +11,7 @@ export default function FoodCalorieEditRecord() {
   const [params] = useSearchParams();
   const id = params.get('id');
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { busy: saving, run: runSaving } = useBusy();
   const [form, setForm] = useState({ food_name: '', meal_type: '午餐', calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, portion: '1 份', record_time: '' });
 
   useEffect(() => {
@@ -42,30 +43,31 @@ export default function FoodCalorieEditRecord() {
   async function save() {
     if (!form.food_name.trim()) return toast('食物名称不能为空');
     if (!Number(form.calories) || Number(form.calories) <= 0) return toast('请输入有效热量');
-    setSaving(true);
-    try {
-      await http.put('/api/v1/foodcalorie/records/' + id, {
-        food_name: form.food_name.trim(),
-        meal_type: form.meal_type,
-        calories: Math.round(Number(form.calories)),
-        protein_g: Number(form.protein_g) || 0,
-        carbs_g: Number(form.carbs_g) || 0,
-        fat_g: Number(form.fat_g) || 0,
-        portion: form.portion || '1 份',
-        record_time: form.record_time
-      });
-      toast('记录已更新');
-      navigate('/detail?id=' + id);
-    } catch (e) {
-      toast(e.message || '保存失败');
-      setSaving(false);
-    }
+    // runSaving：同步闩锁防双击重复保存
+    await runSaving(async () => {
+      try {
+        await http.put('/api/v1/foodcalorie/records/' + id, {
+          food_name: form.food_name.trim(),
+          meal_type: form.meal_type,
+          calories: Math.round(Number(form.calories)),
+          protein_g: Number(form.protein_g) || 0,
+          carbs_g: Number(form.carbs_g) || 0,
+          fat_g: Number(form.fat_g) || 0,
+          portion: form.portion || '1 份',
+          record_time: form.record_time
+        });
+        toast('记录已更新');
+        navigate('/detail?id=' + id);
+      } catch (e) {
+        toast(e.message || '保存失败');
+      }
+    });
   }
 
   const field = (label, placeholder, value, onChange, type = 'number') => (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 0', borderBottom: '1px solid #F3F4F6' }}>
       <span style={{ fontSize: 14, color: '#1A1A1A', fontWeight: 500 }}>{label}</span>
-      <input value={value} onChange={onChange} type={type} placeholder={placeholder} style={{ border: 'none', outline: 'none', textAlign: 'right', fontSize: 14, color: '#1A1A1A', width: 160, background: 'transparent' }} />
+      <input value={value} onChange={onChange} type={type} placeholder={placeholder} aria-label={label} style={{ border: 'none', outline: 'none', textAlign: 'right', fontSize: 14, color: '#1A1A1A', width: 160, background: 'transparent' }} />
     </div>
   );
 

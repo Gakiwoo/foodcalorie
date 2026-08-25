@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
+import { useBusy } from './src/ui/useBusy';
 
 // 目标设置页：真实数据（GET/PUT profile.goal_type + target_calories）
 const GOALS = [
@@ -16,7 +17,7 @@ export default function FoodCalorieGoal() {
   const [goal, setGoal] = useState('减脂');
   const [target, setTarget] = useState(1400);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { busy: saving, run: runSaving } = useBusy();
 
   useEffect(() => {
     (async () => {
@@ -34,15 +35,16 @@ export default function FoodCalorieGoal() {
 
   async function save() {
     if (!Number(target) || Number(target) < 800 || Number(target) > 6000) return toast('目标热量需在 800-6000 kcal 之间');
-    setSaving(true);
-    try {
-      await http.put('/api/v1/foodcalorie/profile', { goal_type: goal, target_calories: Math.round(Number(target)) });
-      toast('目标已保存');
-      navigate('/me');
-    } catch (e) {
-      toast(e.message || '保存失败');
-      setSaving(false);
-    }
+    // runSaving：同步闩锁防双击重复保存
+    await runSaving(async () => {
+      try {
+        await http.put('/api/v1/foodcalorie/profile', { goal_type: goal, target_calories: Math.round(Number(target)) });
+        toast('目标已保存');
+        navigate('/me');
+      } catch (e) {
+        toast(e.message || '保存失败');
+      }
+    });
   }
 
   return (

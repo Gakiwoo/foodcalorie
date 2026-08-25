@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { UnitProvider } from './src/ui/units.jsx';
 
 // 路由级代码分割（F7）：首页保持静态加载保证首屏，其余页面按需懒加载
 const FoodCalorieHome = lazy(() => import('./FoodCalorie-Home.jsx'));
@@ -117,27 +118,29 @@ export default function App() {
   }, []);
 
   return (
-    <div className="app-shell">
-      <div className="page-frame">
-        <Suspense fallback={<div style={{ minHeight: '100dvh', background: '#F7F8FA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF', fontSize: 13 }}>加载中…</div>}>
-          <Routes>
-            {PAGES.map((p) => (
-              <Route key={p.path} path={p.path} element={<p.Comp />} />
-            ))}
-          </Routes>
-        </Suspense>
-        {fromSettings && (
-          <button
-            className="records-back-btn"
-            data-name="records-back-float"
-            onClick={goBack}
-            aria-label="返回设置">
-            <i className="fas fa-chevron-left" style={{ fontSize: '16px', color: '#1A1A1A' }} />
-            <span style={{ fontSize: '13px', color: '#1A1A1A', fontWeight: 600 }}>设置</span>
-          </button>
-        )}
+    <UnitProvider>
+      <div className="app-shell">
+        <div className="page-frame">
+          <Suspense fallback={<div style={{ minHeight: '100dvh', background: '#F7F8FA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF', fontSize: 13 }}>加载中…</div>}>
+            <Routes>
+              {PAGES.map((p) => (
+                <Route key={p.path} path={p.path} element={<p.Comp />} />
+              ))}
+            </Routes>
+          </Suspense>
+          {fromSettings && (
+            <button
+              className="records-back-btn"
+              data-name="records-back-float"
+              onClick={goBack}
+              aria-label="返回设置">
+              <i className="fas fa-chevron-left" style={{ fontSize: '16px', color: '#1A1A1A' }} />
+              <span style={{ fontSize: '13px', color: '#1A1A1A', fontWeight: 600 }}>设置</span>
+            </button>
+          )}
+        </div>
+        {toast && <div className="toast" role="status" aria-live="polite">{toast}</div>}
       </div>
-      {toast && <div className="toast">{toast}</div>}
-    </div>
+    </UnitProvider>
   );
 }

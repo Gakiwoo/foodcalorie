@@ -1,9 +1,7 @@
 // M14 E2E：图片持久化前端闭环（相机上传 → 识别返回 image_url → 确认添加 → 详情页展示图片）
 const puppeteer = require('puppeteer-core');
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const BASE = 'http://127.0.0.1:5173';
-const EMAIL = 't_fc_test@x.com';
-const PWD = 'Test123456!';
+const { CHROME, ROOT: BASE } = require('./e2e-config');
+const { EMAIL, PWD } = require('./test-credentials');
 const IMG = require('path').join(__dirname, '..', '..', 'archive', 'food-test', 'rice.jpg');
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));

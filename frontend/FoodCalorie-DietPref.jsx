@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
+import { useBusy } from './src/ui/useBusy';
 
 // 饮食偏好页：真实数据（GET/PUT profile.diet_preferences）
 const GROUPS = [
@@ -15,7 +16,7 @@ export default function FoodCalorieDietPref() {
   const navigate = useNavigate();
   const [selected, setSelected] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { busy: saving, run: runSaving } = useBusy();
 
   useEffect(() => {
     (async () => {
@@ -35,15 +36,16 @@ export default function FoodCalorieDietPref() {
   }
 
   async function save() {
-    setSaving(true);
-    try {
-      await http.put('/api/v1/foodcalorie/profile', { diet_preferences: selected });
-      toast('偏好已保存');
-      navigate('/settings');
-    } catch (e) {
-      toast(e.message || '保存失败');
-      setSaving(false);
-    }
+    // runSaving：同步闩锁防双击重复保存
+    await runSaving(async () => {
+      try {
+        await http.put('/api/v1/foodcalorie/profile', { diet_preferences: selected });
+        toast('偏好已保存');
+        navigate('/settings');
+      } catch (e) {
+        toast(e.message || '保存失败');
+      }
+    });
   }
 
   return (

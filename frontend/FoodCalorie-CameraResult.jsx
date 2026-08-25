@@ -3,10 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast, nowDateTime } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
+import { useBusy } from './src/ui/useBusy';
+import { useUnits } from './src/ui/units';
 
 // 识别结果页：显示图片 + 候选食物 → 确认创建记录（source=AI识别）
 export default function FoodCalorieCameraResult() {
   const navigate = useNavigate();
+  const { unitCalorie, unitWeight, kcal, g } = useUnits();
   const location = useLocation();
   const state = useMemo(() => location.state || {}, [location.state]);
   const candidates = useMemo(() => state.candidates || [], [state]);
@@ -22,7 +25,7 @@ export default function FoodCalorieCameraResult() {
 
   const [selectedIndex, setSelectedIndex] = useState(selectedDefault);
   const [meal, setMeal] = useState('午餐');
-  const [adding, setAdding] = useState(false);
+  const { busy: adding, run: runAdding } = useBusy();
   const [portionCount, setPortionCount] = useState(1);
   const [showOthers, setShowOthers] = useState(false);
 
@@ -35,28 +38,29 @@ export default function FoodCalorieCameraResult() {
 
   async function confirmAdd() {
     const item = candidates[selectedIndex];
-    if (!item || adding) return;
-    setAdding(true);
-    try {
-      await http.post('/api/v1/foodcalorie/records', {
-        food_name: item.name,
-        category: item.category || null,
-        meal_type: meal,
-        calories: Math.round((item.calories || 0) * portionCount),
-        protein_g: Math.round((item.protein_g || 0) * portionCount * 10) / 10,
-        carbs_g: Math.round((item.carbs_g || 0) * portionCount * 10) / 10,
-        fat_g: Math.round((item.fat_g || 0) * portionCount * 10) / 10,
-        portion: portionCount + ' 份',
-        record_time: nowDateTime(),
-        source: 'AI识别',
-        image_url: storedImageUrl
-      });
-      toast('已添加「' + item.name + '」');
-      navigate('/records');
-    } catch (e) {
-      toast(e.message || '添加失败');
-      setAdding(false);
-    }
+    if (!item) return;
+    // runAdding：同步闩锁防双击重复添加记录
+    await runAdding(async () => {
+      try {
+        await http.post('/api/v1/foodcalorie/records', {
+          food_name: item.name,
+          category: item.category || null,
+          meal_type: meal,
+          calories: Math.round((item.calories || 0) * portionCount),
+          protein_g: Math.round((item.protein_g || 0) * portionCount * 10) / 10,
+          carbs_g: Math.round((item.carbs_g || 0) * portionCount * 10) / 10,
+          fat_g: Math.round((item.fat_g || 0) * portionCount * 10) / 10,
+          portion: portionCount + ' 份',
+          record_time: nowDateTime(),
+          source: 'AI识别',
+          image_url: storedImageUrl
+        });
+        toast('已添加「' + item.name + '」');
+        navigate('/records');
+      } catch (e) {
+        toast(e.message || '添加失败');
+      }
+    });
   }
 
   // 无识别状态（直接访问）
@@ -142,7 +146,7 @@ export default function FoodCalorieCameraResult() {
               />
             </div>
           </div>
-          <div style={{ marginTop: 10, fontSize: 12, color: '#9CA3AF' }}>每份 {item.calories || 0} kcal</div>
+          <div style={{ marginTop: 10, fontSize: 12, color: '#9CA3AF' }}>每份 {kcal(item.calories)} {unitCalorie}</div>
         </Card>
 
         {candidates.length > 1 && (
@@ -172,7 +176,7 @@ export default function FoodCalorieCameraResult() {
                         <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>{c.name} <span style={{ fontSize: 10, color: '#9CA3AF', fontWeight: 400 }}>{c.category}</span></div>
                         <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{c.unit_desc} · 推荐度 {Math.round((c.confidence ?? 0) * 100)}%</div>
                       </div>
-                      <div style={{ fontSize: 14, fontWeight: 700, color: '#E8590C' }}>{c.calories}<span style={{ fontSize: 10, fontWeight: 400, color: '#9CA3AF' }}> kcal</span></div>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#E8590C' }}>{kcal(c.calories)}<span style={{ fontSize: 10, fontWeight: 400, color: '#9CA3AF' }}> {unitCalorie}</span></div>
                     </Card>
                   );
                 })}
@@ -191,22 +195,22 @@ export default function FoodCalorieCameraResult() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '0 16px 14px' }}>
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 18, fontWeight: 700, color: '#34C759', lineHeight: '22px' }}>{item.calories || 0}</span>
-              <span style={{ fontSize: 11, color: '#9CA3AF', lineHeight: '15px' }}>卡路里</span>
+              <span style={{ fontSize: 18, fontWeight: 700, color: '#34C759', lineHeight: '22px' }}>{kcal(item.calories)}</span>
+              <span style={{ fontSize: 11, color: '#9CA3AF', lineHeight: '15px' }}>{unitCalorie}</span>
             </div>
             <div style={{ width: 1, height: 32, background: '#EEF0F2' }} />
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 16, fontWeight: 700, color: '#1A1A1A', lineHeight: '20px' }}>{item.protein_g || 0}g</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: '#1A1A1A', lineHeight: '20px' }}>{g(item.protein_g)} {unitWeight}</span>
               <span style={{ fontSize: 11, color: '#9CA3AF', lineHeight: '15px' }}>蛋白质</span>
             </div>
             <div style={{ width: 1, height: 32, background: '#EEF0F2' }} />
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 16, fontWeight: 700, color: '#1A1A1A', lineHeight: '20px' }}>{item.carbs_g || 0}g</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: '#1A1A1A', lineHeight: '20px' }}>{g(item.carbs_g)} {unitWeight}</span>
               <span style={{ fontSize: 11, color: '#9CA3AF', lineHeight: '15px' }}>碳水</span>
             </div>
             <div style={{ width: 1, height: 32, background: '#EEF0F2' }} />
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 16, fontWeight: 700, color: '#1A1A1A', lineHeight: '20px' }}>{item.fat_g || 0}g</span>
+              <span style={{ fontSize: 16, fontWeight: 700, color: '#1A1A1A', lineHeight: '20px' }}>{g(item.fat_g)} {unitWeight}</span>
               <span style={{ fontSize: 11, color: '#9CA3AF', lineHeight: '15px' }}>脂肪</span>
             </div>
           </div>

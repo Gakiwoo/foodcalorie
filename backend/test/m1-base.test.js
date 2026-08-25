@@ -7,6 +7,8 @@ const jwt = require('jsonwebtoken')
 
 process.env.NODE_ENV = 'test'
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret-for-unit-tests'
+// 测试隔离：避免 dotenv 从本机 .env 注入 REDIS_URL（限流中间件在 test 环境跳过，双保险）
+process.env.REDIS_URL = ''
 
 const { createApp } = require('../src/app')
 const { closeDb } = require('../src/db')

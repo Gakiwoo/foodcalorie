@@ -1,14 +1,12 @@
 // M9 E2E：详情 → 编辑 → 删除 → 周视图 → 月历 → 导出（真实数据）
 const puppeteer = require('puppeteer-core');
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const BASE = 'http://127.0.0.1:5173/';
-const SHOT = 'C:/Users/Administrator/WorkBuddy/2026-08-05-10-22-23/archive/verify-screenshots/verify8';
+const { CHROME, BASE, SHOT_DIR } = require('./e2e-config');
+const SHOT = SHOT_DIR + '/verify8';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const fs = require('fs');
 fs.mkdirSync(SHOT, { recursive: true });
 
-const EMAIL = 't_fc_test@x.com';
-const PWD = 'Test123456!';
+const { EMAIL, PWD } = require('./test-credentials');
 const results = [];
 const ok = (n, p, x = '') => results.push(`${p ? '✅' : '❌'} ${n}${x ? ' → ' + x : ''}`);
 const clickByText = (page, text) =>
@@ -40,7 +38,7 @@ const clickByText = (page, text) =>
     // 1) 添加一条记录（供详情/编辑/删除测试）
     await page.goto(BASE + 'addfood', { waitUntil: 'networkidle2' });
     await sleep(2500);
-    await page.type('input[placeholder="搜索食物（如：鸡胸肉、米饭）"]', '牛油果');
+    await page.type('input[placeholder="搜索食物名称"]', '牛油果');
     await sleep(1500);
     const addClicked = await page.evaluate(() => { const el = document.querySelector('[data-name^="food-result-"]'); if (el) el.click(); return !!el; });
     ok('添加测试记录', addClicked, '');
@@ -81,7 +79,7 @@ const clickByText = (page, text) =>
     // 4) 删除 → 确认 → 回记录页
     const delClicked = await page.evaluate(() => { const el = [...document.querySelectorAll('button')].find((x) => x.textContent.includes('删除记录')); if (el) el.click(); return !!el; });
     await sleep(1000);
-    ok('删除按钮→确认弹窗', delClicked && (await page.evaluate(() => !!document.querySelector('.modal-card') || document.body.innerText.includes('删除这条记录'))), '');
+    ok('删除按钮→确认弹窗', delClicked && (await page.evaluate(() => document.body.innerText.includes('删除这条记录'))), '');
     await page.evaluate(() => { const b = [...document.querySelectorAll('button')].find((x) => x.textContent.trim() === '删除'); if (b) b.click(); });
     await sleep(3000);
     const delResult = await page.evaluate(() => location.pathname);

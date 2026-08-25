@@ -12,8 +12,25 @@ describe('home statistics resilience', () => {
       total: 320,
       target: 1400,
       percent: 22.8,
+      average: 0,
       reachedDays: 0,
       totalDays: 1,
     })
+  })
+
+  it('passes through the backend average (daily mean) instead of frontend fallback', () => {
+    expect(normalizeDailyStats({ total: 500, target: 1400, percent: 36, average: 250, reachedDays: 2, totalDays: 7 })).toEqual({
+      total: 500,
+      target: 1400,
+      percent: 36,
+      average: 250,
+      reachedDays: 2,
+      totalDays: 7,
+    })
+  })
+
+  it('tolerates malformed average values', () => {
+    expect(normalizeDailyStats({ average: 'abc' }).average).toBe(0)
+    expect(normalizeDailyStats({ average: undefined }).average).toBe(0)
   })
 })

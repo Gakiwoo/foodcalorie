@@ -19,6 +19,7 @@ export function normalizeDailyStats(value) {
     total: number(value.total),
     target: number(value.target, 1400),
     percent: number(value.percent),
+    average: number(value.average), // 日均（后端按范围口径计算），透传避免前端 fallback 失真
     reachedDays: number(value.reachedDays),
     totalDays: number(value.totalDays, 1)
   };
@@ -74,8 +75,17 @@ export function NavBar({ title, right, onBack, appearance = 'light', showBack = 
     <div data-name="top-nav" style={{ width: '100%', display: 'flex', alignItems: 'center', padding: '10px 20px' }}>
       {showBack ? (
         <div
-          style={{ width: 32, display: 'flex', alignItems: 'center', cursor: 'pointer' }}
-          onClick={() => (onBack ? onBack() : navigate(-1))}>
+          role="button"
+          tabIndex={0}
+          aria-label="返回"
+          style={{ width: 32, display: 'flex', alignItems: 'center', cursor: 'pointer', outline: 'none' }}
+          onClick={() => (onBack ? onBack() : navigate(-1))}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              onBack ? onBack() : navigate(-1);
+            }
+          }}>
           <i data-name="nav-back" className="fas fa-chevron-left" style={{ fontSize: 22, color }} />
         </div>
       ) : (
@@ -88,12 +98,21 @@ export function NavBar({ title, right, onBack, appearance = 'light', showBack = 
 }
 
 export function ToggleSwitch({ checked, label, onChange }) {
+  const toggle = () => onChange && onChange(!checked);
   return (
     <span
       role="switch"
       aria-checked={checked}
       aria-label={label}
-      onClick={onChange ? () => onChange(!checked) : undefined}
+      tabIndex={onChange ? 0 : undefined}
+      onClick={toggle}
+      onKeyDown={(e) => {
+        // 键盘可达：Enter / 空格 触发切换（a11y）
+        if (onChange && (e.key === 'Enter' || e.key === ' ')) {
+          e.preventDefault();
+          toggle();
+        }
+      }}
       style={{
         width: 42,
         height: 24,
@@ -105,6 +124,7 @@ export function ToggleSwitch({ checked, label, onChange }) {
         alignItems: 'center',
         flexShrink: 0,
         cursor: onChange ? 'pointer' : 'default',
+        outline: 'none',
         transition: 'background .2s ease'
       }}>
       <span style={{ width: 20, height: 20, borderRadius: 10, background: '#FFFFFF', boxShadow: '0 1px 3px rgba(0,0,0,.18)' }} />
@@ -139,7 +159,21 @@ export function BottomNav({ active }) {
       {NAV_ITEMS.map((n) => {
         const on = n.key === active;
         return (
-          <div key={n.key} data-name={'nav-' + n.label} style={{ display: 'flex', flex: 1, flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer' }} onClick={() => navigate(n.key)}>
+          <div
+            key={n.key}
+            data-name={'nav-' + n.label}
+            role="button"
+            tabIndex={0}
+            aria-label={n.label}
+            aria-current={on ? 'page' : undefined}
+            onClick={() => navigate(n.key)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigate(n.key);
+              }
+            }}
+            style={{ display: 'flex', flex: 1, flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer', outline: 'none' }}>
             <i className={'fas ' + n.icon} style={{ fontSize: 22, color: on ? '#34C759' : '#9CA3AF' }} />
             <span style={{ fontSize: 11, fontWeight: on ? 600 : 500, color: on ? '#34C759' : '#9CA3AF', lineHeight: '14px', textAlign: 'center' }}>{n.label}</span>
           </div>
@@ -219,6 +253,42 @@ export function Card({ children, style = {}, ...rest }) {
   return (
     <div {...rest} style={{ background: '#FFFFFF', borderRadius: 16, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', padding: 16, ...style }}>
       {children}
+    </div>
+  );
+}
+
+// 餐次选择 pills（AddFood / Search 收敛共用）
+export function MealPills({ options, value, onChange }) {
+  return (
+    <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+      {options.map((m) => {
+        const val = typeof m === 'string' ? m : m.value;
+        const label = typeof m === 'string' ? m : m.label;
+        const active = value === val;
+        return (
+          <div
+            key={val}
+            onClick={() => onChange(val)}
+            style={{
+              height: 30,
+              borderRadius: 15,
+              padding: '0 14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              background: active ? '#34C759' : '#FFFFFF',
+              color: active ? '#FFFFFF' : '#1A1A1A',
+              fontSize: 13,
+              fontWeight: active ? 600 : 500,
+              boxShadow: active ? 'none' : '0 2px 8px rgba(0,0,0,0.04)',
+              cursor: 'pointer'
+            }}
+          >
+            {label}
+          </div>
+        );
+      })}
     </div>
   );
 }

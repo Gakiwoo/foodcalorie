@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from './src/api/auth';
+import { toast } from './src/ui/toast';
 import { StatusBar } from './src/ui/common';
 
 // 登录页（真实表单）：邮箱账号密码方式，对接服务器 gakiwoo-api /api/auth/login
@@ -88,6 +89,7 @@ export default function FoodCalorieLogin() {
           <input
             type="email"
             placeholder="请输入邮箱地址"
+            aria-label="邮箱"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             style={inputStyle}
@@ -109,6 +111,7 @@ export default function FoodCalorieLogin() {
           <input
             type={showPwd ? 'text' : 'password'}
             placeholder="请输入密码"
+            aria-label="密码"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
@@ -122,7 +125,11 @@ export default function FoodCalorieLogin() {
           />
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <span style={{ fontSize: 12, fontWeight: 500, color: '#22A85A', cursor: 'pointer' }}>忘记密码？</span>
+          <span
+            style={{ fontSize: 12, fontWeight: 500, color: '#22A85A', cursor: 'pointer' }}
+            onClick={() => toast('密码找回功能开发中，请联系管理员')}>
+            忘记密码？
+          </span>
         </div>
       </div>
 
@@ -170,7 +177,7 @@ export default function FoodCalorieLogin() {
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', padding: '4px 20px 8px' }}>
         <button
-          onClick={() => alert('微信一键登录（演示）')}
+          onClick={() => toast('微信登录开发中，请先用邮箱登录')}
           style={{
             width: '100%',
             height: 48,
@@ -195,8 +202,8 @@ export default function FoodCalorieLogin() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '10px 20px 8px' }}>
         <i className="fas fa-check" style={{ fontSize: 10, color: '#FFFFFF', background: '#34C759', borderRadius: 8, width: 16, height: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }} />
         <span style={{ fontSize: 11, color: '#9CA3AF' }}>我已阅读并同意</span>
-        <span style={{ fontSize: 11, fontWeight: 500, color: '#22A85A' }}>《用户协议》</span>
-        <span style={{ fontSize: 11, fontWeight: 500, color: '#22A85A' }}>《隐私政策》</span>
+        <span style={{ fontSize: 11, fontWeight: 500, color: '#22A85A', cursor: 'pointer' }} onClick={() => toast('《用户协议》（开发中）')}>《用户协议》</span>
+        <span style={{ fontSize: 11, fontWeight: 500, color: '#22A85A', cursor: 'pointer' }} onClick={() => navigate('/privacy')}>《隐私政策》</span>
       </div>
 
       {/* 去注册 */}

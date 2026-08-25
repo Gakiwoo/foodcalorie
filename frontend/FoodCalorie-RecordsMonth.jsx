@@ -1,29 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast, todayStr } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
+import { useUnits } from './src/ui/units';
 
 // 月视图：真实数据（GET calendar?month= 每日摄入点 + 月份切换 + 点某天进记录页）
 export default function FoodCalorieRecordsMonth() {
   const navigate = useNavigate();
+  const { unitCalorie, kcal } = useUnits();
   const now = new Date();
   const [month, setMonth] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
   const [days, setDays] = useState({});
   const [loading, setLoading] = useState(true);
+  const seq = useRef(0); // 请求序号守卫：快速切月时丢弃过期响应，防止错月数据渲染
 
   useEffect(() => {
+    const current = ++seq.current;
     setLoading(true);
     (async () => {
       try {
         const r = await http.get('/api/v1/foodcalorie/records/calendar', { month });
+        if (current !== seq.current) return; // 已有更新的月份请求，丢弃过期响应
         const map = {};
         (r.data.days || []).forEach((d) => { map[d.day] = d.calories; });
         setDays(map);
       } catch (e) {
+        if (current !== seq.current) return;
         toast(e.message || '加载失败');
       } finally {
-        setLoading(false);
+        if (current === seq.current) setLoading(false);
       }
     })();
   }, [month]);
@@ -58,8 +64,8 @@ export default function FoodCalorieRecordsMonth() {
         <i className="fas fa-chevron-right" style={{ fontSize: 14, color: '#34C759', cursor: 'pointer' }} onClick={() => shiftMonth(1)} />
       </div>
       <Card style={{ margin: '0 20px 12px', display: 'flex', justifyContent: 'space-around', padding: '12px 8px' }}>
-        <div style={{ textAlign: 'center' }}><div style={{ fontSize: 17, fontWeight: 800, color: '#1A1A1A' }}>{total}</div><div style={{ fontSize: 10, color: '#9CA3AF' }}>月总摄入</div></div>
-        <div style={{ textAlign: 'center' }}><div style={{ fontSize: 17, fontWeight: 800, color: '#1A1A1A' }}>{avg}</div><div style={{ fontSize: 10, color: '#9CA3AF' }}>日均 kcal</div></div>
+        <div style={{ textAlign: 'center' }}><div style={{ fontSize: 17, fontWeight: 800, color: '#1A1A1A' }}>{kcal(total)}</div><div style={{ fontSize: 10, color: '#9CA3AF' }}>月总摄入 {unitCalorie}</div></div>
+        <div style={{ textAlign: 'center' }}><div style={{ fontSize: 17, fontWeight: 800, color: '#1A1A1A' }}>{kcal(avg)}</div><div style={{ fontSize: 10, color: '#9CA3AF' }}>日均 {unitCalorie}</div></div>
         <div style={{ textAlign: 'center' }}><div style={{ fontSize: 17, fontWeight: 800, color: '#34C759' }}>{Object.keys(days).length}</div><div style={{ fontSize: 10, color: '#9CA3AF' }}>记录天数</div></div>
       </Card>
 

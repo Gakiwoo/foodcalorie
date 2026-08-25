@@ -11,7 +11,8 @@ const router = express.Router()
 
 const listQuery = z.object({
   type: z.enum(['article', 'recipe']).optional(),
-  page: z.coerce.number().int().min(1).optional().default(1),
+  // page 上限 10000：防巨型 OFFSET 全表偏移扫描（与 records 域一致）
+  page: z.coerce.number().int().min(1).max(10000).optional().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).optional().default(20)
 })
 const idParam = z.object({ id: z.coerce.number().int().positive() })

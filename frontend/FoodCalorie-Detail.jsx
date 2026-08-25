@@ -4,16 +4,19 @@ import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar } from './src/ui/common';
 import { ProtectedImage } from './src/ui/ProtectedImage';
+import { useBusy } from './src/ui/useBusy';
+import { useUnits } from './src/ui/units';
 
 // 记录详情页：真实数据（GET /records/:id + 删除 + 编辑入口）
 export default function FoodCalorieDetail() {
   const navigate = useNavigate();
+  const { unitCalorie, unitWeight, kcal, g } = useUnits();
   const [params] = useSearchParams();
   const id = params.get('id');
   const [record, setRecord] = useState(null);
   const [loading, setLoading] = useState(true);
   const [confirmDel, setConfirmDel] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const { busy: deleting, run: runDeleting } = useBusy();
 
   useEffect(() => {
     if (!id) { setLoading(false); return; }
@@ -30,19 +33,25 @@ export default function FoodCalorieDetail() {
   }, [id]);
 
   async function doDelete() {
-    setDeleting(true);
-    try {
-      await http.del('/api/v1/foodcalorie/records/' + id);
-      toast('记录已删除');
-      navigate('/records');
-    } catch (e) {
-      toast(e.message || '删除失败');
-      setDeleting(false);
-    }
+    // runDeleting：同步闩锁防双击重复删除（第二次请求会 404 并弹错）
+    await runDeleting(async () => {
+      try {
+        await http.del('/api/v1/foodcalorie/records/' + id);
+        toast('记录已删除');
+        navigate('/records');
+      } catch (e) {
+        toast(e.message || '删除失败');
+      }
+    });
   }
 
   const mealIcon = { 早餐: 'fa-mug-hot', 午餐: 'fa-bowl-food', 晚餐: 'fa-moon', 加餐: 'fa-apple-whole' };
   const cardShadow = '0px 4px 14px 0px rgba(0,0,0,0.05)';
+  const SOURCE_META = {
+    'AI识别': { icon: 'fa-camera', title: 'AI 图像识别', desc: '数据来自照片识别，仅供参考' },
+    search: { icon: 'fa-magnifying-glass', title: '食物库搜索', desc: '数据来自食物库搜索添加' },
+    manual: { icon: 'fa-pen', title: '手动添加', desc: '手动录入的记录' }
+  }[record.source] || { icon: 'fa-pen', title: '手动添加', desc: '手动录入的记录' };
 
   if (loading) return <div style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="记录详情" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;
 
@@ -97,8 +106,8 @@ export default function FoodCalorieDetail() {
             <span style={{ fontSize: 13, lineHeight: '18px', fontWeight: 400, color: '#9CA3AF', textAlign: 'center' }}>{record.record_time} · {record.meal_type} · {dateText}</span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'baseline', gap: 6 }}>
-            <span style={{ fontSize: 32, lineHeight: '38px', fontWeight: 800, color: '#34C759', textAlign: 'center' }}>{record.calories}</span>
-            <span style={{ fontSize: 15, lineHeight: '20px', fontWeight: 600, color: '#34C759', textAlign: 'center' }}>kcal</span>
+            <span style={{ fontSize: 32, lineHeight: '38px', fontWeight: 800, color: '#34C759', textAlign: 'center' }}>{kcal(record.calories)}</span>
+            <span style={{ fontSize: 15, lineHeight: '20px', fontWeight: 600, color: '#34C759', textAlign: 'center' }}>{unitCalorie}</span>
           </div>
         </div>
       </div>
@@ -109,17 +118,17 @@ export default function FoodCalorieDetail() {
           <span style={{ fontSize: 15, lineHeight: '20px', fontWeight: 700, color: '#1A1A1A' }}>营养成分</span>
           <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 16, lineHeight: '20px', fontWeight: 700, color: '#1A1A1A' }}>{record.protein_g || 0}g</span>
+              <span style={{ fontSize: 16, lineHeight: '20px', fontWeight: 700, color: '#1A1A1A' }}>{g(record.protein_g)} {unitWeight}</span>
               <span style={{ fontSize: 12, lineHeight: '16px', fontWeight: 400, color: '#9CA3AF' }}>蛋白质</span>
             </div>
             <div style={{ width: 1, height: 28, background: '#EEF0F2' }} />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 16, lineHeight: '20px', fontWeight: 700, color: '#1A1A1A' }}>{record.carbs_g || 0}g</span>
+              <span style={{ fontSize: 16, lineHeight: '20px', fontWeight: 700, color: '#1A1A1A' }}>{g(record.carbs_g)} {unitWeight}</span>
               <span style={{ fontSize: 12, lineHeight: '16px', fontWeight: 400, color: '#9CA3AF' }}>碳水</span>
             </div>
             <div style={{ width: 1, height: 28, background: '#EEF0F2' }} />
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: 4 }}>
-              <span style={{ fontSize: 16, lineHeight: '20px', fontWeight: 700, color: '#1A1A1A' }}>{record.fat_g || 0}g</span>
+              <span style={{ fontSize: 16, lineHeight: '20px', fontWeight: 700, color: '#1A1A1A' }}>{g(record.fat_g)} {unitWeight}</span>
               <span style={{ fontSize: 12, lineHeight: '16px', fontWeight: 400, color: '#9CA3AF' }}>脂肪</span>
             </div>
             <div style={{ width: 1, height: 28, background: '#EEF0F2' }} />
@@ -150,13 +159,13 @@ export default function FoodCalorieDetail() {
         </div>
       </div>
 
-      {/* 来源 */}
+      {/* 来源（按 record.source 真实渲染，避免 manual/search 被误标为 AI 识别） */}
       <div style={{ padding: '8px 20px' }}>
         <div style={{ width: '100%', padding: '14px 16px', borderRadius: 16, background: '#FFFFFF', boxShadow: cardShadow, display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-          <i className="fas fa-camera" style={{ fontSize: 20, color: '#34C759', flexShrink: 0 }} />
+          <i className={'fas ' + SOURCE_META.icon} style={{ fontSize: 20, color: '#34C759', flexShrink: 0 }} />
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontSize: 14, lineHeight: '18px', fontWeight: 600, color: '#1A1A1A' }}>AI 图像识别</span>
-            <span style={{ fontSize: 12, lineHeight: '16px', fontWeight: 400, color: '#9CA3AF' }}>数据来自照片识别，仅供参考</span>
+            <span style={{ fontSize: 14, lineHeight: '18px', fontWeight: 600, color: '#1A1A1A' }}>{SOURCE_META.title}</span>
+            <span style={{ fontSize: 12, lineHeight: '16px', fontWeight: 400, color: '#9CA3AF' }}>{SOURCE_META.desc}</span>
           </div>
         </div>
       </div>
@@ -169,13 +178,13 @@ export default function FoodCalorieDetail() {
 
       {/* 删除确认 */}
       {confirmDel && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99 }} onClick={() => setConfirmDel(false)}>
+        <div role="dialog" aria-modal="true" aria-label="删除记录确认" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99 }} onClick={() => setConfirmDel(false)}>
           <div style={{ width: 280, background: '#fff', borderRadius: 18, padding: 22, textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ width: 46, height: 46, borderRadius: 23, background: '#FFE8EC', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
               <i className="fas fa-trash-can" style={{ fontSize: 18, color: '#FF6B6B' }} />
             </div>
             <p style={{ fontSize: 15, fontWeight: 700, color: '#1A1A1A', margin: '12px 0 4px' }}>删除这条记录？</p>
-            <p style={{ fontSize: 12, color: '#9CA3AF', margin: '0 0 16px' }}>「{record.food_name} · {record.calories} kcal」删除后无法恢复</p>
+            <p style={{ fontSize: 12, color: '#9CA3AF', margin: '0 0 16px' }}>「{record.food_name} · {kcal(record.calories)} {unitCalorie}」删除后无法恢复</p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => setConfirmDel(false)} style={{ flex: 1, height: 42, borderRadius: 12, border: 'none', background: '#F3F4F6', color: '#6B7280', fontWeight: 600, cursor: 'pointer' }}>取消</button>
               <button onClick={doDelete} disabled={deleting} style={{ flex: 1, height: 42, borderRadius: 12, border: 'none', background: '#E03131', color: '#fff', fontWeight: 600, cursor: deleting ? 'wait' : 'pointer' }}>{deleting ? '删除中…' : '删除'}</button>

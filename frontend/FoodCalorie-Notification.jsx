@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card, ToggleSwitch } from './src/ui/common';
+import { useBusy } from './src/ui/useBusy';
 
 // 通知设置页：真实数据（GET/PUT profile.notif_* + quiet 时段）
 const SWITCHES = [
@@ -18,7 +19,7 @@ export default function FoodCalorieNotification() {
   const [flags, setFlags] = useState({ notif_record: 1, notif_goal: 1, notif_community: 0, notif_weekly: 1, notif_activity: 0 });
   const [quiet, setQuiet] = useState({ start: '22:00', end: '08:00' });
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { busy: saving, run: runSaving } = useBusy();
 
   useEffect(() => {
     (async () => {
@@ -42,20 +43,21 @@ export default function FoodCalorieNotification() {
   }, []);
 
   async function save() {
-    setSaving(true);
-    try {
-      // 后端 zod 期望 boolean（内部转 0/1），前端提交 boolean
-      const body = {}
-      for (const k of Object.keys(flags)) body[k] = !!flags[k]
-      body.quiet_start = quiet.start
-      body.quiet_end = quiet.end
-      await http.put('/api/v1/foodcalorie/profile', body);
-      toast('通知设置已保存');
-      navigate('/settings');
-    } catch (e) {
-      toast(e.message || '保存失败');
-      setSaving(false);
-    }
+    // runSaving：同步闩锁防双击重复保存
+    await runSaving(async () => {
+      try {
+        // 后端 zod 期望 boolean（内部转 0/1），前端提交 boolean
+        const body = {}
+        for (const k of Object.keys(flags)) body[k] = !!flags[k]
+        body.quiet_start = quiet.start
+        body.quiet_end = quiet.end
+        await http.put('/api/v1/foodcalorie/profile', body);
+        toast('通知设置已保存');
+        navigate('/settings');
+      } catch (e) {
+        toast(e.message || '保存失败');
+      }
+    });
   }
 
   return (

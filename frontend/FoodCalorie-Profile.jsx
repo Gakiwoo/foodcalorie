@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { http, apiClient } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card, Seg } from './src/ui/common';
+import { useBusy } from './src/ui/useBusy';
 
 // 个人信息页：真实数据（GET/PUT profile + PUT /api/auth/me 昵称）
 const GOALS = [
@@ -21,7 +22,7 @@ export default function FoodCalorieProfile() {
   const [goal, setGoal] = useState('减脂');
   const [target, setTarget] = useState(1400);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { busy: saving, run: runSaving } = useBusy();
 
   useEffect(() => {
     (async () => {
@@ -48,26 +49,27 @@ export default function FoodCalorieProfile() {
 
   async function save() {
     if (!nickname.trim()) return toast('昵称不能为空');
-    setSaving(true);
-    try {
-      // 昵称走 gakiwoo /api/auth/me；其余走 profile（F2：昵称失败必须中断并提示，不得静默吞错）
-      if (nickname !== '') {
-        await apiClient('/api/auth/me', { method: 'PUT', body: JSON.stringify({ nickname: nickname.trim() }) });
+    // runSaving：同步闩锁防双击重复保存（昵称 PUT + profile PUT 双请求场景尤需防重）
+    await runSaving(async () => {
+      try {
+        // 昵称走 gakiwoo /api/auth/me；其余走 profile（F2：昵称失败必须中断并提示，不得静默吞错）
+        if (nickname !== '') {
+          await apiClient('/api/auth/me', { method: 'PUT', body: JSON.stringify({ nickname: nickname.trim() }) });
+        }
+        await http.put('/api/v1/foodcalorie/profile', {
+          gender: gender || null,
+          birthday: birthday || null,
+          height_cm: height ? Number(height) : null,
+          weight_kg: weight ? Number(weight) : null,
+          goal_type: goal,
+          target_calories: Number(target) || 1400
+        });
+        toast('个人信息已保存');
+        navigate('/me');
+      } catch (e) {
+        toast(e.message || '保存失败');
       }
-      await http.put('/api/v1/foodcalorie/profile', {
-        gender: gender || null,
-        birthday: birthday || null,
-        height_cm: height ? Number(height) : null,
-        weight_kg: weight ? Number(weight) : null,
-        goal_type: goal,
-        target_calories: Number(target) || 1400
-      });
-      toast('个人信息已保存');
-      navigate('/me');
-    } catch (e) {
-      toast(e.message || '保存失败');
-      setSaving(false);
-    }
+    });
   }
 
   const row = (label, child) => (

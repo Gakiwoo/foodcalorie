@@ -3,12 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
+import { useBusy } from './src/ui/useBusy';
+import { useUnits } from './src/ui/units';
+import { Loading, EmptyState } from './src/ui/PageState';
 
 // 我的收藏页：真实数据（GET favorites 联查内容标题 + 取消收藏）
 export default function FoodCalorieFavorites() {
   const navigate = useNavigate();
+  const { unitCalorie, kcal } = useUnits();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { run: runUncollect } = useBusy();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -25,13 +30,16 @@ export default function FoodCalorieFavorites() {
   useEffect(() => { load(); }, [load]);
 
   async function uncollect(fav) {
-    try {
-      await http.del('/api/v1/foodcalorie/favorites?type=' + fav.type + '&ref_id=' + fav.ref_id);
-      toast('已取消收藏');
-      load();
-    } catch (e) {
-      toast(e.message || '操作失败');
-    }
+    // runUncollect：同步闩锁防双击连点重复取消收藏
+    await runUncollect(async () => {
+      try {
+        await http.del('/api/v1/foodcalorie/favorites?type=' + fav.type + '&ref_id=' + fav.ref_id);
+        toast('已取消收藏');
+        load();
+      } catch (e) {
+        toast(e.message || '操作失败');
+      }
+    });
   }
 
   return (
@@ -40,13 +48,9 @@ export default function FoodCalorieFavorites() {
       <NavBar title="我的收藏" />
 
       {loading ? (
-        <div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div>
+        <Loading text="加载中…" padding={60} />
       ) : items.length === 0 ? (
-        <div style={{ padding: 60, textAlign: 'center' }}>
-          <i className="fas fa-bookmark" style={{ fontSize: 34, color: '#D1D5DB' }} />
-          <div style={{ marginTop: 10, fontSize: 13, color: '#9CA3AF' }}>还没有收藏内容</div>
-          <button onClick={() => navigate('/discover')} style={{ marginTop: 14, padding: '9px 28px', borderRadius: 14, border: 'none', background: '#34C759', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>去发现页逛逛</button>
-        </div>
+        <EmptyState icon="fa-bookmark" text="还没有收藏内容" actionText="去发现页逛逛" onAction={() => navigate('/discover')} padding={40} />
       ) : (
         <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {items.map((f) => (
@@ -65,7 +69,7 @@ export default function FoodCalorieFavorites() {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                   <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: f.type === 'recipe' ? '#E8F5EC' : '#EFF6FF', color: f.type === 'recipe' ? '#22A85A' : '#3B82F6', fontWeight: 600 }}>{f.type === 'recipe' ? '食谱' : '文章'}</span>
-                  {f.calories > 0 && <span style={{ fontSize: 11, color: '#E8590C', fontWeight: 600 }}>{f.calories} kcal</span>}
+                  {f.calories > 0 && <span style={{ fontSize: 11, color: '#E8590C', fontWeight: 600 }}>{kcal(f.calories)} {unitCalorie}</span>}
                 </div>
               </div>
               <i className="fas fa-bookmark" style={{ fontSize: 15, color: '#34C759', cursor: 'pointer', alignSelf: 'center' }} onClick={(e) => { e.stopPropagation(); uncollect(f); }} />

@@ -12,7 +12,8 @@ const router = express.Router()
 const searchQuery = z.object({
   keyword: z.string().trim().max(50).optional(),
   category: z.string().trim().max(30).optional(),
-  page: z.coerce.number().int().min(1).optional().default(1),
+  // page 上限 10000：防巨型 OFFSET 全表偏移扫描（与 records 域一致）
+  page: z.coerce.number().int().min(1).max(10000).optional().default(1),
   pageSize: z.coerce.number().int().min(1).max(100).optional().default(20)
 })
 

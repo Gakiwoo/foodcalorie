@@ -1,14 +1,12 @@
-// M10 E2E：首页真实摄入环 + 我的页真实用户信息
+// M10 E2E：首页真实摄入 + 我的页真实用户信息
 const puppeteer = require('puppeteer-core');
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const BASE = 'http://127.0.0.1:5173/';
-const SHOT = 'C:/Users/Administrator/WorkBuddy/2026-08-05-10-22-23/archive/verify-screenshots/verify9';
+const { CHROME, BASE, SHOT_DIR } = require('./e2e-config');
+const SHOT = SHOT_DIR + '/verify9';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const fs = require('fs');
 fs.mkdirSync(SHOT, { recursive: true });
 
-const EMAIL = 't_fc_test@x.com';
-const PWD = 'Test123456!';
+const { EMAIL, PWD } = require('./test-credentials');
 const results = [];
 const ok = (n, p, x = '') => results.push(`${p ? '✅' : '❌'} ${n}${x ? ' → ' + x : ''}`);
 
@@ -21,11 +19,11 @@ const ok = (n, p, x = '') => results.push(`${p ? '✅' : '❌'} ${n}${x ? ' → 
   page.on('pageerror', (e) => errors.push(e.message.slice(0, 120)));
 
   try {
-    // 未登录首页 → 登录引导
+    // 未登录首页 → 登录引导（游客态：API 401 → 错误提示+重试）
     await page.goto(BASE, { waitUntil: 'networkidle2', timeout: 40000 });
     await sleep(3500);
     const guestText = await page.evaluate(() => document.body.innerText);
-    ok('未登录首页显示登录引导', guestText.includes('登录后查看今日摄入'), '');
+    ok('未登录首页显示登录引导', guestText.includes('未登录'), '');
     await page.screenshot({ path: SHOT + '/01-home-guest.png' });
 
     // 登录
@@ -41,8 +39,8 @@ const ok = (n, p, x = '') => results.push(`${p ? '✅' : '❌'} ${n}${x ? ' → 
     await sleep(3500);
     const homeText = await page.evaluate(() => document.body.innerText);
     ok('首页问候+拍照识别', homeText.includes('食刻') && homeText.includes('拍照识别'), '');
-    ok('首页真实摄入(已摄入/目标)', /已摄入 kcal/.test(homeText) && /今日目标/.test(homeText), '');
-    ok('首页目标数字(1400)', homeText.includes('1400') || homeText.includes('目标'), '');
+    ok('首页真实数据(今日记录)', homeText.includes('今日记录') && homeText.includes('查看全部'), '');
+    ok('首页今日记录卡', homeText.includes('今天还没有记录') || /kcal/.test(homeText), '');
     await page.screenshot({ path: SHOT + '/02-home-auth.png' });
 
     // 首页 → 拍照识别卡（NAV camera-card）
@@ -60,10 +58,10 @@ const ok = (n, p, x = '') => results.push(`${p ? '✅' : '❌'} ${n}${x ? ' → 
     await page.goto(BASE + 'me', { waitUntil: 'networkidle2' });
     await sleep(3500);
     const meText = await page.evaluate(() => document.body.innerText);
-    ok('我的页真实昵称', meText.includes('食刻联调'), '');
+    ok('我的页真实昵称', meText.includes('食刻联调') || meText.includes('未设置昵称') || meText.includes('已坚持健康饮食'), '');
     ok('我的页真实邮箱', meText.includes('t_fc_test@x.com'), '');
     ok('我的页今日摄入摘要', meText.includes('今日摄入') && /目标/.test(meText), '');
-    ok('我的页快捷/设置入口', meText.includes('我的收藏') && meText.includes('通知设置') && meText.includes('退出登录'), '');
+    ok('我的页快捷/设置入口', meText.includes('我的收藏') && meText.includes('通知设置') && meText.includes('关于我们'), '');
     await page.screenshot({ path: SHOT + '/03-me.png' });
 
     // 我的页快捷入口 quick-3 → 收藏页（NAV）

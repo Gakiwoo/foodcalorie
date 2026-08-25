@@ -1,7 +1,9 @@
 // 生产环境 E2E：https://gakiwoo.com/foodcalorie/ 登录→记录→添加→清理
 const puppeteer = require('puppeteer-core');
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const BASE = 'https://foodcalorie.gakiwoo.com/';
+const { EMAIL, PWD } = require('./test-credentials');
+// 生产验证脚本：默认打生产；可用 FC_E2E_BASE 覆盖（如本地联调）
+const { CHROME, BASE: _base } = require('./e2e-config');
+const BASE = process.env.FC_E2E_BASE ? _base : 'https://foodcalorie.gakiwoo.com/';
 const SHOT = require('os').tmpdir() + '/fc-verify-shots';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const fs = require('fs');
@@ -27,8 +29,8 @@ const ok = (n, p, x = '') => results.push(`${p ? '✅' : '❌'} ${n}${x ? ' → 
     await page.screenshot({ path: SHOT + '/01-login.png' });
 
     // 2) 真实登录
-    await page.type('input[placeholder="请输入邮箱地址"]', 't_fc_test@x.com');
-    await page.type('input[placeholder="请输入密码"]', 'Test123456!');
+    await page.type('input[placeholder="请输入邮箱地址"]', EMAIL);
+    await page.type('input[placeholder="请输入密码"]', PWD);
     await page.click('button');
     let p = '';
     for (let i = 0; i < 20; i++) { p = await page.evaluate(() => location.pathname); if (p === '/' || p === '/foodcalorie') break; await sleep(500); }

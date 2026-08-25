@@ -3,6 +3,7 @@
 const { createApp } = require('./app')
 const { logger } = require('./shared/utils/logger')
 const { closeDb } = require('./db')
+const { closeRateLimit } = require('./shared/middleware/rateLimitStore')
 
 const PORT = Number(process.env.PORT) || 3001
 const HOST = process.env.HOST || '127.0.0.1' // 默认仅本机监听（nginx 反代），避免公网直连；如需公网直连可设 HOST=0.0.0.0
@@ -40,12 +41,12 @@ function installProcessHandlers() {
   process.on('unhandledRejection', (reason) => {
     logger.error({ reason }, 'unhandledRejection')
   })
-  // SIGINT / SIGTERM 统一优雅关闭：停止接收新连接 + 关闭 DB（WAL checkpoint），再退出（B7）
+  // SIGINT / SIGTERM 统一优雅关闭：停止接收新连接 + 关闭 DB（WAL checkpoint）+ 释放 redis，再退出（B7）
   const gracefulShutdown = (signal) => {
     logger.info(`收到 ${signal}，开始优雅关闭`)
     server.close(() => {
       closeDb()
-      process.exit(0)
+      closeRateLimit().finally(() => process.exit(0))
     })
     // 兜底：5 秒内未能优雅退出则强制结束
     setTimeout(() => {

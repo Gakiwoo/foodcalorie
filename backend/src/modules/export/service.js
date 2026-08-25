@@ -4,6 +4,7 @@ const recordRepo = require('../records/repositories/recordRepo')
 const { weekRange, monthRange, today } = require('../records/service')
 const { ServiceError } = require('../../shared/utils/serviceError')
 const { RANGE_INVALID, EXPORT_FAILED } = require('../../shared/utils/errors')
+const { logger } = require('../../shared/utils/logger')
 
 // 时间范围：day/week/month/all
 function resolveRange(range, date) {
@@ -40,10 +41,16 @@ function exportRecords(userId, { format = 'csv', range = 'all', date }) {
     const { from, to } = resolveRange(range, date)
     const rows = recordRepo.listByRange(userId, from, to)
     if (format === 'json') return { format, range, count: rows.length, records: rows }
-    if (format === 'csv') return { format, range, count: rows.length, content: toCsv(rows), filename: `foodcalorie-records-${range}-${date || 'all'}.csv` }
+    if (format === 'csv') {
+      // 文件名按实际范围命名：range=all 不带 date，避免 "all-2026-08-05" 误导
+      const suffix = date && range !== 'all' ? `${range}-${date}` : range
+      return { format, range, count: rows.length, content: toCsv(rows), filename: `foodcalorie-records-${suffix}.csv` }
+    }
     throw new ServiceError(400, RANGE_INVALID, 'format 仅支持 csv / json')
   } catch (e) {
     if (e instanceof ServiceError) throw e
+    // 记录原始错误：errorHandler 对 ServiceError 不落日志，这里不记则导出失败根因不可见
+    logger.error({ err: e }, 'export 失败')
     throw new ServiceError(500, EXPORT_FAILED)
   }
 }

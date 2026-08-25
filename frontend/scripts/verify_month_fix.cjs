@@ -1,7 +1,9 @@
 // 生产验证：月历页（RecordsMonth）无崩溃 + 日均正常显示（回归 1e30efc 遮蔽 bug）
 const puppeteer = require('puppeteer-core');
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const BASE = 'https://foodcalorie.gakiwoo.com/';
+const { EMAIL, PWD } = require('./test-credentials');
+// 生产验证脚本：默认打生产；可用 FC_E2E_BASE 覆盖（如本地联调）
+const { CHROME, BASE: _base } = require('./e2e-config');
+const BASE = process.env.FC_E2E_BASE ? _base : 'https://foodcalorie.gakiwoo.com/';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const results = [];
@@ -18,8 +20,8 @@ const ok = (n, p, x = '') => results.push(`${p ? '✅' : '❌'} ${n}${x ? ' → 
     // 登录
     await page.goto(BASE + 'login', { waitUntil: 'networkidle2', timeout: 60000 });
     await sleep(4000);
-    await page.type('input[placeholder="请输入邮箱地址"]', 't_fc_test@x.com');
-    await page.type('input[placeholder="请输入密码"]', 'Test123456!');
+    await page.type('input[placeholder="请输入邮箱地址"]', EMAIL);
+    await page.type('input[placeholder="请输入密码"]', PWD);
     await page.click('button');
     await sleep(4000);
 

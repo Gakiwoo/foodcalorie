@@ -2,12 +2,13 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar } from './src/ui/common';
+import { useBusy } from './src/ui/useBusy';
 
 // 夏季轻食挑战页：真实数据（GET challenges + join + checkin）
 export default function FoodCalorieChallenge() {
   const [challenge, setChallenge] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(false);
+  const { busy, run: runBusy } = useBusy();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -25,31 +26,30 @@ export default function FoodCalorieChallenge() {
   useEffect(() => { load(); }, [load]);
 
   async function join() {
-    if (!challenge || busy) return;
-    setBusy(true);
-    try {
-      await http.post(`/api/v1/foodcalorie/challenges/${challenge.id}/join`);
-      toast('已加入挑战，开始打卡吧！');
-      load();
-    } catch (e) {
-      toast(e.message || '操作失败');
-    } finally {
-      setBusy(false);
-    }
+    if (!challenge) return;
+    // runBusy：同步闩锁防双击重复参与/打卡（后端打卡有原子防重，前端再加一道）
+    await runBusy(async () => {
+      try {
+        await http.post(`/api/v1/foodcalorie/challenges/${challenge.id}/join`);
+        toast('已加入挑战，开始打卡吧！');
+        load();
+      } catch (e) {
+        toast(e.message || '操作失败');
+      }
+    });
   }
 
   async function checkIn() {
-    if (!challenge || busy) return;
-    setBusy(true);
-    try {
-      await http.post(`/api/v1/foodcalorie/challenges/${challenge.id}/checkin`);
-      toast('打卡成功 +10 积分');
-      load();
-    } catch (e) {
-      toast(e.message || '操作失败');
-    } finally {
-      setBusy(false);
-    }
+    if (!challenge) return;
+    await runBusy(async () => {
+      try {
+        await http.post(`/api/v1/foodcalorie/challenges/${challenge.id}/checkin`);
+        toast('打卡成功 +10 积分');
+        load();
+      } catch (e) {
+        toast(e.message || '操作失败');
+      }
+    });
   }
 
   if (loading) return <div style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="夏季轻食挑战" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;

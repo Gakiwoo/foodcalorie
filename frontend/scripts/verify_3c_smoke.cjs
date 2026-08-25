@@ -1,9 +1,7 @@
 // 批次3c 冒烟：首页/我的页委托收敛后导航验证
 const puppeteer = require('puppeteer-core');
-const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const BASE = 'http://127.0.0.1:5173';
-const EMAIL = 't_fc_test@x.com';
-const PWD = 'Test123456!';
+const { CHROME, ROOT: BASE } = require('./e2e-config');
+const { EMAIL, PWD } = require('./test-credentials');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = [];
 const ok = (name, cond, extra) => log.push(`${cond ? '✅' : '❌'} ${name}${extra ? ' — ' + extra : ''}`);

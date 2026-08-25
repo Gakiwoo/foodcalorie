@@ -36,7 +36,7 @@
 
 - **AI 拍照识别**：Kimi 视觉模型（`moonshot-v1-8k-vision-preview`）识别餐食，输出热量/蛋白质/脂肪/碳水；未配置 Key 时自动降级为食物库候选推荐
 - **记录与统计**：今日摄入进度环、周/月报表、目标达标天数；按日期/餐次管理记录，支持编辑删除
-- **食物库**：10 万+ 常见食物营养数据；AI 识别结果可审核后回灌（`AI_BACKFILL_ENABLED` 显式开启）
+- **食物库**：精选常见食物营养数据（支持搜索与分类）；AI 识别结果可审核后回灌（`AI_BACKFILL_ENABLED` 显式开启）
 - **收藏与内容**：食物/文章/食谱收藏；发现页内容流
 - **挑战打卡**：连续打卡激励
 - **数据导出**：JSON / CSV 一键导出个人记录
@@ -165,7 +165,7 @@ npm run dev                 # vite dev，/api/* 自动代理到服务器
 - 统一前缀：业务 `/api/v1/foodcalorie/*`，认证 `/api/auth/*`（复用 gakiwoo-api）
 - 统一响应：`{ code, message, data }`；6 段错误码（1xxxx 参数 / 2xxxx 鉴权 / 3xxxx 业务 / 4xxxx 权限 / 5xxxx 系统 / 9xxxx 内部）
 - 9 个业务模块：`health`（探活）· `records`（记录 CRUD + 统计）· `foods`（食物库/搜索）· `ai`（拍照识别）· `favorites`（收藏）· `contents`（文章/食谱）· `challenges`（挑战打卡）· `profiles`（个人目标）· `export`（数据导出）
-- 生产 Swagger：`SWAGGER_ENABLED=true` 时 `/api-docs` 可用
+- 生产 Swagger：`SWAGGER_ENABLED=true` 时 `/api/docs` 可用
 
 ## 测试
 
@@ -213,7 +213,7 @@ export GRADLE_USER_HOME="<项目根>/.gradle-home"
 
 ## 部署
 
-生产拓扑：阿里云 ECS · PM2（`foodcalorie-api`，监听 `127.0.0.1:3001`）· nginx 独立子域 `https://foodcalorie.gakiwoo.com`（前端静态 + `/api/v1/foodcalorie/*` 反代 + `/uploads/` 静态）。
+生产拓扑：阿里云 ECS · PM2（`foodcalorie-api`，监听 `127.0.0.1:3001`）· nginx 独立子域 `https://foodcalorie.gakiwoo.com`（前端静态 + `/api/v1/foodcalorie/*` 反代；**`/uploads/` 在 nginx 层硬性 404**，图片仅经鉴权 API `/api/v1/foodcalorie/ai/images/:filename` 读取，见 `ops/nginx/`）。
 
 标准发布流程（详见 [`backend/README.md`](./backend/README.md) 与 [`docs/README.md`](./docs/README.md)）：
 

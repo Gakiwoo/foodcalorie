@@ -13,6 +13,14 @@ const KIMI_MODEL = process.env.MOONSHOT_VISION_MODEL || 'moonshot-v1-8k-vision-p
 const OK_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 const MAX_SIZE = 10 * 1024 * 1024
 
+// 营养值钳制：模型幻觉可能输出负数/NaN/Infinity/天文数字，
+// 统一归零并设上限，防止负数污染候选列表与回灌食物库（P1-4）
+function clampNutrient(value, max = 5000) {
+  const v = Number(value)
+  if (!Number.isFinite(v) || v <= 0) return 0
+  return Math.min(v, max)
+}
+
 // 解析模型返回内容：容忍 markdown 代码块包裹，提取 JSON
 function parseKimiContent(content) {
   if (!content) return []
@@ -25,10 +33,10 @@ function parseKimiContent(content) {
     return foods.slice(0, 5).map((f) => ({
       name: String(f.name || '').trim(),
       category: f.category ? String(f.category).trim() : null,
-      calories: Math.round(Number(f.calories) || 0),
-      protein_g: Number(f.protein_g) || 0,
-      carbs_g: Number(f.carbs_g) || 0,
-      fat_g: Number(f.fat_g) || 0
+      calories: Math.round(clampNutrient(f.calories, 5000)),
+      protein_g: clampNutrient(f.protein_g),
+      carbs_g: clampNutrient(f.carbs_g),
+      fat_g: clampNutrient(f.fat_g)
     })).filter((f) => f.name)
   } catch {
     return []

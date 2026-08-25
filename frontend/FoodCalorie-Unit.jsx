@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card, Seg } from './src/ui/common';
+import { useBusy } from './src/ui/useBusy';
 
 // 单位设置页：真实数据（GET/PUT profile.unit_calorie + unit_weight）
 export default function FoodCalorieUnit() {
@@ -10,7 +11,7 @@ export default function FoodCalorieUnit() {
   const [calorie, setCalorie] = useState('kcal');
   const [weight, setWeight] = useState('g');
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const { busy: saving, run: runSaving } = useBusy();
 
   useEffect(() => {
     (async () => {
@@ -27,15 +28,16 @@ export default function FoodCalorieUnit() {
   }, []);
 
   async function save() {
-    setSaving(true);
-    try {
-      await http.put('/api/v1/foodcalorie/profile', { unit_calorie: calorie, unit_weight: weight });
-      toast('单位已保存');
-      navigate('/settings');
-    } catch (e) {
-      toast(e.message || '保存失败');
-      setSaving(false);
-    }
+    // runSaving：同步闩锁防双击重复保存
+    await runSaving(async () => {
+      try {
+        await http.put('/api/v1/foodcalorie/profile', { unit_calorie: calorie, unit_weight: weight });
+        toast('单位已保存');
+        navigate('/settings');
+      } catch (e) {
+        toast(e.message || '保存失败');
+      }
+    });
   }
 
   return (

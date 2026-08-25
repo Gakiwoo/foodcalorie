@@ -1,0 +1,91 @@
+# 生产部署流水线（模板）：后端打包 + 前端构建 → scp 上传 → 备份 → pm2 重启 → 冒烟
+#
+# 触发：push v* tag 或手动 dispatch；未配置 DEPLOY_SSH_KEY / DEPLOY_HOST Secrets 时自动跳过。
+# 前置（一次性，见 ops/README.md）：
+#   1. 服务器安装 Node 24（/opt/node-v24/bin/node）与 pm2
+#   2. 在 Actions Secrets 配置：
+#      DEPLOY_SSH_KEY   部署用 SSH 私钥（建议独立 deploy key，仅可登录部署账号）
+#      DEPLOY_HOST      user@1.2.3.4（或 user@host）
+#   3. 服务器路径与代码约定一致：
+#      /var/www/foodcalorie-api   （后端，ecosystem.config.cjs 所在目录）
+#      /var/www/foodcalorie-web   （前端 dist 根）
+#      PM2 进程名 foodcalorie-api
+#
+# 说明：这是可运行模板，实际路径/账号请按服务器实况调整后再启用。
+
+name: Deploy
+
+on:
+  workflow_dispatch: {}
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: secrets.DEPLOY_HOST != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: 24.14.0
+          cache: npm
+          cache-dependency-path: |
+            backend/package-lock.json
+            frontend/package-lock.json
+      - uses: webfactory/ssh-agent@f13b64705d45199f527eb17f0888bd81e09fbe2a # v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Build backend (deps + tarball)
+        run: |
+          cd backend
+          npm ci --omit=dev
+          tar czf ../deploy-backend.tgz --exclude=node_modules --exclude=test --exclude=.env .
+      - name: Build frontend (dist)
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+          tar czf ../deploy-frontend.tgz dist
+
+      - name: Upload artifacts
+        run: |
+          scp -o StrictHostKeyChecking=accept-new deploy-backend.tgz deploy-frontend.tgz "${{ secrets.DEPLOY_HOST }}:/tmp/"
+
+      - name: Backup → install → restart → smoke
+        run: |
+          ssh "${{ secrets.DEPLOY_HOST }}" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          TS=$(date +%Y%m%d-%H%M%S)
+
+          # 1) 备份当前版本（保留最近 5 份，支持回滚）
+          if [ -d /var/www/foodcalorie-api ]; then
+            mkdir -p /var/backups/foodcalorie/deploy
+            tar czf /var/backups/foodcalorie/deploy/foodcalorie-api-${TS}.tgz \
+              --exclude=node_modules --exclude=uploads /var/www/foodcalorie-api
+            ls -1t /var/backups/foodcalorie/deploy/foodcalorie-api-*.tgz | tail -n +6 | xargs -r rm -f
+          fi
+
+          # 2) 解压后端（保留 .env / uploads）
+          cd /var/www/foodcalorie-api
+          tar xzf /tmp/deploy-backend.tgz
+          /opt/node-v24/bin/npm ci --omit=dev
+
+          # 3) 解压前端
+          mkdir -p /var/www/foodcalorie-web
+          tar xzf /tmp/deploy-frontend.tgz -C /var/www/foodcalorie-web
+
+          # 4) 重启 + 冒烟（失败即退出，可由人工回滚备份目录）
+          pm2 restart foodcalorie-api
+          sleep 3
+          curl -sf http://127.0.0.1:3001/api/v1/foodcalorie/health >/dev/null || { echo "SMOKE FAILED"; exit 1; }
+          echo "DEPLOY OK: ${TS}"
+          REMOTE
+
+      - name: Cleanup remote temp files
+        if: always()
+        run: ssh "${{ secrets.DEPLOY_HOST }}" 'rm -f /tmp/deploy-backend.tgz /tmp/deploy-frontend.tgz'

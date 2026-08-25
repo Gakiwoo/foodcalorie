@@ -86,6 +86,13 @@ async function deleteRecord(userId, id) {
 
 // 统计：day / week / month
 // 返回：总摄入、日均、达标天数（<= target）、环形百分比、按天明细
+// 口径说明（与前端展示契约一致）：
+// - total      区间内所有记录热量之和
+// - average    总摄入 ÷ 区间总天数（day=1 / week=7 / month=当月天数）——"全周期日均"，
+//              未记录的天按 0 摄入计入分母；如需"有记录天均值"请用 total ÷ loggedDays 自行计算
+// - reachedDays 区间内有记录且当日摄入 <= target 的天数（0 摄入的未记录天不计入）
+// - percent    总摄入 ÷ target（上限 100）
+// - daily      按天聚合 { 'YYYY-MM-DD': 热量 }（仅包含有记录的天）
 function getStats(userId, { range = 'day', date = today(), target = 1400 }) {
   let from, to
   if (range === 'week') ({ from, to } = weekRange(date))

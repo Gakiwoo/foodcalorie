@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, BottomNav, Card } from './src/ui/common';
+import { useUnits } from './src/ui/units';
+import { Loading, EmptyState } from './src/ui/PageState';
 
 // 发现页：真实数据（GET contents 文章/食谱流，本地搜索 + 分类切换）
 export default function FoodCalorieDiscover() {
   const navigate = useNavigate();
+  const { unitCalorie, unitWeight, kcal, g } = useUnits();
   const [tab, setTab] = useState('all');
   const [keyword, setKeyword] = useState('');
   const [items, setItems] = useState([]);
@@ -35,10 +38,10 @@ export default function FoodCalorieDiscover() {
   return (
     <div data-name="FoodCalorie-Discover" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
       <StatusBar />
-      {/* 顶部：标题 + 铃铛 */}
+      {/* 顶部：标题 + 铃铛（→ 通知设置） */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 20px' }}>
         <span style={{ fontSize: 20, fontWeight: 800, color: '#1A1A1A' }}>发现</span>
-        <i className="fas fa-bell" style={{ fontSize: 16, color: '#1A1A1A' }} />
+        <i className="fas fa-bell" style={{ fontSize: 16, color: '#1A1A1A', cursor: 'pointer' }} onClick={() => navigate('/notification')} />
       </div>
 
       {/* 搜索框（本地过滤） */}
@@ -90,9 +93,9 @@ export default function FoodCalorieDiscover() {
 
       {/* 内容流 */}
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div>
+        <Loading text="加载中…" padding={40} />
       ) : filtered.length === 0 ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>{keyword ? '没有匹配的内容' : '暂无内容'}</div>
+        <EmptyState icon="fa-compass" text={keyword ? '没有匹配的内容' : '暂无内容'} padding={40} />
       ) : (
         <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {filtered.map((c) =>
@@ -102,7 +105,7 @@ export default function FoodCalorieDiscover() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.title}</div>
                   <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{c.summary}</div>
-                  <div style={{ fontSize: 11, color: '#E8590C', marginTop: 4, fontWeight: 600 }}>{c.calories} kcal · {c.protein_g}g 蛋白</div>
+                  <div style={{ fontSize: 11, color: '#E8590C', marginTop: 4, fontWeight: 600 }}>{kcal(c.calories)} {unitCalorie} · {g(c.protein_g)} {unitWeight} 蛋白</div>
                 </div>
               </Card>
             ) : (

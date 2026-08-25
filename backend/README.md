@@ -2,7 +2,7 @@
 
 食刻业务后端 API 服务（**foodcalorie-api**）。注册登录模块**复用服务器 gakiwoo-api**（`/api/auth/*`，零改动）；本服务提供业务接口 `/api/v1/foodcalorie/*`。
 
-- 技术规格：`SPEC.md`（已确认：Node 20 + Express 4 + SQLite 同栈）
+- 技术规格：`SPEC.md`（已确认：Node 24 + Express 4 + SQLite 同栈）
 - 服务器注册登录盘点：`server-audit.md`
 
 ## 快速开始

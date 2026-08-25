@@ -7,7 +7,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "lint": "eslint src test",
-    "test": "node --test test/ai.test.js test/challenges.test.js test/m1-base.test.js test/records.test.js test/runtime-config.test.js test/security.test.js",
+    "test": "node --test test/ai.test.js test/challenges.test.js test/export.test.js test/favorites.test.js test/m1-base.test.js test/records.test.js test/runtime-config.test.js test/security.test.js",
     "init-db": "node src/db.js --init"
   },
   "engines": {

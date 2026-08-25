@@ -24,10 +24,15 @@ module.exports = {
 
   add: (userId, type, refId) => {
     const db = getDb()
-    const exists = db.prepare('SELECT id FROM favorites WHERE user_id = ? AND type = ? AND ref_id = ?').get(userId, type, refId)
-    if (exists) return { inserted: false, id: exists.id }
-    const id = db.prepare('INSERT INTO favorites (user_id, type, ref_id) VALUES (?, ?, ?)').run(userId, type, refId).lastInsertRowid
-    return { inserted: true, id }
+    // 原子防重：UNIQUE(user_id,type,ref_id) + INSERT OR IGNORE，
+    // 避免 check-then-insert 在并发（双击收藏/多端同时收藏）下抛未捕获的
+    // SQLITE_CONSTRAINT → 500；changes=1 表示本次真正插入，否则查回已存在行
+    const r = db
+      .prepare('INSERT OR IGNORE INTO favorites (user_id, type, ref_id) VALUES (?, ?, ?)')
+      .run(userId, type, refId)
+    if (r.changes === 1) return { inserted: true, id: Number(r.lastInsertRowid) }
+    const existing = db.prepare('SELECT id FROM favorites WHERE user_id = ? AND type = ? AND ref_id = ?').get(userId, type, refId)
+    return { inserted: false, id: existing?.id ?? null }
   },
 
   remove: (userId, type, refId) => {

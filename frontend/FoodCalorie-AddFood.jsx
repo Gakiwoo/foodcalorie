@@ -1,8 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast, nowDateTime } from './src/ui/toast';
-import { StatusBar, NavBar, Card } from './src/ui/common';
+import { StatusBar, NavBar, Card, MealPills } from './src/ui/common';
+import { useBusy } from './src/ui/useBusy';
+import { useUnits } from './src/ui/units';
+import { useDebouncedSearch } from './src/ui/useDebouncedSearch';
 
 const MEAL_OPTIONS = ['全部', '早餐', '午餐', '晚餐', '加餐'];
 
@@ -27,44 +30,25 @@ const GRADIENTS = [
 // 添加记录页：真实数据（GET foods 搜索 → POST records 创建）
 export default function FoodCalorieAddFood() {
   const navigate = useNavigate();
+  const { unitCalorie, kcal } = useUnits();
   const [keyword, setKeyword] = useState('');
   const [meal, setMeal] = useState('全部');
-  const [results, setResults] = useState([]);
-  const [searched, setSearched] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [adding, setAdding] = useState(false);
+  const { busy: adding, run: runAdding } = useBusy();
   const [selected, setSelected] = useState([]);
   const [customOpen, setCustomOpen] = useState(false);
   // 自定义添加
   const [customName, setCustomName] = useState('');
   const [customCal, setCustomCal] = useState('');
-  const timer = useRef(null);
-  const seq = useRef(0); // 请求序号守卫：仅最新一次请求的结果允许写入 state
+
+  // 防抖搜索 + 序号守卫（收敛自原内联 effect）
+  const fetchFoods = useCallback(
+    async (kw) => http.get('/api/v1/foodcalorie/foods', { keyword: kw, pageSize: 20 }),
+    []
+  );
+  const { loading, searched, results } = useDebouncedSearch(keyword, fetchFoods);
 
   const displayedFoods = keyword.trim() ? results : DEFAULT_FOODS;
   const totalCal = selected.reduce((sum, item) => sum + (item.calories || 0), 0);
-
-  // 输入防抖搜索
-  useEffect(() => {
-    clearTimeout(timer.current);
-    if (!keyword.trim()) { setResults([]); setSearched(false); return; }
-    const current = ++seq.current;
-    timer.current = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const r = await http.get('/api/v1/foodcalorie/foods', { keyword: keyword.trim(), pageSize: 20 });
-        if (current !== seq.current) return; // 已有更新的关键词，丢弃过期响应
-        setResults(r.data.list);
-        setSearched(true);
-      } catch (e) {
-        if (current !== seq.current) return;
-        toast(e.message || '搜索失败');
-      } finally {
-        if (current === seq.current) setLoading(false);
-      }
-    }, 350);
-    return () => clearTimeout(timer.current);
-  }, [keyword]);
 
   const isSelected = (item) => selected.some((s) => s.id === item.id);
 
@@ -79,60 +63,60 @@ export default function FoodCalorieAddFood() {
 
   async function saveSelected() {
     if (selected.length === 0) return toast('请先选择食物');
-    if (adding) return;
     const effectiveMeal = meal === '全部' ? '早餐' : meal;
-    setAdding(true);
-    let successCount = 0;
-    for (const item of selected) {
-      try {
-        await http.post('/api/v1/foodcalorie/records', {
-          food_name: item.name,
-          category: item.category || null,
-          meal_type: effectiveMeal,
-          calories: item.calories || 0,
-          protein_g: item.protein_g || 0,
-          carbs_g: item.carbs_g || 0,
-          fat_g: item.fat_g || 0,
-          portion: item.unit_desc || '1 份',
-          record_time: nowDateTime(),
-          source: String(item.id).startsWith('common-') ? 'common' : 'search',
-        });
-        successCount++;
-      } catch {
-        // 单条失败继续提交其余项，最后统一提示
+    // runAdding：同步闩锁防双击重复提交（重复点击只执行一次）
+    await runAdding(async () => {
+      let successCount = 0;
+      for (const item of selected) {
+        try {
+          await http.post('/api/v1/foodcalorie/records', {
+            food_name: item.name,
+            category: item.category || null,
+            meal_type: effectiveMeal,
+            calories: item.calories || 0,
+            protein_g: item.protein_g || 0,
+            carbs_g: item.carbs_g || 0,
+            fat_g: item.fat_g || 0,
+            portion: item.unit_desc || '1 份',
+            record_time: nowDateTime(),
+            // 常见食物预设（common-*）无后端枚举值，归为 manual；搜索结果为 search
+            source: String(item.id).startsWith('common-') ? 'manual' : 'search',
+          });
+          successCount++;
+        } catch {
+          // 单条失败继续提交其余项，最后统一提示
+        }
       }
-    }
-    if (successCount > 0) {
-      toast(`已成功添加 ${successCount} 项食物`);
-      navigate('/records');
-    } else {
-      toast('保存失败，请稍后重试');
-      setAdding(false);
-    }
+      if (successCount > 0) {
+        toast(`已成功添加 ${successCount} 项食物`);
+        navigate('/records');
+      } else {
+        toast('保存失败，请稍后重试');
+      }
+    });
   }
 
   async function addCustom() {
     const cal = Number(customCal);
     if (!customName.trim()) return toast('请输入食物名称');
     if (!cal || cal <= 0) return toast('请输入有效热量');
-    if (adding) return;
     const effectiveMeal = meal === '全部' ? '早餐' : meal;
-    setAdding(true);
-    try {
-      await http.post('/api/v1/foodcalorie/records', {
-        food_name: customName.trim(),
-        meal_type: effectiveMeal,
-        calories: Math.round(cal),
-        portion: '1 份',
-        record_time: nowDateTime(),
-        source: 'manual',
-      });
-      toast('已添加「' + customName.trim() + '」');
-      navigate('/records');
-    } catch (e) {
-      toast(e.message || '添加失败');
-      setAdding(false);
-    }
+    await runAdding(async () => {
+      try {
+        await http.post('/api/v1/foodcalorie/records', {
+          food_name: customName.trim(),
+          meal_type: effectiveMeal,
+          calories: Math.round(cal),
+          portion: '1 份',
+          record_time: nowDateTime(),
+          source: 'manual',
+        });
+        toast('已添加「' + customName.trim() + '」');
+        navigate('/records');
+      } catch (e) {
+        toast(e.message || '添加失败');
+      }
+    });
   }
 
   return (
@@ -143,8 +127,9 @@ export default function FoodCalorieAddFood() {
         right={
           <i
             className="fas fa-check"
+            data-name="nav-save-check"
             style={{ fontSize: 20, color: '#34C759', cursor: 'pointer' }}
-            onClick={() => navigate('/records')}
+            onClick={saveSelected}
           />
         }
       />
@@ -157,6 +142,7 @@ export default function FoodCalorieAddFood() {
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="搜索食物名称"
+            aria-label="搜索食物名称"
             style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, background: 'transparent' }}
           />
           {keyword && <i className="fas fa-circle-xmark" style={{ fontSize: 14, color: '#C0C4CC', cursor: 'pointer' }} onClick={() => setKeyword('')} />}
@@ -165,34 +151,7 @@ export default function FoodCalorieAddFood() {
 
       {/* 餐次 */}
       <div style={{ padding: '4px 20px 8px' }}>
-        <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
-          {MEAL_OPTIONS.map((m) => {
-            const active = meal === m;
-            return (
-              <div
-                key={m}
-                onClick={() => setMeal(m)}
-                style={{
-                  height: 30,
-                  borderRadius: 15,
-                  padding: '0 14px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                  background: active ? '#34C759' : '#FFFFFF',
-                  color: active ? '#FFFFFF' : '#1A1A1A',
-                  fontSize: 13,
-                  fontWeight: active ? 600 : 500,
-                  boxShadow: active ? 'none' : '0 2px 8px rgba(0,0,0,0.04)',
-                  cursor: 'pointer',
-                }}
-              >
-                {m}
-              </div>
-            );
-          })}
-        </div>
+        <MealPills options={MEAL_OPTIONS} value={meal} onChange={setMeal} />
       </div>
 
       {/* 食物列表 */}
@@ -246,7 +205,7 @@ export default function FoodCalorieAddFood() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 15, fontWeight: 600, color: '#1A1A1A' }}>{f.name}</div>
-                <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>{f.unit_desc} · {f.calories} kcal</div>
+                <div style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>{f.unit_desc} · {kcal(f.calories)} {unitCalorie}</div>
               </div>
               <div
                 onClick={(e) => { e.stopPropagation(); toggleSelected(f); }}
@@ -290,7 +249,7 @@ export default function FoodCalorieAddFood() {
       <div style={{ position: 'sticky', bottom: 0, background: '#FFFFFF', padding: '12px 20px calc(20px + env(safe-area-inset-bottom, 0px))', borderTop: '1px solid #F3F4F6' }}>
         <div style={{ display: 'flex', alignSelf: 'stretch', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 10 }}>
           <span style={{ fontSize: 13, color: '#9CA3AF' }}>已选 {selected.length} 项</span>
-          <span style={{ fontSize: 13, color: '#34C759', fontWeight: 600 }}>{totalCal} kcal</span>
+          <span style={{ fontSize: 13, color: '#34C759', fontWeight: 600 }}>{kcal(totalCal)} {unitCalorie}</span>
         </div>
         <div
           data-name="save-records-btn"

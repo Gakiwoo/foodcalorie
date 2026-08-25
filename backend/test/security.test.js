@@ -11,6 +11,9 @@ const fs = require('fs')
 
 process.env.NODE_ENV = 'test-security'
 process.env.JWT_SECRET = 'security-test-secret-0123456789'
+// 测试隔离：清空 REDIS_URL（本机 .env 可能配置了 redis 地址），
+// 避免限流中间件在无 Redis 环境下尝试连接导致套件挂起
+process.env.REDIS_URL = ''
 process.env.DB_PATH = path.join(os.tmpdir(), 'fc-security-test.db')
 process.env.UPLOAD_DIR = path.join(os.tmpdir(), 'fc-security-uploads')
 try { fs.unlinkSync(process.env.DB_PATH) } catch {}

@@ -58,7 +58,7 @@
 
 ### P1（完善级）
 4. ✅ **生产 Swagger 已按环境白名单开放**：非 production 默认开；production 需 `SWAGGER_ENABLED=true` 显式开启（M14 落地）。
-5. ✅ **识别图片已持久化**：uploads 目录 + nginx 静态服务 + `food_records.image_url` 落库 + 详情页展示（M14 落地，E2E 9/9）。
+5. ✅ **识别图片已持久化**：uploads 目录（nginx 层 `/uploads/` 硬性 404，不公开） + 鉴权 API 读取 + `food_records.image_url` 落库 + 详情页展示（M14 落地，E2E 9/9）。
 6. **限流为单实例内存实现**：当前单机部署可用；扩展为多实例时需接入共享限流存储。
 
 ### P2（体验增强）

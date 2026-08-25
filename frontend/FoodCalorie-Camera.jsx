@@ -109,7 +109,7 @@ export default function FoodCalorieCamera() {
             </div>
             <div data-name="hint" style={{ display: 'flex', alignSelf: 'stretch', justifyContent: 'flex-start', alignItems: 'flex-start', flexDirection: 'column', padding: '0 44px' }}>
               <p
-                data-name="将食物放入框内，点击快门即可自动识别热量与营养"
+                data-name="hint-text"
                 style={{ alignSelf: 'stretch', flexShrink: 0, color: 'rgba(255,255,255,0.55)', fontSize: 13, textAlign: 'center', lineHeight: '18px', margin: 0 }}>
                 将食物放入框内，点击快门即可自动识别热量与营养
               </p>

@@ -4,12 +4,13 @@ import { http } from './src/api/client';
 import { fetchMe } from './src/api/auth';
 import { todayStr } from './src/ui/toast';
 import { StatusBar, BottomNav } from './src/ui/common';
-
-const APP_VERSION = 'v1.0.3';
+import { useUnits } from './src/ui/units';
+import { APP_VERSION } from './src/version';
 
 // 我的页：真实数据（/auth/me 用户信息 + profile 目标 + 今日摄入摘要；data-name 保留供全局 NAV 跳转）
 export default function FoodCalorieMe() {
   const navigate = useNavigate();
+  const { unitCalorie, kcal } = useUnits();
   const [user, setUser] = useState(null);
   const [stats, setStats] = useState(null);
   const [authed, setAuthed] = useState(true);
@@ -71,18 +72,18 @@ export default function FoodCalorieMe() {
           </div>
           <div data-name="today-stats" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
             <div data-name="stat-intake" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-              <span data-name="intake-value" style={{ fontSize: 22, fontWeight: 700, color: '#34C759', lineHeight: '28px' }}>{stats ? intake : '--'}</span>
-              <span data-name="intake-label" style={{ fontSize: 11, color: '#9CA3AF', lineHeight: '15px' }}>已摄入 kcal</span>
+              <span data-name="intake-value" style={{ fontSize: 22, fontWeight: 700, color: '#34C759', lineHeight: '28px' }}>{stats ? kcal(intake) : '--'}</span>
+              <span data-name="intake-label" style={{ fontSize: 11, color: '#9CA3AF', lineHeight: '15px' }}>已摄入 {unitCalorie}</span>
             </div>
             <div data-name="stat-divider-1" style={{ width: 1, height: 32, background: '#EEF0F2' }} />
             <div data-name="stat-goal" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              <span data-name="goal-value" style={{ fontSize: 22, fontWeight: 700, color: '#1A1A1A', lineHeight: '28px' }}>{stats ? target : '--'}</span>
-              <span data-name="goal-label" style={{ fontSize: 11, color: '#9CA3AF', lineHeight: '15px' }}>目标 kcal</span>
+              <span data-name="goal-value" style={{ fontSize: 22, fontWeight: 700, color: '#1A1A1A', lineHeight: '28px' }}>{stats ? kcal(target) : '--'}</span>
+              <span data-name="goal-label" style={{ fontSize: 11, color: '#9CA3AF', lineHeight: '15px' }}>目标 {unitCalorie}</span>
             </div>
             <div data-name="stat-divider-2" style={{ width: 1, height: 32, background: '#EEF0F2' }} />
             <div data-name="stat-remain" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
-              <span data-name="remain-value" style={{ fontSize: 22, fontWeight: 700, color: '#1A1A1A', lineHeight: '28px' }}>{stats ? remain : '--'}</span>
-              <span data-name="remain-label" style={{ fontSize: 11, color: '#9CA3AF', lineHeight: '15px' }}>剩余 kcal</span>
+              <span data-name="remain-value" style={{ fontSize: 22, fontWeight: 700, color: '#1A1A1A', lineHeight: '28px' }}>{stats ? kcal(remain) : '--'}</span>
+              <span data-name="remain-label" style={{ fontSize: 11, color: '#9CA3AF', lineHeight: '15px' }}>剩余 {unitCalorie}</span>
             </div>
           </div>
           <div data-name="today-bar" style={{ width: '100%', height: 8, background: '#E8F5EC', borderRadius: 8, overflow: 'hidden' }}>
@@ -99,8 +100,8 @@ export default function FoodCalorieMe() {
             { to: '/goal', icon: 'fa-bullseye', label: '目标设置', bg: '#FFF4E5', color: '#FA8C16' },
             { to: '/favorites', icon: 'fa-heart', label: '我的收藏', bg: '#FFE8EC', color: '#FF4D4F' },
             { to: '/dataexport', icon: 'fa-file-export', label: '数据导出', bg: '#E6F4FF', color: '#1677FF' }
-          ].map((g) => (
-            <div key={g.label} onClick={() => navigate(g.to)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch', borderRadius: 16, background: '#FFFFFF', boxShadow: '0 4px 14px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+          ].map((g, gi) => (
+            <div key={g.label} data-name={'quick-' + (gi + 1)} onClick={() => navigate(g.to)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch', borderRadius: 16, background: '#FFFFFF', boxShadow: '0 4px 14px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
               <div data-name="quick-icon" style={{ height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', background: g.bg, borderRadius: '16px 16px 0 0' }}>
                 <i className={'fas ' + g.icon} style={{ fontSize: 22, color: g.color }} />
               </div>
