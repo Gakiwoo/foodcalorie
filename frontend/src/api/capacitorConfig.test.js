@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { APP_VERSION } from '../version'
 
 const configPath = new URL('../../capacitor.config.json', import.meta.url)
 const androidBuildPath = new URL('../../android/app/build.gradle', import.meta.url)
@@ -29,9 +30,15 @@ describe('Capacitor native networking', () => {
     const build = readFileSync(androidBuildPath, 'utf8')
     const strings = readFileSync(androidStringsPath, 'utf8')
 
+    // 版本号与 src/version.js 单一来源保持一致（发版 bump 后测试自动跟随，无需手改）
+    const versionName = APP_VERSION
+    const versionCodeMatch = build.match(/versionCode (\d+)/)
+    expect(versionCodeMatch).not.toBeNull()
+    const versionCode = Number(versionCodeMatch[1])
+    expect(Number.isInteger(versionCode)).toBe(true)
+    expect(versionCode).toBeGreaterThanOrEqual(5) // 单调递增基线（v1.0.4 = 5）
+    expect(build).toMatch(new RegExp(`versionName "${versionName.replace(/\./g, '\\.')}"`))
     expect(build).toMatch(/applicationId "com\.shike\.app"/)
-    expect(build).toMatch(/versionCode 5/)
-    expect(build).toMatch(/versionName "1\.0\.4"/)
     expect(strings).toContain('<string name="app_name">食刻</string>')
     expect(strings).toContain('<string name="title_activity_main">食刻</string>')
   })
