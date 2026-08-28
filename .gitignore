@@ -25,6 +25,9 @@ frontend/.vite/
 # ── 设计工具缓存（MasterGo MCP 同步数据，勿提交）──
 .mastergo/
 
+# ── 归档区（历史脚本/原型/截图/旧构建，只读参考；出库以减小 clone 体积，本地保留）──
+archive/
+
 # ── 冗余备份（与 archive/ 重复，文档标注可删）──
 react-app-backup/
 
