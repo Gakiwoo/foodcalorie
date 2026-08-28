@@ -8,13 +8,12 @@
 ## 一、顶层目录速览
 
 ```
-WorkBuddy/2026-08-05-10-22-23/
-├── frontend/          # 前端：Vite + React（31 个页面组件 + 共享 UI）
+foodcalorie/（仓库根）
+├── frontend/          # 前端：Vite + React（32 个页面组件 + 共享 UI/主题令牌）
 ├── backend/           # 后端：Express + SQLite（9 业务模块，分层架构）
 ├── docs/              # 产品/页面文档
-├── archive/           # 归档区（历史脚本、原型、截图、旧构建，只读参考）
-├── react-app-backup/  # 早期原型备份（与 archive/react-app-backup 重复，保留勿动）
-├── .mastergo/         # MasterGo 设计稿同步数据（勿改）
+├── ops/               # nginx / sshd / 备份运维配置
+├── archive/           # 归档区（历史脚本、原型、截图、旧构建，只读参考；已 gitignore 出库，本地保留）
 └── .workbuddy/memory/ # 每日开发记忆（2026-08-0X.md，含踩坑与验证记录）
 ```
 
@@ -33,7 +32,7 @@ WorkBuddy/2026-08-05-10-22-23/
 | `styles.css` | 全局样式 |
 | `package.json` | 依赖：react 18 / react-router-dom 7 / **puppeteer-core**（E2E） |
 
-### 2.2 页面组件（`FoodCalorie-*.jsx`，31 个）
+### 2.2 页面组件（`FoodCalorie-*.jsx`，32 个）
 
 全部为**真实数据组件**（内部 fetch API + 自处理导航）。约定：**页面级组件 = 文件名即路由组件**。
 
@@ -47,17 +46,23 @@ WorkBuddy/2026-08-05-10-22-23/
 | 挑战 | `Challenge` `DataExport` | 挑战打卡（含连续 streak）/ 数据导出 |
 | 内容页 | `Privacy` `About` `Help` | 纯静态；**Help 依赖 `FoodCalorie-Help.html`（?raw 引入），勿删该 html** |
 
-> ⚠️ **维护红线**：`Help.jsx` 通过 `import html from './FoodCalorie-Help.html?raw'` 嵌入内容，**必须保留 `FoodCalorie-Help.html`**。其余同名 `.html` 原型均已归档（archive/prototype/legacy-html/），避免 Vite/静态服务路由冲突。
+> 与 jsx 同名的原型 `.html` 已全部归档（archive/prototype/legacy-html/），避免 Vite/静态服务路由冲突；Help.jsx 内容已自包含，不再依赖外部 html。
 
 ### 2.3 共享代码 `src/`
 
 | 文件 | 职责 |
 |------|------|
-| `src/api/client.js` | 封装的 http 客户端（token 注入 / 统一错误 / 401 跳转） |
-| `src/api/auth.js` | 认证辅助（登出等） |
+| `src/api/client.js` | 封装的 http 客户端（token 注入 / 统一错误 / 401 单飞刷新 + 会话标记跳转 / GET 重试） |
+| `src/api/auth.js` | 认证辅助（登录/注册/登出，走 gakiwoo /api/auth/*） |
 | `capacitor.config.json` | Android 容器配置；启用 CapacitorHttp，以原生 Cookie 管理器承载 httpOnly 登录会话 |
-| `src/ui/common.jsx` | 通用 UI：StatusBar / NavBar / Card / Seg / 环形进度等 |
-| `src/ui/toast.js` | Toast 提示 + `nowDateTime()` 时间格式化 |
+| `src/ui/theme.js` | 设计令牌（颜色/间距/圆角/阴影/字号/层级），页面禁止硬编码色值 |
+| `src/ui/components/` | 页面原语组件（PageContainer/ListItem/PrimaryButton/SectionHeader/StatBadge） |
+| `src/ui/common.jsx` | 通用 UI：StatusBar / NavBar / Card / Seg / 环形进度 / ToggleSwitch / MealPills |
+| `src/ui/PageState.jsx` | 页面三态：Loading / ErrorRetry / EmptyState |
+| `src/ui/units.jsx` | 单位换算上下文（kcal↔kJ、g↔oz，设置真实生效） |
+| `src/ui/useBusy.js` / `useDebouncedSearch.js` | 防双击闩锁 / 防抖搜索（请求序号守卫） |
+| `src/ui/toast.js` | Toast 提示 + 本地日期工具（todayStr / nowDateTime） |
+| `src/test/` | vitest 页面冒烟套件（34 文件 / 376 用例）+ setup + renderPage 工具 |
 
 ### 2.4 验证脚本 `scripts/`（核心回归，勿删）
 
@@ -78,18 +83,17 @@ WorkBuddy/2026-08-05-10-22-23/
 运行方式（Windows）：
 ```bash
 cd frontend/scripts
-"C:/Users/Administrator/.workbuddy/binaries/node/versions/22.22.2/node.exe" verify_m14.cjs
+node verify_m14.cjs   # 需 Node 24（.nvmrc），dev server 已启动时执行
 ```
 > 历史调试脚本已归档 `archive/scripts/debug/`。
 
-### 2.5 构建产物（`dist-prod3/` 为当前生产版本）
+### 2.5 构建产物（`dist/`，构建后上传 /var/www/foodcalorie-web/）
 
 | 目录 | 说明 |
 |------|------|
-| `dist-prod3/` | **当前生产构建**（子域根路径，已部署 /var/www/foodcalorie-web/） |
-| `archive/prototype/old-dist/` | 旧构建（dist-v0 / 子路径版 / 早期根路径版），仅历史参考 |
+| `dist/` | 生产构建产物（`npm run build`；历史 dist-prod3 及更早版本已归档 archive/prototype/old-dist/） |
 
-构建命令：`NODE_ENV=production vite build --outDir dist-prod3`（Windows 下用新 outDir 避开安全钩子清空拦截）。
+构建命令：`npm run build`（vite build，base './' + es2015 目标）。
 
 ---
 
@@ -136,14 +140,21 @@ cd frontend/scripts
 | utils | `errors.js` | 6 段错误码定义 |
 | utils | `logger.js` | pino JSON 日志 |
 
-### 3.4 单元测试 `test/`
+### 3.4 单元测试 `test/`（node:test，58 用例）
 
 | 文件 | 覆盖 |
 |------|------|
-| `m1-base.test.js` | 基础：health/鉴权/错误码 |
-| `records.test.js` | 记录域 CRUD/stats（含目标读 profile） |
-| `ai.test.js` | AI 降级/解析/enrich/受控回灌仓储/image_url |
-| `challenges.test.js` | 挑战：首次/连续/断签/重复 429 |
+| `m1-base.test.js` | 基础：health/鉴权/错误码/404 |
+| `records.test.js` | 记录域 CRUD/stats/calendar（含目标读 profile、越权 404） |
+| `ai.test.js` | AI 降级/解析/enrich/受控回灌/image_url 白名单 |
+| `challenges.test.js` | 挑战：首次/连续/断签/重复 429/并发原子防重/窗口校验 |
+| `favorites.test.js` | 收藏：防重 409/并发恰好一次/联查/跨用户隔离 |
+| `contents.test.js` | 内容流/详情原子浏览量/404 |
+| `foods.test.js` | 食物库搜索/分类 |
+| `profiles.test.js` | 资料默认档/部分更新/布尔序列化 |
+| `export.test.js` | CSV BOM/转义/公式注入防护/JSON/range/跨用户隔离 |
+| `security.test.js` | 限流/魔数校验/私有图片所有权/CORS fail-closed |
+| `runtime-config.test.js` | 运行时配置守卫 |
 
 运行（服务器上，DB 用临时库隔离）：
 ```bash

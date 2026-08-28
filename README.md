@@ -95,6 +95,8 @@ flowchart LR
   CI -->|单测 lint| Mods
 ```
 
+> **已知架构约束**：食刻后端与 gakiwoo-api 共享同一 SQLite 文件与 `JWT_SECRET`（业务库直接读其 `users` 表，无外键），账号体系零成本复用的代价是两服务 schema/部署互相耦合，且 SQLite 多进程写并发有上限——这是有意为之的务实取舍，不支持水平扩展；若未来需要独立扩容，应把用户/认证域显式服务化。
+
 ## 目录结构
 
 ```
@@ -110,7 +112,7 @@ foodcalorie/
 ├── backend/                  # Express 分层（Controller/Service/DAO）
 │   ├── src/modules/          # 9 模块：ai/challenges/contents/export/favorites/foods/health/profiles/records
 │   ├── src/shared/           # 限流/错误码/中间件
-│   ├── test/                 # node:test 单测（45 用例）
+│   ├── test/                 # node:test 单测（58 用例，覆盖安全/并发/跨用户隔离）
 │   ├── .env.example          # 环境变量模板
 │   ├── SPEC.md               # 需求规格
 │   └── ASSESSMENT.md         # 完成度评估与遗留项
@@ -170,10 +172,10 @@ npm run dev                 # vite dev，/api/* 自动代理到服务器
 ## 测试
 
 ```bash
-# 后端单测（45 用例，需 Node 24）
+# 后端单测（58 用例，需 Node 24）
 cd backend && npm test
 
-# 前端单元（vitest）
+# 前端单元（vitest，34 文件 / 376 用例）
 cd frontend && npm test
 
 # 前端 E2E（连 dev server，16 个脚本：verify_m7/m8/.../m14 + 3b/3c 冒烟 + prod）
