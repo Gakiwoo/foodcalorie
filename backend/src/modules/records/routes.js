@@ -5,7 +5,6 @@ const { z } = require('zod')
 const { validate } = require('../../shared/middleware/validate')
 const { requireAuth } = require('../../shared/middleware/requireAuth')
 const { ok, okPage } = require('../../shared/utils/response')
-const { ServiceError } = require('../../shared/utils/serviceError')
 const { isValidCnDate } = require('../../shared/utils/date')
 const service = require('./service')
 const profilesService = require('../profiles/service')
@@ -88,32 +87,8 @@ router.post('/', requireAuth, validate(recordBody), async (req, res, next) => {
  */
 router.get('/', requireAuth, validate(querySchema, 'query'), (req, res, next) => {
   try {
-    const page = req.query.page
-    const pageSize = req.query.pageSize
-    const offset = (page - 1) * pageSize
-    const date = req.query.date
-    const meal = req.query.meal
-    const repo = require('./repositories/recordRepo')
-    const uid = req.user.id
-
-    // SQL 分页下推（替代内存 slice）：date/meal 条件在 SQL 层过滤 + 计数
-    let list
-    let total
-    if (date && meal) {
-      list = repo.listByDateMealPaged(uid, date, meal, pageSize, offset)
-      total = repo.countByDateMeal(uid, date, meal)
-    } else if (date) {
-      list = repo.listByDatePaged(uid, date, pageSize, offset)
-      total = repo.countByDate(uid, date)
-    } else if (meal) {
-      list = repo.listByRangeMealPaged(uid, '0000-01-01', '9999-12-31', meal, pageSize, offset)
-      total = repo.countByRangeMeal(uid, '0000-01-01', '9999-12-31', meal)
-    } else {
-      list = repo.listByRangePaged(uid, '0000-01-01', '9999-12-31', pageSize, offset)
-      total = repo.countByRange(uid, '0000-01-01', '9999-12-31')
-    }
-
-    return okPage(res, { list, page, pageSize, total })
+    const { list, total } = service.listRecords(req.user.id, req.query)
+    return okPage(res, { list, page: req.query.page, pageSize: req.query.pageSize, total })
   } catch (e) {
     next(e)
   }
@@ -163,9 +138,7 @@ router.get('/calendar', requireAuth, validate(calendarQuery, 'query'), (req, res
  */
 router.get('/:id', requireAuth, validate(idParam, 'params'), (req, res, next) => {
   try {
-    const record = require('./repositories/recordRepo').findById(req.params.id, req.user.id)
-    if (!record) throw new ServiceError(404, 30001)
-    return ok(res, record)
+    return ok(res, service.getRecord(req.user.id, req.params.id))
   } catch (e) {
     next(e)
   }

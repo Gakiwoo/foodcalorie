@@ -42,7 +42,8 @@ function monthRange(dateStr) {
   return { from, to }
 }
 
-async function createRecord(userId, data) {
+// better-sqlite3 为同步引擎：这里无需 async，返回普通值（路由层 await 兼容）
+function createRecord(userId, data) {
   const create = getDb().transaction(() => {
     if (data.image_url) imageStore.claim(data.image_url, userId)
     return recordRepo.insertRecord({ ...data, user_id: userId, source: data.source || 'manual' })
@@ -51,7 +52,7 @@ async function createRecord(userId, data) {
   return recordRepo.findById(id, userId)
 }
 
-async function updateRecord(userId, id, data) {
+function updateRecord(userId, id, data) {
   const exists = recordRepo.findById(id, userId)
   if (!exists) throw new ServiceError(404, RECORD_NOT_FOUND)
   // 部分更新：以现有记录为基底，仅覆盖传入字段（支持 PATCH 语义）
@@ -71,7 +72,7 @@ async function updateRecord(userId, id, data) {
   return recordRepo.findById(id, userId)
 }
 
-async function deleteRecord(userId, id) {
+function deleteRecord(userId, id) {
   const exists = recordRepo.findById(id, userId)
   if (!exists) throw new ServiceError(404, RECORD_NOT_FOUND)
   const changes = recordRepo.deleteRecord(id, userId)
@@ -82,6 +83,33 @@ async function deleteRecord(userId, id) {
     }
   }
   return { deleted: true }
+}
+
+// 列表查询：date/meal 条件在 SQL 层过滤 + 计数（分页下推，防巨型 OFFSET）
+function listRecords(userId, { date, meal, page, pageSize }) {
+  const offset = (page - 1) * pageSize
+  let list
+  let total
+  if (date && meal) {
+    list = recordRepo.listByDateMealPaged(userId, date, meal, pageSize, offset)
+    total = recordRepo.countByDateMeal(userId, date, meal)
+  } else if (date) {
+    list = recordRepo.listByDatePaged(userId, date, pageSize, offset)
+    total = recordRepo.countByDate(userId, date)
+  } else if (meal) {
+    list = recordRepo.listByRangeMealPaged(userId, '0000-01-01', '9999-12-31', meal, pageSize, offset)
+    total = recordRepo.countByRangeMeal(userId, '0000-01-01', '9999-12-31', meal)
+  } else {
+    list = recordRepo.listByRangePaged(userId, '0000-01-01', '9999-12-31', pageSize, offset)
+    total = recordRepo.countByRange(userId, '0000-01-01', '9999-12-31')
+  }
+  return { list, total }
+}
+
+function getRecord(userId, id) {
+  const record = recordRepo.findById(id, userId)
+  if (!record) throw new ServiceError(404, RECORD_NOT_FOUND)
+  return record
 }
 
 // 统计：day / week / month
@@ -145,6 +173,8 @@ module.exports = {
   createRecord,
   updateRecord,
   deleteRecord,
+  listRecords,
+  getRecord,
   getStats,
   getCalendar,
   today,
