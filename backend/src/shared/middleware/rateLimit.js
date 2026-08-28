@@ -2,6 +2,7 @@
 // 限流中间件：默认单实例内存滑窗；配置 REDIS_URL 后切换为 Redis 共享滑窗（多实例）。
 // 内存路径保持同步（既有测试兼容）；Redis 路径异步执行，故障时自动回退内存，不阻断请求。
 const { ServiceError } = require('../utils/serviceError')
+const { logger } = require('../utils/logger')
 const rateLimitStore = require('./rateLimitStore')
 
 const buckets = new Map() // `${scope}:${key}` -> number[]
@@ -64,7 +65,7 @@ function createRateLimit(limit, windowMs, keyFn) {
         return next()
       })
       .catch((err) => {
-        console.warn('[rateLimit] redis 检查失败，使用内存兜底:', err.message)
+        logger.warn({ err: err.message }, '[rateLimit] redis 检查失败，使用内存兜底')
         if (!checkMemory(buckets, bucketKey + key, limit, windowMs)) return next(TOO_MANY())
         return next()
       })

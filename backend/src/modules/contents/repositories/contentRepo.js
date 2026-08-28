@@ -33,5 +33,17 @@ module.exports = {
 
   getById: (id) => decorate(getDb().prepare('SELECT * FROM contents WHERE id = ?').get(id)),
 
-  incrementViews: (id) => getDb().prepare('UPDATE contents SET views = views + 1 WHERE id = ?').run(id)
+  incrementViews: (id) => getDb().prepare('UPDATE contents SET views = views + 1 WHERE id = ?').run(id),
+
+  // 原子读取并递增浏览量：事务包裹 SELECT + UPDATE，避免并发下返回值与 DB 实际值不一致
+  getAndIncrementViews: (id) => {
+    const db = getDb()
+    const tx = db.transaction(() => {
+      const row = db.prepare('SELECT * FROM contents WHERE id = ?').get(id)
+      if (!row) return null
+      db.prepare('UPDATE contents SET views = views + 1 WHERE id = ?').run(id)
+      return { ...row, views: row.views + 1 }
+    })
+    return decorate(tx())
+  }
 }

@@ -8,7 +8,7 @@ const { ok, okPage } = require('../../shared/utils/response')
 const { ServiceError } = require('../../shared/utils/serviceError')
 const { isValidCnDate } = require('../../shared/utils/date')
 const service = require('./service')
-const profileRepo = require('../profiles/repositories/profileRepo')
+const profilesService = require('../profiles/service')
 
 const router = express.Router()
 
@@ -130,8 +130,8 @@ router.get('/stats', requireAuth, validate(statsQuery, 'query'), (req, res, next
   try {
     // target 未显式传入时，读用户 profile.target_calories（目标设置页配置的真实目标）
     if (!req.query.target) {
-      const profile = profileRepo.getByUserId(req.user.id)
-      if (profile && profile.target_calories) req.query.target = profile.target_calories
+      const target = profilesService.getTargetCalories(req.user.id)
+      if (target) req.query.target = target
     }
     return ok(res, service.getStats(req.user.id, req.query))
   } catch (e) {

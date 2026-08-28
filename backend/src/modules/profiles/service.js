@@ -21,4 +21,10 @@ function updateProfile(userId, patch) {
   return { ...profile, nickname: profileRepo.getNickname(userId) }
 }
 
-module.exports = { getProfile, updateProfile }
+// 供其他模块调用：读取用户目标热量，无档或未设置时返回 null（由调用方决定兜底值）
+function getTargetCalories(userId) {
+  const profile = profileRepo.getByUserId(userId)
+  return profile && profile.target_calories ? profile.target_calories : null
+}
+
+module.exports = { getProfile, updateProfile, getTargetCalories }

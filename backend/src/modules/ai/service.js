@@ -38,6 +38,9 @@ function parseKimiContent(content) {
       carbs_g: clampNutrient(f.carbs_g),
       fat_g: clampNutrient(f.fat_g)
     })).filter((f) => f.name)
+      // 过滤 0 卡路里候选：模型幻觉或非食物图片可能返回 0 卡，
+      // 展示给用户会误导并污染统计数据；全部过滤后由 recognize() 走降级候选推荐
+      .filter((f) => f.calories > 0)
   } catch {
     return []
   }

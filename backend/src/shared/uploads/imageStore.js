@@ -5,6 +5,7 @@ const path = require('path')
 const { getDb } = require('../../db')
 const { ServiceError } = require('../utils/serviceError')
 const { NOT_FOUND, PARAM_INVALID } = require('../utils/errors')
+const { logger } = require('../utils/logger')
 
 const IMAGE_ROUTE_PREFIX = '/api/v1/foodcalorie/ai/images/'
 const FILENAME_PATTERN = /^food_\d+_[0-9a-f]{8}\.(?:jpg|png|webp|heic|heif)$/i
@@ -60,12 +61,13 @@ function register(filename, userId) {
     if (oldest) {
       db.prepare('DELETE FROM uploaded_images WHERE filename = ? AND user_id = ?').run(oldest.filename, userId)
       try { fs.unlinkSync(path.join(UPLOAD_DIR, oldest.filename)) } catch (error) {
-        if (error.code !== 'ENOENT') console.warn(`[imageStore] 清理超出上限图片失败 ${oldest.filename}: ${error.message}`)
+        if (error.code !== 'ENOENT') logger.warn({ err: error.message, filename: oldest.filename }, '[imageStore] 清理超出上限图片失败')
       }
     }
   }
   db.prepare("INSERT INTO uploaded_images (filename, user_id, status) VALUES (?, ?, 'pending')").run(filename, userId)
-  cleanupExpiredPending()
+  // 注意：全局过期清理已移至独立定时器（startCleanupTimer），不在用户上传的同步路径中执行，
+  // 避免全局清理阻塞单次上传请求。单用户 pending 上限守护仍在此同步执行（仅影响当前用户）。
   return imageUrl(filename)
 }
 
@@ -119,9 +121,36 @@ function cleanupExpiredPending() {
   // 逐个清理文件：单文件失败（EPERM/EBUSY 等）只记日志，不得阻断当前用户的上传流程
   for (const row of expired) {
     try { fs.unlinkSync(path.join(getUploadDir(), row.filename)) } catch (error) {
-      if (error.code !== 'ENOENT') console.warn(`[imageStore] 清理过期图片失败 ${row.filename}: ${error.message}`)
+      if (error.code !== 'ENOENT') logger.warn({ err: error.message, filename: row.filename }, '[imageStore] 清理过期图片失败')
     }
   }
+  return expired.length
+}
+
+// 全局过期清理定时器：每小时执行一次，独立于用户请求路径
+let _cleanupTimer = null
+function startCleanupTimer(intervalMs = 60 * 60 * 1000) {
+  if (_cleanupTimer) return
+  _cleanupTimer = setInterval(() => {
+    try {
+      const count = cleanupExpiredPending()
+      if (count > 0) logger.info({ count }, '[imageStore] 定时清理过期 pending 图片')
+    } catch (err) {
+      logger.warn({ err: err.message }, '[imageStore] 定时清理失败')
+    }
+  }, intervalMs)
+  _cleanupTimer.unref?.() // 不阻止进程退出
+}
+function stopCleanupTimer() {
+  if (_cleanupTimer) {
+    clearInterval(_cleanupTimer)
+    _cleanupTimer = null
+  }
+}
+
+// 模块加载时自动启动清理定时器（测试环境可通过 stopCleanupTimer 关闭）
+if (process.env.NODE_ENV !== 'test') {
+  startCleanupTimer()
 }
 
 module.exports = {
@@ -135,5 +164,7 @@ module.exports = {
   claim,
   ownedFile,
   removeOwnedUrl,
-  cleanupExpiredPending
+  cleanupExpiredPending,
+  startCleanupTimer,
+  stopCleanupTimer
 }

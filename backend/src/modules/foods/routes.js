@@ -5,7 +5,7 @@ const { z } = require('zod')
 const { validate } = require('../../shared/middleware/validate')
 const { requireAuth } = require('../../shared/middleware/requireAuth')
 const { okPage, ok } = require('../../shared/utils/response')
-const foodRepo = require('./repositories/foodRepo')
+const service = require('./service')
 
 const router = express.Router()
 
@@ -27,7 +27,7 @@ const searchQuery = z.object({
  */
 router.get('/', requireAuth, validate(searchQuery, 'query'), (req, res, next) => {
   try {
-    const { list, total } = foodRepo.search({
+    const { list, total } = service.searchFoods({
       keyword: req.query.keyword,
       category: req.query.category,
       page: req.query.page,
@@ -49,7 +49,7 @@ router.get('/', requireAuth, validate(searchQuery, 'query'), (req, res, next) =>
  */
 router.get('/categories', requireAuth, (req, res, next) => {
   try {
-    return ok(res, foodRepo.categories())
+    return ok(res, service.listCategories())
   } catch (e) {
     next(e)
   }

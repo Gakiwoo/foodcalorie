@@ -9,10 +9,10 @@ function listContents({ type, page, pageSize }) {
 }
 
 function getContent(id) {
-  const content = contentRepo.getById(id)
+  // 原子读取并递增浏览量（事务包裹），避免并发下返回值与 DB 实际值不一致
+  const content = contentRepo.getAndIncrementViews(id)
   if (!content) throw new ServiceError(404, CONTENT_NOT_FOUND)
-  contentRepo.incrementViews(id)
-  return { ...content, views: content.views + 1 }
+  return content
 }
 
 module.exports = { listContents, getContent }

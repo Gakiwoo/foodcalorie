@@ -3,6 +3,7 @@
 // 部署时通过 DB_PATH 指向 gakiwoo-api 同一 SQLite 文件（共享 users 表），JWT_SECRET 同值互通鉴权。
 const path = require('path')
 const Database = require('better-sqlite3')
+const { logger } = require('./shared/utils/logger')
 
 const DB_PATH =
   process.env.DB_PATH ||
@@ -82,6 +83,7 @@ function initSchema(db) {
       source      TEXT DEFAULT 'seed'
     );
     CREATE INDEX IF NOT EXISTS idx_food_items_name ON food_items(name);
+    CREATE INDEX IF NOT EXISTS idx_food_items_category ON food_items(category);
 
     -- 收藏（我的收藏页）
     CREATE TABLE IF NOT EXISTS favorites (
@@ -111,6 +113,7 @@ function initSchema(db) {
       body        TEXT,
       created_at  TEXT DEFAULT (datetime('now'))
     );
+    CREATE INDEX IF NOT EXISTS idx_contents_type ON contents(type);
 
     -- 挑战活动定义（user_id 为空 = 系统级活动；M4 起用）
     CREATE TABLE IF NOT EXISTS challenges (
@@ -137,6 +140,7 @@ function initSchema(db) {
       joined_at     TEXT DEFAULT (datetime('now')),
       UNIQUE(challenge_id, user_id)
     );
+    CREATE INDEX IF NOT EXISTS idx_challenge_participants_user ON challenge_participants(user_id);
   `)
 }
 
@@ -153,7 +157,7 @@ function migrateColumns(db) {
     if (!tableColumns[table].includes(col)) {
       db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`)
       tableColumns[table].push(col)
-      console.log(`[migrate] ${table}.${col} 已补充`)
+      logger.info({ table, col }, '[migrate] 列已补充')
     }
   }
   ensure('food_items', 'source', "source TEXT DEFAULT 'seed'")
@@ -290,7 +294,7 @@ function seedIfEmpty(db) {
       for (const r of rows) ins.run(...r)
     })
     tx(SEED_FOODS)
-    console.log(`[seed] food_items 已初始化 ${SEED_FOODS.length} 条`)
+    logger.info({ count: SEED_FOODS.length }, '[seed] food_items 已初始化')
   }
 
   const contentCount = db.prepare('SELECT COUNT(*) c FROM contents').get().c
@@ -306,7 +310,7 @@ function seedIfEmpty(db) {
       for (const r of list) ins.run(r)
     })
     tx(rows)
-    console.log(`[seed] contents 已初始化 ${rows.length} 条`)
+    logger.info({ count: rows.length }, '[seed] contents 已初始化')
   }
 
   const challengeCount = db.prepare('SELECT COUNT(*) c FROM challenges').get().c
@@ -318,7 +322,7 @@ function seedIfEmpty(db) {
       for (const r of rows) ins.run(r)
     })
     tx(SEED_CHALLENGES)
-    console.log(`[seed] challenges 已初始化 ${SEED_CHALLENGES.length} 条`)
+    logger.info({ count: SEED_CHALLENGES.length }, '[seed] challenges 已初始化')
   }
 }
 
