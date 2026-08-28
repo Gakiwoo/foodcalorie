@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+﻿import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast, nowDateTime } from './src/ui/toast';
@@ -6,6 +6,8 @@ import { StatusBar, MealPills } from './src/ui/common';
 import { useBusy } from './src/ui/useBusy';
 import { useUnits } from './src/ui/units';
 import { useDebouncedSearch } from './src/ui/useDebouncedSearch';
+import { PageContainer } from './src/ui/components';
+import { colors, radius, shadow, fontSize, fontWeight } from './src/ui/theme';
 
 const MEAL_OPTIONS = [
   { value: '全部', label: '全部' },
@@ -24,7 +26,6 @@ const GRADIENTS = [
   'linear-gradient(135deg, #B2DFDB 0%, #80CBC4 100%)'
 ];
 
-// 搜索页：真实数据（GET foods 搜索 → 点结果添加记录）
 export default function FoodCalorieSearch() {
   const navigate = useNavigate();
   const { unitCalorie, unitWeight, kcal, g } = useUnits();
@@ -33,7 +34,6 @@ export default function FoodCalorieSearch() {
   const { run: runAdding } = useBusy();
   const [sortAsc, setSortAsc] = useState(false);
 
-  // 防抖搜索 + 序号守卫（收敛自原内联 effect）
   const fetchFoods = useCallback(
     async (kw) => http.get('/api/v1/foodcalorie/foods', { keyword: kw, pageSize: 30 }),
     []
@@ -50,7 +50,6 @@ export default function FoodCalorieSearch() {
   }
 
   async function addRecord(f) {
-    // runAdding：同步闩锁防双击重复添加
     await runAdding(async () => {
       try {
         await http.post('/api/v1/foodcalorie/records', {
@@ -74,82 +73,60 @@ export default function FoodCalorieSearch() {
   }
 
   return (
-    <div data-name="FoodCalorie-Search" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <PageContainer data-name="FoodCalorie-Search">
       <StatusBar />
 
-      {/* 搜索栏：返回图标 + 搜索框同行 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 20px' }}>
-        <i className="fas fa-chevron-left" style={{ fontSize: 22, color: '#1A1A1A', cursor: 'pointer' }} onClick={() => navigate(-1)} />
-        <div style={{ flex: 1, height: 40, display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', background: '#FFFFFF', borderRadius: 20, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-          <i className="fas fa-magnifying-glass" style={{ fontSize: 14, color: '#9CA3AF' }} />
-          <input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="搜索食物（如：鸡胸肉、米饭）" aria-label="搜索食物" style={{ flex: 1, border: 'none', outline: 'none', fontSize: 14, background: 'transparent', color: '#1A1A1A' }} />
-          {keyword && <i className="fas fa-circle-xmark" style={{ fontSize: 14, color: '#9CA3AF', cursor: 'pointer' }} onClick={() => setKeyword('')} />}
+        <i className="fas fa-chevron-left" style={{ fontSize: 22, color: colors.textPrimary, cursor: 'pointer' }} onClick={() => navigate(-1)} />
+        <div style={{ flex: 1, height: 40, display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', background: colors.surface, borderRadius: 20, boxShadow: shadow.md }}>
+          <i className="fas fa-magnifying-glass" style={{ fontSize: 14, color: colors.textTertiary }} />
+          <input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="搜索食物（如：鸡胸肉、米饭）" aria-label="搜索食物" style={{ flex: 1, border: 'none', outline: 'none', fontSize: fontSize.lg, background: 'transparent', color: colors.textPrimary }} />
+          {keyword && <i className="fas fa-circle-xmark" style={{ fontSize: 14, color: colors.textTertiary, cursor: 'pointer' }} onClick={() => setKeyword('')} />}
         </div>
       </div>
 
-      {/* 餐次 pill chips */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '4px 20px 8px' }}>
         <MealPills options={MEAL_OPTIONS} value={meal} onChange={setMeal} />
       </div>
 
-      {/* 结果数量与排序 */}
       {searched && results.length > 0 && (
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 20px 8px' }}>
-          <span style={{ color: '#9CA3AF', fontSize: 13, fontWeight: 500, lineHeight: '18px' }}>找到 {results.length} 条结果</span>
-          <div
-            onClick={() => setSortAsc((v) => !v)}
-            style={{ height: 24, display: 'flex', alignItems: 'center', gap: 4, padding: '0 8px', background: '#FFFFFF', borderRadius: 12, cursor: 'pointer' }}
-          >
-            <span style={{ color: '#1A1A1A', fontSize: 12, fontWeight: 500, lineHeight: '16px' }}>{sortAsc ? '热量从低到高' : '默认排序'}</span>
-            <i className="fas fa-sort" style={{ fontSize: 10, color: '#1A1A1A' }} />
+          <span style={{ color: colors.textTertiary, fontSize: fontSize.md, fontWeight: fontWeight.medium, lineHeight: '18px' }}>找到 {results.length} 条结果</span>
+          <div onClick={() => setSortAsc((v) => !v)} style={{ height: 24, display: 'flex', alignItems: 'center', gap: 4, padding: '0 8px', background: colors.surface, borderRadius: 12, cursor: 'pointer' }}>
+            <span style={{ color: colors.textPrimary, fontSize: fontSize.sm, fontWeight: fontWeight.medium, lineHeight: '16px' }}>{sortAsc ? '热量从低到高' : '默认排序'}</span>
+            <i className="fas fa-sort" style={{ fontSize: 10, color: colors.textPrimary }} />
           </div>
         </div>
       )}
 
-      {/* 结果列表 */}
       <div style={{ flex: 1, padding: '4px 20px 16px', display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto' }}>
-        {loading && <div style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 13, padding: 20 }}>搜索中…</div>}
+        {loading && <div style={{ textAlign: 'center', color: colors.textTertiary, fontSize: fontSize.md, padding: 20 }}>搜索中…</div>}
         {!loading && searched && results.length === 0 && (
-          <div style={{ background: '#FFFFFF', borderRadius: 16, padding: 20, textAlign: 'center', boxShadow: '0 4px 14px rgba(0,0,0,0.05)' }}>
-            <div style={{ fontSize: 13, color: '#9CA3AF' }}>没有找到「{keyword}」，可尝试手动添加</div>
+          <div style={{ background: colors.surface, borderRadius: radius.xl, padding: 20, textAlign: 'center', boxShadow: shadow.lg }}>
+            <div style={{ fontSize: fontSize.md, color: colors.textTertiary }}>没有找到「{keyword}」，可尝试手动添加</div>
           </div>
         )}
         {displayedResults.map((f, idx) => (
-          <div
-            key={f.id}
-            data-name={'search-result-' + f.id}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              padding: 12,
-              background: '#FFFFFF',
-              borderRadius: 16,
-              boxShadow: '0 4px 14px rgba(0,0,0,0.05)'
-            }}
-          >
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: GRADIENTS[idx % GRADIENTS.length], display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <i className="fas fa-bowl-food" style={{ fontSize: 20, color: '#FFFFFF' }} />
+          <div key={f.id} data-name={'search-result-' + f.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: 12, background: colors.surface, borderRadius: radius.xl, boxShadow: shadow.lg }}>
+            <div style={{ width: 48, height: 48, borderRadius: radius.lg, background: GRADIENTS[idx % GRADIENTS.length], display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <i className="fas fa-bowl-food" style={{ fontSize: 20, color: colors.textInverse }} />
             </div>
             <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <div style={{ fontSize: 15, fontWeight: 600, color: '#1A1A1A', lineHeight: '20px' }}>{f.name}</div>
-              <div style={{ fontSize: 12, color: '#9CA3AF', lineHeight: '16px' }}>{f.unit_desc || '1 份'} · {kcal(f.calories)} {unitCalorie} · 蛋白质 {g(f.protein_g)} {unitWeight}</div>
+              <div style={{ fontSize: fontSize.xl, fontWeight: fontWeight.semibold, color: colors.textPrimary, lineHeight: '20px' }}>{f.name}</div>
+              <div style={{ fontSize: fontSize.sm, color: colors.textTertiary, lineHeight: '16px' }}>{f.unit_desc || '1 份'} · {kcal(f.calories)} {unitCalorie} · 蛋白质 {g(f.protein_g)} {unitWeight}</div>
             </div>
-            <div
-              onClick={() => addRecord(f)}
-              style={{ width: 32, height: 32, borderRadius: 16, background: '#E8F5EC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
-            >
-              <i className="fas fa-plus" style={{ fontSize: 14, color: '#22A85A' }} />
+            <div onClick={() => addRecord(f)} style={{ width: 32, height: 32, borderRadius: 16, background: colors.primaryBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}>
+              <i className="fas fa-plus" style={{ fontSize: 14, color: colors.primaryDark }} />
             </div>
           </div>
         ))}
         {!loading && !searched && !keyword && (
-          <div style={{ textAlign: 'center', padding: 40, color: '#C0C4CC', fontSize: 13 }}>
+          <div style={{ textAlign: 'center', padding: 40, color: '#C0C4CC', fontSize: fontSize.md }}>
             <i className="fas fa-magnifying-glass" style={{ fontSize: 30, marginBottom: 10 }} />
             <div>输入关键词搜索食物库</div>
           </div>
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }

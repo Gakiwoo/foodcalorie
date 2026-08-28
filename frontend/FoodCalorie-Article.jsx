@@ -4,8 +4,9 @@ import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
 import { useBusy } from './src/ui/useBusy';
+import { PageContainer } from './src/ui/components';
+import { colors, radius, fontSize, fontWeight } from './src/ui/theme';
 
-// 文章详情页：真实数据（GET /contents/:id 正文 + 收藏/取消收藏）
 export default function FoodCalorieArticle() {
   const [params] = useSearchParams();
   const id = params.get('id');
@@ -39,7 +40,6 @@ export default function FoodCalorieArticle() {
   }, [id, loadFav]);
 
   async function toggleFav() {
-    // runFav：同步闩锁防双击连点（连续两次 POST 收藏会触发后端唯一约束冲突）
     await runFav(async () => {
       try {
         if (faved) {
@@ -57,37 +57,35 @@ export default function FoodCalorieArticle() {
     });
   }
 
-  if (loading) return <div style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}><StatusBar /><NavBar title="文章" /><div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div></div>;
+  if (loading) return <PageContainer><StatusBar /><NavBar title="文章" /><div style={{ padding: 60, textAlign: 'center', color: colors.textTertiary, fontSize: fontSize.lg }}>加载中…</div></PageContainer>;
 
   if (!article) {
     return (
-      <div data-name="FoodCalorie-Article" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column' }}>
+      <PageContainer data-name="FoodCalorie-Article">
         <StatusBar /><NavBar title="文章" />
-        <div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>内容不存在或已删除</div>
-      </div>
+        <div style={{ padding: 60, textAlign: 'center', color: colors.textTertiary, fontSize: fontSize.lg }}>内容不存在或已删除</div>
+      </PageContainer>
     );
   }
 
   return (
-    <div data-name="FoodCalorie-Article" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <PageContainer data-name="FoodCalorie-Article">
       <StatusBar />
       <NavBar title="文章" right={
-        <i className={'fas fa-bookmark'} style={{ fontSize: 16, color: faved ? '#34C759' : '#C0C4CC', cursor: 'pointer' }} onClick={toggleFav} />
+        <i className={'fas fa-bookmark'} role="button" tabIndex={0} aria-label={faved ? '取消收藏' : '收藏文章'} style={{ fontSize: 16, color: faved ? colors.primary : '#C0C4CC', cursor: 'pointer' }} onClick={toggleFav} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleFav(); } }} />
       } />
 
-      {/* 封面 + 标题 */}
       <div style={{ margin: '6px 20px 14px' }}>
-        <div style={{ borderRadius: 20, padding: '22px 18px', background: 'linear-gradient(135deg,#34C759 0%,#1FA355 100%)', color: '#fff' }}>
+        <div style={{ borderRadius: radius.xxl, padding: '22px 18px', background: 'linear-gradient(135deg,#34C759 0%,#1FA355 100%)', color: colors.textInverse }}>
           <div style={{ fontSize: 34 }}>{article.cover_icon || '📄'}</div>
-          <div style={{ fontSize: 19, fontWeight: 800, marginTop: 10, lineHeight: 1.4 }}>{article.title}</div>
-          <div style={{ fontSize: 11, opacity: 0.85, marginTop: 8 }}>{article.author} · {article.views} 阅读</div>
+          <div style={{ fontSize: 19, fontWeight: fontWeight.extrabold, marginTop: 10, lineHeight: 1.4 }}>{article.title}</div>
+          <div style={{ fontSize: fontSize.xs, opacity: 0.85, marginTop: 8 }}>{article.author} · {article.views} 阅读</div>
         </div>
       </div>
 
-      {/* 正文 */}
       <Card style={{ margin: '0 20px 20px' }}>
-        <div style={{ fontSize: 14, color: '#374151', lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>{article.body || '（暂无正文内容）'}</div>
+        <div style={{ fontSize: fontSize.lg, color: '#374151', lineHeight: 1.9, whiteSpace: 'pre-wrap' }}>{article.body || '（暂无正文内容）'}</div>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

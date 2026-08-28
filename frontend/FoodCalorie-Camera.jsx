@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { upload } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar } from './src/ui/common';
+import { PageContainer } from './src/ui/components';
+import { colors, spacing, radius, fontSize, fontWeight } from './src/ui/theme';
 
-// 拍照识别页：选图/拍照 → 本地预览 → 上传识别 → 跳转结果页
 export default function FoodCalorieCamera() {
   const navigate = useNavigate();
   const fileRef = useRef(null);
@@ -61,30 +62,22 @@ export default function FoodCalorieCamera() {
   }
 
   return (
-    <div data-name="FoodCalorie-Camera" style={{ width: '100%', minHeight: '100dvh', background: '#0F0F0F', display: 'flex', flexDirection: 'column', alignItems: 'stretch', overflow: 'hidden' }}>
+    <PageContainer data-name="FoodCalorie-Camera" style={{ background: '#0F0F0F', overflow: 'hidden' }}>
       <StatusBar appearance="dark" />
       <NavBar
         appearance="dark"
         title="拍照识别"
-        right={<i data-name="nav-flash" className="fas fa-bolt" style={{ fontSize: 20, color: '#fff' }} />}
+        right={<i data-name="nav-flash" className="fas fa-bolt" style={{ fontSize: 20, color: colors.textInverse }} />}
       />
       <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={onFile} />
 
-      {/* 取景框 */}
       <div
         data-name="viewfinder"
         style={{
-          width: '100%',
-          height: 586,
-          display: 'flex',
-          flex: 'none',
-          justifyContent: 'center',
-          alignItems: 'center',
-          flexDirection: 'column',
-          gap: 28,
+          width: '100%', height: 586, display: 'flex', flex: 'none',
+          justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: 28,
           background: preview ? '#000' : 'linear-gradient(167deg, #2E2E2E 0%, #0F0F0F 100%)',
-          position: 'relative',
-          overflow: 'hidden'
+          position: 'relative', overflow: 'hidden'
         }}>
         {preview ? (
           <img src={preview} alt="预览" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -93,24 +86,15 @@ export default function FoodCalorieCamera() {
             <div
               data-name="focus-frame"
               style={{
-                width: 264,
-                height: 264,
-                display: 'flex',
-                flex: 'none',
-                justifyContent: 'center',
-                alignItems: 'center',
-                flexDirection: 'column',
-                gap: 14,
-                border: '3px solid #34C759',
-                borderRadius: 28
+                width: 264, height: 264, display: 'flex', flex: 'none',
+                justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: 14,
+                border: `3px solid ${colors.primary}`, borderRadius: 28
               }}>
               <i data-name="focus-icon" className="fas fa-camera" style={{ fontSize: 44, color: 'rgba(255,255,255,0.81)' }} />
-              <span data-name="focus-text" style={{ color: 'rgba(255,255,255,0.75)', fontSize: 15, fontWeight: 500, lineHeight: '20px', textAlign: 'center' }}>对准食物</span>
+              <span data-name="focus-text" style={{ color: 'rgba(255,255,255,0.75)', fontSize: fontSize.xl, fontWeight: fontWeight.medium, lineHeight: '20px', textAlign: 'center' }}>对准食物</span>
             </div>
             <div data-name="hint" style={{ display: 'flex', alignSelf: 'stretch', justifyContent: 'flex-start', alignItems: 'flex-start', flexDirection: 'column', padding: '0 44px' }}>
-              <p
-                data-name="hint-text"
-                style={{ alignSelf: 'stretch', flexShrink: 0, color: 'rgba(255,255,255,0.55)', fontSize: 13, textAlign: 'center', lineHeight: '18px', margin: 0 }}>
+              <p data-name="hint-text" style={{ alignSelf: 'stretch', flexShrink: 0, color: 'rgba(255,255,255,0.55)', fontSize: fontSize.md, textAlign: 'center', lineHeight: '18px', margin: 0 }}>
                 将食物放入框内，点击快门即可自动识别热量与营养
               </p>
             </div>
@@ -118,67 +102,37 @@ export default function FoodCalorieCamera() {
         )}
       </div>
 
-      {/* 底部工具栏 / 预览操作 */}
       <div
         data-name="toolbar"
         style={{
-          width: '100%',
-          display: 'flex',
-          flex: 'none',
+          width: '100%', display: 'flex', flex: 'none',
           justifyContent: preview ? 'center' : 'space-between',
-          alignItems: 'center',
-          gap: preview ? 16 : 0,
-          padding: '34px 48px',
-          background: '#0F0F0F'
+          alignItems: 'center', gap: preview ? spacing.lg : 0,
+          padding: '34px 48px', background: '#0F0F0F'
         }}>
         {preview ? (
           <>
-            <button
-              onClick={retake}
-              style={{
-                width: 140,
-                height: 48,
-                borderRadius: 16,
-                border: '1.5px solid #E5E7EB',
-                background: 'transparent',
-                color: '#FFFFFF',
-                fontSize: 15,
-                fontWeight: 600,
-                cursor: 'pointer'
-              }}>
+            <button onClick={retake} style={{ width: 140, height: 48, borderRadius: radius.xl, border: `1.5px solid ${colors.border}`, background: 'transparent', color: colors.textInverse, fontSize: fontSize.xl, fontWeight: fontWeight.semibold, cursor: 'pointer' }}>
               重新拍照
             </button>
-            <button
-              onClick={recognize}
-              disabled={recognizing}
-              style={{
-                width: 140,
-                height: 48,
-                borderRadius: 16,
-                border: 'none',
-                background: '#34C759',
-                color: '#FFFFFF',
-                fontSize: 15,
-                fontWeight: 700,
-                cursor: recognizing ? 'wait' : 'pointer'
-              }}>
+            <button onClick={recognize} disabled={recognizing} style={{ width: 140, height: 48, borderRadius: radius.xl, border: 'none', background: colors.primary, color: colors.textInverse, fontSize: fontSize.xl, fontWeight: fontWeight.bold, cursor: recognizing ? 'wait' : 'pointer' }}>
               {recognizing ? '识别中…' : '开始识别'}
             </button>
           </>
         ) : (
           <>
-            <div data-name="btn-gallery-wrap" onClick={() => pickFile(false)} style={{ padding: 12, margin: -12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <i data-name="btn-gallery" className="fas fa-images" style={{ fontSize: 26, color: '#FFFFFF' }} />
+            <div data-name="btn-gallery-wrap" role="button" tabIndex={0} aria-label="从相册选择图片" onClick={() => pickFile(false)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); pickFile(false); } }} style={{ padding: spacing.md, margin: -12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <i data-name="btn-gallery" className="fas fa-images" style={{ fontSize: 26, color: colors.textInverse }} />
             </div>
-            <div data-name="shutter" onClick={() => pickFile(true)} style={{ width: 74, height: 74, display: 'flex', flex: 'none', justifyContent: 'center', alignItems: 'center', background: '#FFFFFF', borderRadius: 74, cursor: 'pointer' }}>
-              <div data-name="shutter-inner" style={{ width: 62, height: 62, display: 'flex', flex: 'none', justifyContent: 'center', alignItems: 'center', background: '#34C759', borderRadius: 62 }} />
+            <div data-name="shutter" onClick={() => pickFile(true)} style={{ width: 74, height: 74, display: 'flex', flex: 'none', justifyContent: 'center', alignItems: 'center', background: colors.surface, borderRadius: 74, cursor: 'pointer' }}>
+              <div data-name="shutter-inner" style={{ width: 62, height: 62, display: 'flex', flex: 'none', justifyContent: 'center', alignItems: 'center', background: colors.primary, borderRadius: 62 }} />
             </div>
-            <div data-name="btn-flip-wrap" onClick={() => toast('切换摄像头功能开发中')} style={{ padding: 12, margin: -12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <i data-name="btn-flip" className="fas fa-sync-alt" style={{ fontSize: 26, color: '#FFFFFF' }} />
+            <div data-name="btn-flip-wrap" role="button" tabIndex={0} aria-label="切换摄像头" onClick={() => toast('切换摄像头功能开发中')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toast('切换摄像头功能开发中'); } }} style={{ padding: spacing.md, margin: -12, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <i data-name="btn-flip" className="fas fa-sync-alt" style={{ fontSize: 26, color: colors.textInverse }} />
             </div>
           </>
         )}
       </div>
-    </div>
+    </PageContainer>
   );
 }

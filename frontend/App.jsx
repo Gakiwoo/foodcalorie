@@ -1,6 +1,8 @@
 import React, { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { UnitProvider } from './src/ui/units.jsx';
+import AppErrorBoundary from './src/ui/AppErrorBoundary';
+import { colors, fontSize, fontWeight } from './src/ui/theme';
 
 // 路由级代码分割（F7）：首页保持静态加载保证首屏，其余页面按需懒加载
 const FoodCalorieHome = lazy(() => import('./FoodCalorie-Home.jsx'));
@@ -34,6 +36,7 @@ const FoodCalorieRecordsWeek = lazy(() => import('./FoodCalorie-RecordsWeek.jsx'
 const FoodCalorieRecordsMonth = lazy(() => import('./FoodCalorie-RecordsMonth.jsx'));
 const FoodCalorieLogin = lazy(() => import('./FoodCalorie-Login.jsx'));
 const FoodCalorieRegister = lazy(() => import('./FoodCalorie-Register.jsx'));
+const FoodCalorieNotFound = lazy(() => import('./FoodCalorie-NotFound.jsx'));
 
 // 路由注册
 const PAGES = [
@@ -70,6 +73,42 @@ const PAGES = [
   { path: '/login', Comp: FoodCalorieLogin },
   { path: '/register', Comp: FoodCalorieRegister }
 ];
+
+// 路由路径 → 页面标题映射（用于 document.title 动态更新与屏幕阅读器通知）
+const PAGE_TITLES = {
+  '/': '首页 - 食刻',
+  '/settings': '设置 - 食刻',
+  '/camera': '拍照识别 - 食刻',
+  '/records': '饮食记录 - 食刻',
+  '/today': '今日摄入 - 食刻',
+  '/detail': '记录详情 - 食刻',
+  '/discover': '发现 - 食刻',
+  '/me': '我的 - 食刻',
+  '/addfood': '添加食物 - 食刻',
+  '/camera-result': '识别结果 - 食刻',
+  '/goal': '目标设置 - 食刻',
+  '/article': '文章详情 - 食刻',
+  '/recipe': '食谱详情 - 食刻',
+  '/search': '搜索食物 - 食刻',
+  '/favorites': '我的收藏 - 食刻',
+  '/dataexport': '数据导出 - 食刻',
+  '/notification': '通知设置 - 食刻',
+  '/privacy': '隐私设置 - 食刻',
+  '/about': '关于食刻',
+  '/profile': '个人资料 - 食刻',
+  '/help': '帮助与反馈 - 食刻',
+  '/dietpref': '饮食偏好 - 食刻',
+  '/unit': '单位设置 - 食刻',
+  '/precision': '识别精度 - 食刻',
+  '/burst': '连拍模式 - 食刻',
+  '/challenge': '挑战活动 - 食刻',
+  '/editrecord': '编辑记录 - 食刻',
+  '/records-week': '周记录 - 食刻',
+  '/records-month': '月历 - 食刻',
+  '/login': '登录 - 食刻',
+  '/register': '注册 - 食刻',
+  '*': '页面未找到 - 食刻'
+};
 
 export default function App() {
   const navigate = useNavigate();
@@ -117,25 +156,66 @@ export default function App() {
     return () => window.removeEventListener('fc-toast', h);
   }, []);
 
+  // 路由切换：动态更新 document.title 并将焦点移至主内容区（屏幕阅读器友好）
+  useEffect(() => {
+    const title = PAGE_TITLES[location.pathname] || '食刻 - 健康饮食记录';
+    document.title = title;
+    // 延迟一帧聚焦，确保新页面 DOM 已渲染
+    const t = requestAnimationFrame(() => {
+      const main = document.getElementById('main-content');
+      if (main) main.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(t);
+  }, [location.pathname]);
+
   return (
     <UnitProvider>
       <div className="app-shell">
+        {/* 键盘可访问的跳转链接：Tab 聚焦时显示，回车跳至主内容 */}
+        <a
+          href="#main-content"
+          className="skip-link"
+          onClick={(e) => {
+            e.preventDefault();
+            const main = document.getElementById('main-content');
+            if (main) main.focus({ preventScroll: false });
+          }}
+          style={{
+            position: 'absolute',
+            left: '-9999px',
+            top: 0,
+            zIndex: 9999,
+            padding: '10px 20px',
+            background: colors.primary,
+            color: colors.textInverse,
+            fontSize: fontSize.md,
+            fontWeight: fontWeight.bold,
+            borderRadius: '0 0 8px 0',
+            textDecoration: 'none'
+          }}
+          onFocus={(e) => { e.target.style.left = '0'; }}
+          onBlur={(e) => { e.target.style.left = '-9999px'; }}>
+          跳至主内容
+        </a>
         <div className="page-frame">
-          <Suspense fallback={<div style={{ minHeight: '100dvh', background: '#F7F8FA', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF', fontSize: 13 }}>加载中…</div>}>
-            <Routes>
-              {PAGES.map((p) => (
-                <Route key={p.path} path={p.path} element={<p.Comp />} />
-              ))}
-            </Routes>
-          </Suspense>
+          <AppErrorBoundary>
+            <Suspense fallback={<div style={{ minHeight: '100dvh', background: colors.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.textTertiary, fontSize: fontSize.md }}>加载中…</div>}>
+              <Routes>
+                {PAGES.map((p) => (
+                  <Route key={p.path} path={p.path} element={<p.Comp />} />
+                ))}
+                <Route path="*" element={<FoodCalorieNotFound />} />
+              </Routes>
+            </Suspense>
+          </AppErrorBoundary>
           {fromSettings && (
             <button
               className="records-back-btn"
               data-name="records-back-float"
               onClick={goBack}
               aria-label="返回设置">
-              <i className="fas fa-chevron-left" style={{ fontSize: '16px', color: '#1A1A1A' }} />
-              <span style={{ fontSize: '13px', color: '#1A1A1A', fontWeight: 600 }}>设置</span>
+              <i className="fas fa-chevron-left" style={{ fontSize: '16px', color: colors.textPrimary }} />
+              <span style={{ fontSize: '13px', color: colors.textPrimary, fontWeight: 600 }}>设置</span>
             </button>
           )}
         </div>

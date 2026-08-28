@@ -54,20 +54,24 @@ export function resolveApiUrl(path, origin = '') {
 
 export const resolveUrl = (path) => resolveApiUrl(path, API_ORIGIN)
 
-const TOKEN_KEY = 'fc_access_token'
-const REFRESH_KEY = 'fc_refresh_token'
+// tokenStore：纯内存存储，不落 localStorage（防止 XSS 窃取）。
+// 当前认证完全靠 gakiwoo-api 下发的 httpOnly Cookie（credentials: 'include'），
+// tokenStore.set() 未被调用；保留此接口仅为未来 Bearer 模式预留，
+// 启用后页面刷新即丢失，需重新登录或走 /api/auth/refresh。
+let _accessToken = null
+let _refreshToken = null
 const SESSION_KEY = 'fc_has_session'
 
 export const tokenStore = {
-  getAccess: () => localStorage.getItem(TOKEN_KEY),
-  getRefresh: () => localStorage.getItem(REFRESH_KEY),
+  getAccess: () => _accessToken,
+  getRefresh: () => _refreshToken,
   set: (access, refresh) => {
-    if (access) localStorage.setItem(TOKEN_KEY, access)
-    if (refresh) localStorage.setItem(REFRESH_KEY, refresh)
+    if (access) _accessToken = access
+    if (refresh) _refreshToken = refresh
   },
   clear: () => {
-    localStorage.removeItem(TOKEN_KEY)
-    localStorage.removeItem(REFRESH_KEY)
+    _accessToken = null
+    _refreshToken = null
   }
 }
 
@@ -148,23 +152,60 @@ function onAuthPage(location = window.location) {
   return /\/(login|register)([/?#]|$)/.test(p)
 }
 
+// 重试配置：仅 GET 请求，网络错误或 5xx，最多 2 次，指数退避
+const RETRY_MAX = 2
+const RETRY_DELAYS = [500, 1500] // ms
+function isRetryable(method, status, error) {
+  if (method && method !== 'GET') return false // 写操作不重试，防重复提交
+  if (error) return true // 网络错误（fetch throw）
+  if (status >= 500 && status < 600) return true // 服务端错误
+  return false
+}
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 /**
  * 统一请求封装
  * @param {string} path 以 /api 开头的相对路径（或绝对 URL）
  * @param {object} options fetch 选项；body 为 FormData 时自动省略 Content-Type（浏览器带 multipart boundary）
  * @param {boolean} options._raw 为 true 时返回原始 Response（供下载 blob 等场景）
  * @param {boolean} options._retried 内部 401 重试标记（勿传）
+ * @param {AbortSignal} options.signal 取消信号（透传 fetch，用于页面卸载时取消请求）
  */
 export async function apiClient(path, options = {}) {
-  const { _raw = false, _retried = false, ...fetchOptions } = options
+  const { _raw = false, _retried = false, signal, ...fetchOptions } = options
+  const method = (fetchOptions.method || 'GET').toUpperCase()
   const isForm = typeof FormData !== 'undefined' && options.body instanceof FormData
-  const headers = { ...(options.headers || {}) }
-  if (!isForm) headers['Content-Type'] = 'application/json'
-  const access = tokenStore.getAccess()
-  if (access) headers.Authorization = `Bearer ${access}`
 
-  const url = resolveUrl(path)
-  let resp = await fetch(url, { ...fetchOptions, headers, credentials: 'include' })
+  // 带重试的 fetch 封装：网络错误/5xx 自动重试（仅 GET），401/429/4xx 不重试
+  async function fetchWithRetry(retryCount = 0) {
+    const headers = { ...(fetchOptions.headers || {}) }
+    if (!isForm) headers['Content-Type'] = 'application/json'
+    const access = tokenStore.getAccess()
+    if (access) headers.Authorization = `Bearer ${access}`
+
+    const url = resolveUrl(path)
+    try {
+      const resp = await fetch(url, { ...fetchOptions, headers, credentials: 'include', signal })
+      // 5xx 响应也视为可重试（仅 GET）
+      if (retryCount < RETRY_MAX && isRetryable(method, resp.status, null)) {
+        await sleep(RETRY_DELAYS[retryCount])
+        return fetchWithRetry(retryCount + 1)
+      }
+      return resp
+    } catch (err) {
+      // AbortError 是主动取消，不重试
+      if (err?.name === 'AbortError') throw err
+      if (retryCount < RETRY_MAX && isRetryable(method, null, err)) {
+        await sleep(RETRY_DELAYS[retryCount])
+        return fetchWithRetry(retryCount + 1)
+      }
+      throw err
+    }
+  }
+
+  const resp = await fetchWithRetry()
 
   // 401 → 尝试 refresh 一次（单飞，并发共享同一次刷新）
   if (resp.status === 401 && !_retried) {

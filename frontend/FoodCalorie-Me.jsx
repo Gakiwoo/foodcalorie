@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { fetchMe } from './src/api/auth';
@@ -6,8 +6,9 @@ import { todayStr } from './src/ui/toast';
 import { StatusBar, BottomNav } from './src/ui/common';
 import { useUnits } from './src/ui/units';
 import { APP_VERSION } from './src/version';
+import { PageContainer } from './src/ui/components';
+import { colors, radius, shadow, fontSize, fontWeight } from './src/ui/theme';
 
-// 我的页：真实数据（/auth/me 用户信息 + profile 目标 + 今日摄入摘要；data-name 保留供全局 NAV 跳转）
 export default function FoodCalorieMe() {
   const navigate = useNavigate();
   const { unitCalorie, kcal } = useUnits();
@@ -17,20 +18,16 @@ export default function FoodCalorieMe() {
 
   useEffect(() => {
     (async () => {
-      // 用户信息（fetchMe 已返回 user 对象，直接使用）
       try {
         const me = await fetchMe();
         setUser(me);
       } catch {
         setAuthed(false);
       }
-      // 今日摄入
       try {
         const r = await http.get('/api/v1/foodcalorie/records/stats', { range: 'day', date: todayStr() });
         setStats(r.data);
-      } catch {
-        /* 未登录时忽略 */
-      }
+      } catch { }
     })();
   }, []);
 
@@ -42,20 +39,19 @@ export default function FoodCalorieMe() {
   const percent = target > 0 ? Math.min(100, Math.round((intake / target) * 100)) : 0;
 
   return (
-    <div data-name="FoodCalorie-Me" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <PageContainer data-name="FoodCalorie-Me">
       <StatusBar />
 
-      {/* 个人信息卡 */}
       <div data-name="profile-section" style={{ margin: '4px 20px 8px' }}>
-        <div data-name="profile-card" onClick={() => navigate(authed ? '/profile' : '/login')} style={{ borderRadius: 20, background: '#FFFFFF', boxShadow: '0 4px 14px rgba(0,0,0,0.05)', padding: 16, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
+        <div data-name="profile-card" onClick={() => navigate(authed ? '/profile' : '/login')} style={{ borderRadius: radius.xxl, background: colors.surface, boxShadow: shadow.lg, padding: 16, display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer' }}>
           <div data-name="avatar" style={{ width: 64, height: 64, borderRadius: 64, background: avatarBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <i className="fas fa-user" style={{ fontSize: 28, color: '#FFFFFF' }} />
+            <i className="fas fa-user" style={{ fontSize: 28, color: colors.textInverse }} />
           </div>
           <div data-name="profile-info" style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <div data-name="profile-name" style={{ fontSize: 18, fontWeight: 700, color: '#1A1A1A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div data-name="profile-name" style={{ fontSize: 18, fontWeight: fontWeight.bold, color: colors.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {authed ? (user?.nickname || '未设置昵称') : '未登录'}
             </div>
-            <div data-name="profile-bio" style={{ fontSize: 12, color: '#9CA3AF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div data-name="profile-bio" style={{ fontSize: fontSize.sm, color: colors.textTertiary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {authed ? (user?.streak ? `已坚持健康饮食 ${user.streak} 天` : (user?.email || '已坚持健康饮食')) : '点击登录账号'}
             </div>
           </div>
@@ -63,36 +59,34 @@ export default function FoodCalorieMe() {
         </div>
       </div>
 
-      {/* 今日摄入 */}
       <div data-name="today-section" style={{ margin: '4px 20px 8px' }}>
-        <div data-name="today-card" style={{ borderRadius: 16, background: '#FFFFFF', boxShadow: '0 4px 14px rgba(0,0,0,0.05)', padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div data-name="today-card" style={{ borderRadius: radius.xl, background: colors.surface, boxShadow: shadow.lg, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           <div data-name="today-header" onClick={() => navigate('/today')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', cursor: 'pointer' }}>
-            <span data-name="today-title" style={{ fontSize: 15, fontWeight: 700, color: '#1A1A1A' }}>今日摄入</span>
-            <span data-name="today-detail" style={{ fontSize: 12, fontWeight: 500, color: '#34C759' }}>查看详情</span>
+            <span data-name="today-title" style={{ fontSize: fontSize.xl, fontWeight: fontWeight.bold, color: colors.textPrimary }}>今日摄入</span>
+            <span data-name="today-detail" style={{ fontSize: fontSize.sm, fontWeight: fontWeight.medium, color: colors.primary }}>查看详情</span>
           </div>
           <div data-name="today-stats" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
             <div data-name="stat-intake" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-              <span data-name="intake-value" style={{ fontSize: 22, fontWeight: 700, color: '#34C759', lineHeight: '28px' }}>{stats ? kcal(intake) : '--'}</span>
-              <span data-name="intake-label" style={{ fontSize: 11, color: '#9CA3AF', lineHeight: '15px' }}>已摄入 {unitCalorie}</span>
+              <span data-name="intake-value" style={{ fontSize: 22, fontWeight: fontWeight.bold, color: colors.primary, lineHeight: '28px' }}>{stats ? kcal(intake) : '--'}</span>
+              <span data-name="intake-label" style={{ fontSize: fontSize.xs, color: colors.textTertiary, lineHeight: '15px' }}>已摄入 {unitCalorie}</span>
             </div>
-            <div data-name="stat-divider-1" style={{ width: 1, height: 32, background: '#EEF0F2' }} />
+            <div data-name="stat-divider-1" style={{ width: 1, height: 32, background: colors.segBg }} />
             <div data-name="stat-goal" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-              <span data-name="goal-value" style={{ fontSize: 22, fontWeight: 700, color: '#1A1A1A', lineHeight: '28px' }}>{stats ? kcal(target) : '--'}</span>
-              <span data-name="goal-label" style={{ fontSize: 11, color: '#9CA3AF', lineHeight: '15px' }}>目标 {unitCalorie}</span>
+              <span data-name="goal-value" style={{ fontSize: 22, fontWeight: fontWeight.bold, color: colors.textPrimary, lineHeight: '28px' }}>{stats ? kcal(target) : '--'}</span>
+              <span data-name="goal-label" style={{ fontSize: fontSize.xs, color: colors.textTertiary, lineHeight: '15px' }}>目标 {unitCalorie}</span>
             </div>
-            <div data-name="stat-divider-2" style={{ width: 1, height: 32, background: '#EEF0F2' }} />
+            <div data-name="stat-divider-2" style={{ width: 1, height: 32, background: colors.segBg }} />
             <div data-name="stat-remain" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
-              <span data-name="remain-value" style={{ fontSize: 22, fontWeight: 700, color: '#1A1A1A', lineHeight: '28px' }}>{stats ? kcal(remain) : '--'}</span>
-              <span data-name="remain-label" style={{ fontSize: 11, color: '#9CA3AF', lineHeight: '15px' }}>剩余 {unitCalorie}</span>
+              <span data-name="remain-value" style={{ fontSize: 22, fontWeight: fontWeight.bold, color: colors.textPrimary, lineHeight: '28px' }}>{stats ? kcal(remain) : '--'}</span>
+              <span data-name="remain-label" style={{ fontSize: fontSize.xs, color: colors.textTertiary, lineHeight: '15px' }}>剩余 {unitCalorie}</span>
             </div>
           </div>
-          <div data-name="today-bar" style={{ width: '100%', height: 8, background: '#E8F5EC', borderRadius: 8, overflow: 'hidden' }}>
-            <div data-name="today-bar-fill" style={{ width: `${percent}%`, height: 8, background: '#34C759', borderRadius: 8 }} />
+          <div data-name="today-bar" style={{ width: '100%', height: 8, background: colors.primaryBg, borderRadius: 8, overflow: 'hidden' }}>
+            <div data-name="today-bar-fill" style={{ width: `${percent}%`, height: 8, background: colors.primary, borderRadius: 8 }} />
           </div>
         </div>
       </div>
 
-      {/* 快捷入口 */}
       <div data-name="quick-section" style={{ margin: '8px 20px' }}>
         <div data-name="quick-grid" style={{ display: 'flex', gap: 12 }}>
           {[
@@ -101,21 +95,20 @@ export default function FoodCalorieMe() {
             { to: '/favorites', icon: 'fa-heart', label: '我的收藏', bg: '#FFE8EC', color: '#FF4D4F' },
             { to: '/dataexport', icon: 'fa-file-export', label: '数据导出', bg: '#E6F4FF', color: '#1677FF' }
           ].map((g, gi) => (
-            <div key={g.label} data-name={'quick-' + (gi + 1)} onClick={() => navigate(g.to)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch', borderRadius: 16, background: '#FFFFFF', boxShadow: '0 4px 14px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+            <div key={g.label} data-name={'quick-' + (gi + 1)} onClick={() => navigate(g.to)} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'stretch', borderRadius: radius.xl, background: colors.surface, boxShadow: shadow.lg, cursor: 'pointer' }}>
               <div data-name="quick-icon" style={{ height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center', background: g.bg, borderRadius: '16px 16px 0 0' }}>
                 <i className={'fas ' + g.icon} style={{ fontSize: 22, color: g.color }} />
               </div>
               <div data-name="quick-body" style={{ padding: '12px 0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span data-name="quick-label" style={{ fontSize: 13, fontWeight: 600, color: '#1A1A1A' }}>{g.label}</span>
+                <span data-name="quick-label" style={{ fontSize: fontSize.md, fontWeight: fontWeight.semibold, color: colors.textPrimary }}>{g.label}</span>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* 设置列表 */}
       <div data-name="settings-section" style={{ margin: '8px 20px 16px' }}>
-        <div data-name="settings-card" style={{ borderRadius: 16, background: '#FFFFFF', boxShadow: '0 4px 14px rgba(0,0,0,0.05)' }}>
+        <div data-name="settings-card" style={{ borderRadius: radius.xl, background: colors.surface, boxShadow: shadow.lg }}>
           {[
             { to: '/notification', icon: 'fa-bell', label: '通知设置', bg: '#E8F5EC', color: '#22A85A' },
             { to: '/privacy', icon: 'fa-shield-halved', label: '隐私设置', bg: '#E6F4FF', color: '#1677FF' },
@@ -124,20 +117,20 @@ export default function FoodCalorieMe() {
           ].map((s, i) => (
             <div key={s.label}>
               <div onClick={() => navigate(s.to)} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', cursor: 'pointer' }}>
-                <div data-name="s-icon" style={{ width: 36, height: 36, borderRadius: 10, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <div data-name="s-icon" style={{ width: 36, height: 36, borderRadius: radius.md, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <i className={'fas ' + s.icon} style={{ fontSize: 16, color: s.color }} />
                 </div>
-                <span data-name="s-label" style={{ flex: 1, fontSize: 14, fontWeight: 500, color: '#1A1A1A', lineHeight: '20px' }}>{s.label}</span>
-                {s.version && <span data-name="s-version" style={{ fontSize: 12, color: '#9CA3AF' }}>{s.version}</span>}
+                <span data-name="s-label" style={{ flex: 1, fontSize: fontSize.lg, fontWeight: fontWeight.medium, color: colors.textPrimary, lineHeight: '20px' }}>{s.label}</span>
+                {s.version && <span data-name="s-version" style={{ fontSize: fontSize.sm, color: colors.textTertiary }}>{s.version}</span>}
                 <i className="fas fa-chevron-right" style={{ fontSize: 12, color: '#C0C4CC', flexShrink: 0 }} />
               </div>
-              {i < 3 && <div data-name="settings-divider" style={{ height: 1, background: '#EEF0F2', margin: '0 16px' }} />}
+              {i < 3 && <div data-name="settings-divider" style={{ height: 1, background: colors.segBg, margin: '0 16px' }} />}
             </div>
           ))}
         </div>
       </div>
 
       <BottomNav active="/me" />
-    </div>
+    </PageContainer>
   );
 }

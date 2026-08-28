@@ -1,12 +1,13 @@
 // 共享 UI 组件：原生系统栏 / 顶部导航 / 底部导航 / 进度环 / 分段控件
-// 视觉规范：页面背景 #F7F8FA、主题绿 #34C759、卡片白色圆角 16px
+// 视觉规范：页面背景 colors.bg、主题绿 colors.primary、卡片白色圆角 radius.xl
 import React, { useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar as NativeStatusBar, Style } from '@capacitor/status-bar';
 import { useNavigate } from 'react-router-dom';
+import { colors, radius, shadow, fontSize, fontWeight } from './theme';
 
 const SYSTEM_BAR_APPEARANCE = {
-  light: { style: Style.Light, backgroundColor: '#F7F8FA' },
+  light: { style: Style.Light, backgroundColor: colors.bg },
   dark: { style: Style.Dark, backgroundColor: '#0F0F0F' }
 };
 
@@ -19,7 +20,7 @@ export function normalizeDailyStats(value) {
     total: number(value.total),
     target: number(value.target, 1400),
     percent: number(value.percent),
-    average: number(value.average), // 日均（后端按范围口径计算），透传避免前端 fallback 失真
+    average: number(value.average),
     reachedDays: number(value.reachedDays),
     totalDays: number(value.totalDays, 1)
   };
@@ -43,11 +44,12 @@ export function StatusBar({ appearance = 'light' }) {
   if (Capacitor.isNativePlatform()) return null;
 
   const isDark = appearance === 'dark';
-  const color = isDark ? '#FFFFFF' : '#1A1A1A';
-  const bg = isDark ? '#0F0F0F' : '#F7F8FA';
+  const color = isDark ? colors.textInverse : colors.textPrimary;
+  const bg = isDark ? '#0F0F0F' : colors.bg;
   return (
     <div
       data-name="status-bar"
+      aria-hidden="true"
       style={{
         width: '100%',
         display: 'flex',
@@ -57,7 +59,7 @@ export function StatusBar({ appearance = 'light' }) {
         background: bg,
         flexShrink: 0
       }}>
-      <span data-name="status-time" style={{ color, fontSize: 15, fontWeight: 600, lineHeight: '20px' }}>9:41</span>
+      <span data-name="status-time" style={{ color, fontSize: fontSize.lg, fontWeight: fontWeight.semibold, lineHeight: '20px' }}>9:41</span>
       <div data-name="status-icons" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 6 }}>
         <i data-name="icon-signal" className="fas fa-signal" style={{ fontSize: 14, color }} />
         <i data-name="icon-wifi" className="fas fa-wifi" style={{ fontSize: 14, color }} />
@@ -70,7 +72,7 @@ export function StatusBar({ appearance = 'light' }) {
 export function NavBar({ title, right, onBack, appearance = 'light', showBack = true }) {
   const navigate = useNavigate();
   const isDark = appearance === 'dark';
-  const color = isDark ? '#FFFFFF' : '#1A1A1A';
+  const color = isDark ? colors.textInverse : colors.textPrimary;
   return (
     <div data-name="top-nav" style={{ width: '100%', display: 'flex', alignItems: 'center', padding: '10px 20px' }}>
       {showBack ? (
@@ -91,7 +93,7 @@ export function NavBar({ title, right, onBack, appearance = 'light', showBack = 
       ) : (
         <div data-name="nav-spacer" style={{ width: 32 }} />
       )}
-      <p data-name="nav-title" style={{ flex: 1, textAlign: 'center', fontSize: 18, fontWeight: 700, color, lineHeight: '24px', margin: 0 }}>{title}</p>
+      <p data-name="nav-title" style={{ flex: 1, textAlign: 'center', fontSize: fontSize.hero, fontWeight: fontWeight.bold, color, lineHeight: '24px', margin: 0 }}>{title}</p>
       <div style={{ width: 32, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>{right}</div>
     </div>
   );
@@ -107,7 +109,6 @@ export function ToggleSwitch({ checked, label, onChange }) {
       tabIndex={onChange ? 0 : undefined}
       onClick={toggle}
       onKeyDown={(e) => {
-        // 键盘可达：Enter / 空格 触发切换（a11y）
         if (onChange && (e.key === 'Enter' || e.key === ' ')) {
           e.preventDefault();
           toggle();
@@ -117,8 +118,8 @@ export function ToggleSwitch({ checked, label, onChange }) {
         width: 42,
         height: 24,
         padding: 2,
-        borderRadius: 12,
-        background: checked ? '#34C759' : '#D1D5DB',
+        borderRadius: radius.lg,
+        background: checked ? colors.primary : colors.textDisabled,
         display: 'flex',
         justifyContent: checked ? 'flex-end' : 'flex-start',
         alignItems: 'center',
@@ -127,7 +128,7 @@ export function ToggleSwitch({ checked, label, onChange }) {
         outline: 'none',
         transition: 'background .2s ease'
       }}>
-      <span style={{ width: 20, height: 20, borderRadius: 10, background: '#FFFFFF', boxShadow: '0 1px 3px rgba(0,0,0,.18)' }} />
+      <span style={{ width: 20, height: 20, borderRadius: 10, background: colors.surface, boxShadow: shadow.sm }} />
     </span>
   );
 }
@@ -152,8 +153,8 @@ export function BottomNav({ active }) {
         justifyContent: 'flex-start',
         alignItems: 'center',
         gap: 8,
-        background: '#FFFFFF',
-        borderTop: '1px solid #EEF0F2',
+        background: colors.surface,
+        borderTop: `1px solid ${colors.segBg}`,
         padding: '10px 20px'
       }}>
       {NAV_ITEMS.map((n) => {
@@ -174,8 +175,8 @@ export function BottomNav({ active }) {
               }
             }}
             style={{ display: 'flex', flex: 1, flexDirection: 'column', alignItems: 'center', gap: 4, cursor: 'pointer', outline: 'none' }}>
-            <i className={'fas ' + n.icon} style={{ fontSize: 22, color: on ? '#34C759' : '#9CA3AF' }} />
-            <span style={{ fontSize: 11, fontWeight: on ? 600 : 500, color: on ? '#34C759' : '#9CA3AF', lineHeight: '14px', textAlign: 'center' }}>{n.label}</span>
+            <i className={'fas ' + n.icon} style={{ fontSize: 22, color: on ? colors.primary : colors.textTertiary }} />
+            <span style={{ fontSize: fontSize.xs, fontWeight: on ? fontWeight.semibold : fontWeight.medium, color: on ? colors.primary : colors.textTertiary, lineHeight: '14px', textAlign: 'center' }}>{n.label}</span>
           </div>
         );
       })}
@@ -189,16 +190,23 @@ export function Ring({ percent, size = 120, stroke = 11, label, sub, labelSize =
   const c = 2 * Math.PI * r;
   const off = c * (1 - Math.min(100, Math.max(0, percent)) / 100);
   const innerSize = size - stroke * 2 - 4;
+  const safePercent = Math.min(100, Math.max(0, percent));
   return (
-    <div style={{ position: 'relative', width: size, height: size }}>
+    <div
+      role="progressbar"
+      aria-valuenow={safePercent}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-label={label != null ? `进度 ${safePercent}%` : undefined}
+      style={{ position: 'relative', width: size, height: size }}>
       <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', position: 'absolute', inset: 0 }}>
         <defs>
           <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#34C759" />
-            <stop offset="100%" stopColor="#22A85A" />
+            <stop offset="0%" stopColor={colors.primary} />
+            <stop offset="100%" stopColor={colors.primaryDark} />
           </linearGradient>
         </defs>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#E8F5EC" strokeWidth={stroke} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={colors.primaryBg} strokeWidth={stroke} />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -212,9 +220,9 @@ export function Ring({ percent, size = 120, stroke = 11, label, sub, labelSize =
         />
       </svg>
       <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ width: innerSize, height: innerSize, borderRadius: innerSize / 2, background: '#FFFFFF', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontSize: labelSize, fontWeight: labelWeight, color: '#1A1A1A', lineHeight: 1 }}>{label}</span>
-          {sub && <span style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{sub}</span>}
+        <div style={{ width: innerSize, height: innerSize, borderRadius: innerSize / 2, background: colors.surface, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: labelSize, fontWeight: labelWeight, color: colors.textPrimary, lineHeight: 1 }}>{label}</span>
+          {sub && <span style={{ fontSize: fontSize.xs, color: colors.textTertiary, marginTop: 2 }}>{sub}</span>}
         </div>
       </div>
     </div>
@@ -222,28 +230,47 @@ export function Ring({ percent, size = 120, stroke = 11, label, sub, labelSize =
 }
 
 // 分段控件
-export function Seg({ options, value, onChange }) {
+export function Seg({ options, value, onChange, ariaLabel }) {
+  const handleKeyDown = (e, index) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const next = options[(index + 1) % options.length];
+      onChange(next.value);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prev = options[(index - 1 + options.length) % options.length];
+      onChange(prev.value);
+    }
+  };
   return (
-    <div style={{ display: 'flex', background: '#EEF0F2', borderRadius: 12, padding: 3 }}>
-      {options.map((o) => (
-        <div
-          key={o.value}
-          onClick={() => onChange(o.value)}
-          style={{
-            flex: 1,
-            textAlign: 'center',
-            padding: '7px 0',
-            borderRadius: 10,
-            fontSize: 13,
-            fontWeight: 600,
-            cursor: 'pointer',
-            background: value === o.value ? '#FFFFFF' : 'transparent',
-            color: value === o.value ? '#34C759' : '#9CA3AF',
-            boxShadow: value === o.value ? '0 1px 4px rgba(0,0,0,0.08)' : 'none'
-          }}>
-          {o.label}
-        </div>
-      ))}
+    <div role="tablist" aria-label={ariaLabel} style={{ display: 'flex', background: colors.segBg, borderRadius: radius.lg, padding: 3 }}>
+      {options.map((o, i) => {
+        const selected = value === o.value;
+        return (
+          <div
+            key={o.value}
+            role="tab"
+            aria-selected={selected}
+            tabIndex={selected ? 0 : -1}
+            onClick={() => onChange(o.value)}
+            onKeyDown={(e) => handleKeyDown(e, i)}
+            style={{
+              flex: 1,
+              textAlign: 'center',
+              padding: '7px 0',
+              borderRadius: radius.md,
+              fontSize: fontSize.md,
+              fontWeight: fontWeight.semibold,
+              cursor: 'pointer',
+              background: selected ? colors.surface : 'transparent',
+              color: selected ? colors.primary : colors.textTertiary,
+              boxShadow: selected ? shadow.sm : 'none',
+              outline: 'none'
+            }}>
+            {o.label}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -251,24 +278,41 @@ export function Seg({ options, value, onChange }) {
 // 白色圆角卡片容器（透传 data-name 等属性）
 export function Card({ children, style = {}, ...rest }) {
   return (
-    <div {...rest} style={{ background: '#FFFFFF', borderRadius: 16, boxShadow: '0 2px 12px rgba(0,0,0,0.05)', padding: 16, ...style }}>
+    <div {...rest} style={{ background: colors.surface, borderRadius: radius.xl, boxShadow: shadow.md, padding: 16, ...style }}>
       {children}
     </div>
   );
 }
 
 // 餐次选择 pills（AddFood / Search 收敛共用）
-export function MealPills({ options, value, onChange }) {
+export function MealPills({ options, value, onChange, ariaLabel = '餐次选择' }) {
+  const handleKeyDown = (e, index) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const next = options[(index + 1) % options.length];
+      const val = typeof next === 'string' ? next : next.value;
+      onChange(val);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const prev = options[(index - 1 + options.length) % options.length];
+      const val = typeof prev === 'string' ? prev : prev.value;
+      onChange(val);
+    }
+  };
   return (
-    <div style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
-      {options.map((m) => {
+    <div role="tablist" aria-label={ariaLabel} style={{ display: 'flex', gap: 8, overflowX: 'auto' }}>
+      {options.map((m, i) => {
         const val = typeof m === 'string' ? m : m.value;
         const label = typeof m === 'string' ? m : m.label;
         const active = value === val;
         return (
           <div
             key={val}
+            role="tab"
+            aria-selected={active}
+            tabIndex={active ? 0 : -1}
             onClick={() => onChange(val)}
+            onKeyDown={(e) => handleKeyDown(e, i)}
             style={{
               height: 30,
               borderRadius: 15,
@@ -277,12 +321,13 @@ export function MealPills({ options, value, onChange }) {
               alignItems: 'center',
               justifyContent: 'center',
               flexShrink: 0,
-              background: active ? '#34C759' : '#FFFFFF',
-              color: active ? '#FFFFFF' : '#1A1A1A',
-              fontSize: 13,
-              fontWeight: active ? 600 : 500,
-              boxShadow: active ? 'none' : '0 2px 8px rgba(0,0,0,0.04)',
-              cursor: 'pointer'
+              background: active ? colors.primary : colors.surface,
+              color: active ? colors.textInverse : colors.textPrimary,
+              fontSize: fontSize.md,
+              fontWeight: active ? fontWeight.semibold : fontWeight.medium,
+              boxShadow: active ? 'none' : shadow.md,
+              cursor: 'pointer',
+              outline: 'none'
             }}
           >
             {label}

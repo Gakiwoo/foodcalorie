@@ -137,3 +137,30 @@ body {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
   cursor: pointer;
 }
+
+/* ===== 可访问性（a11y）辅助样式 ===== */
+
+/* 屏幕阅读器专用：视觉上隐藏但保留语义，供屏幕阅读器朗读 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* 减少动画偏好：前庭功能障碍用户在系统设置中开启"减少动态效果"时禁用动画 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -4,8 +4,9 @@ import { http } from './src/api/client';
 import { toast, todayStr } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
 import { useUnits } from './src/ui/units';
+import { PageContainer } from './src/ui/components';
+import { colors, radius, fontSize, fontWeight } from './src/ui/theme';
 
-// 月视图：真实数据（GET calendar?month= 每日摄入点 + 月份切换 + 点某天进记录页）
 export default function FoodCalorieRecordsMonth() {
   const navigate = useNavigate();
   const { unitCalorie, kcal } = useUnits();
@@ -13,7 +14,7 @@ export default function FoodCalorieRecordsMonth() {
   const [month, setMonth] = useState(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`);
   const [days, setDays] = useState({});
   const [loading, setLoading] = useState(true);
-  const seq = useRef(0); // 请求序号守卫：快速切月时丢弃过期响应，防止错月数据渲染
+  const seq = useRef(0);
 
   useEffect(() => {
     const current = ++seq.current;
@@ -21,7 +22,7 @@ export default function FoodCalorieRecordsMonth() {
     (async () => {
       try {
         const r = await http.get('/api/v1/foodcalorie/records/calendar', { month });
-        if (current !== seq.current) return; // 已有更新的月份请求，丢弃过期响应
+        if (current !== seq.current) return;
         const map = {};
         (r.data.days || []).forEach((d) => { map[d.day] = d.calories; });
         setDays(map);
@@ -36,9 +37,8 @@ export default function FoodCalorieRecordsMonth() {
 
   const [y, m] = month.split('-').map(Number);
   const totalDays = new Date(y, m, 0).getDate();
-  const firstDow = new Date(y, m - 1, 1).getDay(); // 0=周日
+  const firstDow = new Date(y, m - 1, 1).getDay();
   const total = Object.values(days).reduce((s, v) => s + v, 0);
-  // 日均分母：当前月取"今天与月末的较小者"，未来日期不计入，避免月中查看时日均被系统性低估
   const isCurrentMonth = todayStr().slice(0, 7) === month;
   const elapsedDays = isCurrentMonth ? Number(todayStr().slice(8, 10)) : totalDays;
   const avg = elapsedDays > 0 ? Math.round(total / elapsedDays) : 0;
@@ -49,35 +49,32 @@ export default function FoodCalorieRecordsMonth() {
   }
 
   const cells = [];
-  for (let i = 0; i < firstDow; i++) cells.push(null); // 前置空位
+  for (let i = 0; i < firstDow; i++) cells.push(null);
   for (let day = 1; day <= totalDays; day++) cells.push(day);
 
   return (
-    <div data-name="FoodCalorie-RecordsMonth" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <PageContainer data-name="FoodCalorie-RecordsMonth">
       <StatusBar />
       <NavBar title="月历" />
 
-      {/* 月份切换 + 汇总 */}
       <div style={{ padding: '4px 20px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <i className="fas fa-chevron-left" style={{ fontSize: 14, color: '#34C759', cursor: 'pointer' }} onClick={() => shiftMonth(-1)} />
-        <div style={{ flex: 1, textAlign: 'center', fontSize: 16, fontWeight: 700, color: '#1A1A1A' }}>{y}年{m}月</div>
-        <i className="fas fa-chevron-right" style={{ fontSize: 14, color: '#34C759', cursor: 'pointer' }} onClick={() => shiftMonth(1)} />
+        <i className="fas fa-chevron-left" role="button" tabIndex={0} aria-label="上一月" style={{ fontSize: 14, color: colors.primary, cursor: 'pointer' }} onClick={() => shiftMonth(-1)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); shiftMonth(-1); } }} />
+        <div style={{ flex: 1, textAlign: 'center', fontSize: fontSize.display, fontWeight: fontWeight.bold, color: colors.textPrimary }}>{y}年{m}月</div>
+        <i className="fas fa-chevron-right" role="button" tabIndex={0} aria-label="下一月" style={{ fontSize: 14, color: colors.primary, cursor: 'pointer' }} onClick={() => shiftMonth(1)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); shiftMonth(1); } }} />
       </div>
       <Card style={{ margin: '0 20px 12px', display: 'flex', justifyContent: 'space-around', padding: '12px 8px' }}>
-        <div style={{ textAlign: 'center' }}><div style={{ fontSize: 17, fontWeight: 800, color: '#1A1A1A' }}>{kcal(total)}</div><div style={{ fontSize: 10, color: '#9CA3AF' }}>月总摄入 {unitCalorie}</div></div>
-        <div style={{ textAlign: 'center' }}><div style={{ fontSize: 17, fontWeight: 800, color: '#1A1A1A' }}>{kcal(avg)}</div><div style={{ fontSize: 10, color: '#9CA3AF' }}>日均 {unitCalorie}</div></div>
-        <div style={{ textAlign: 'center' }}><div style={{ fontSize: 17, fontWeight: 800, color: '#34C759' }}>{Object.keys(days).length}</div><div style={{ fontSize: 10, color: '#9CA3AF' }}>记录天数</div></div>
+        <div style={{ textAlign: 'center' }}><div style={{ fontSize: 17, fontWeight: fontWeight.extrabold, color: colors.textPrimary }}>{kcal(total)}</div><div style={{ fontSize: 10, color: colors.textTertiary }}>月总摄入 {unitCalorie}</div></div>
+        <div style={{ textAlign: 'center' }}><div style={{ fontSize: 17, fontWeight: fontWeight.extrabold, color: colors.textPrimary }}>{kcal(avg)}</div><div style={{ fontSize: 10, color: colors.textTertiary }}>日均 {unitCalorie}</div></div>
+        <div style={{ textAlign: 'center' }}><div style={{ fontSize: 17, fontWeight: fontWeight.extrabold, color: colors.primary }}>{Object.keys(days).length}</div><div style={{ fontSize: 10, color: colors.textTertiary }}>记录天数</div></div>
       </Card>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: colors.textTertiary, fontSize: fontSize.lg }}>加载中…</div>
       ) : (
         <>
-          {/* 星期表头 */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', padding: '0 20px', gap: 6, marginBottom: 6 }}>
-            {['日', '一', '二', '三', '四', '五', '六'].map((w) => <div key={w} style={{ textAlign: 'center', fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>{w}</div>)}
+            {['日', '一', '二', '三', '四', '五', '六'].map((w) => <div key={w} style={{ textAlign: 'center', fontSize: 11, color: colors.textTertiary, fontWeight: fontWeight.semibold }}>{w}</div>)}
           </div>
-          {/* 日历格 */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', padding: '0 20px', gap: 6 }}>
             {cells.map((day, i) => {
               if (!day) return <div key={'e' + i} />;
@@ -86,16 +83,16 @@ export default function FoodCalorieRecordsMonth() {
               const isToday = date === todayStr().slice(0, 10);
               const has = cal > 0;
               return (
-                <div key={day} onClick={() => navigate('/records?date=' + date)} style={{ aspectRatio: '1', borderRadius: 10, background: isToday ? '#34C759' : has ? '#E8F5EC' : '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid ' + (isToday ? '#34C759' : '#EEF0F2') }}>
-                  <span style={{ fontSize: 13, fontWeight: isToday ? 700 : 500, color: isToday ? '#fff' : has ? '#1A1A1A' : '#C0C4CC' }}>{day}</span>
-                  {has ? <span style={{ fontSize: 8, fontWeight: 700, color: isToday ? '#fff' : '#22A85A', marginTop: 2 }}>{cal}</span> : <span style={{ fontSize: 8, color: '#D1D5DB', marginTop: 2 }}>·</span>}
+                <div key={day} role="button" tabIndex={0} aria-label={`${date}，${has ? cal + '千卡' : '无记录'}`} onClick={() => navigate('/records?date=' + date)} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate('/records?date=' + date); } }} style={{ aspectRatio: '1', borderRadius: radius.md, background: isToday ? colors.primary : has ? colors.primaryBg : colors.bg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '1px solid ' + (isToday ? colors.primary : colors.segBg), outline: 'none' }}>
+                  <span style={{ fontSize: fontSize.lg, fontWeight: isToday ? fontWeight.bold : fontWeight.medium, color: isToday ? colors.textInverse : has ? colors.textPrimary : '#C0C4CC' }}>{day}</span>
+                  {has ? <span style={{ fontSize: 8, fontWeight: fontWeight.bold, color: isToday ? colors.textInverse : colors.primaryDark, marginTop: 2 }}>{cal}</span> : <span style={{ fontSize: 8, color: colors.textDisabled, marginTop: 2 }}>·</span>}
                 </div>
               );
             })}
           </div>
-          <div style={{ padding: '14px 20px 8px', fontSize: 11, color: '#9CA3AF', textAlign: 'center' }}>点击日期查看当日记录</div>
+          <div style={{ padding: '14px 20px 8px', fontSize: 11, color: colors.textTertiary, textAlign: 'center' }}>点击日期查看当日记录</div>
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }

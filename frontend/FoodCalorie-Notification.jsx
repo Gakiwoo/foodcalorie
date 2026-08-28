@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card, ToggleSwitch } from './src/ui/common';
 import { useBusy } from './src/ui/useBusy';
+import { PageContainer } from './src/ui/components';
+import { colors, radius, fontSize, fontWeight } from './src/ui/theme';
 
-// 通知设置页：真实数据（GET/PUT profile.notif_* + quiet 时段）
 const SWITCHES = [
   { key: 'notif_record', label: '记录提醒', desc: '到了饭点提醒记录饮食' },
   { key: 'notif_goal', label: '目标达成提醒', desc: '达到每日目标热量时通知' },
@@ -43,10 +44,8 @@ export default function FoodCalorieNotification() {
   }, []);
 
   async function save() {
-    // runSaving：同步闩锁防双击重复保存
     await runSaving(async () => {
       try {
-        // 后端 zod 期望 boolean（内部转 0/1），前端提交 boolean
         const body = {}
         for (const k of Object.keys(flags)) body[k] = !!flags[k]
         body.quiet_start = quiet.start
@@ -61,43 +60,41 @@ export default function FoodCalorieNotification() {
   }
 
   return (
-    <div data-name="FoodCalorie-Notification" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <PageContainer data-name="FoodCalorie-Notification">
       <StatusBar />
       <NavBar title="通知设置" />
 
       {loading ? (
-        <div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div>
+        <div style={{ padding: 60, textAlign: 'center', color: colors.textTertiary, fontSize: fontSize.lg }}>加载中…</div>
       ) : (
         <>
-          {/* 开关列表 */}
           <Card style={{ margin: '6px 20px 12px', padding: '4px 16px' }}>
             {SWITCHES.map((s, i) => (
-              <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', borderBottom: i < SWITCHES.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
+              <div key={s.key} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 0', borderBottom: i < SWITCHES.length - 1 ? `1px solid ${colors.borderLight}` : 'none' }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#1A1A1A' }}>{s.label}</div>
-                  <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2 }}>{s.desc}</div>
+                  <div style={{ fontSize: fontSize.lg, fontWeight: fontWeight.semibold, color: colors.textPrimary }}>{s.label}</div>
+                  <div style={{ fontSize: fontSize.xs, color: colors.textTertiary, marginTop: 2 }}>{s.desc}</div>
                 </div>
                 <ToggleSwitch checked={!!flags[s.key]} label={s.label} onChange={(v) => setFlags((f) => ({ ...f, [s.key]: v ? 1 : 0 }))} />
               </div>
             ))}
           </Card>
 
-          {/* 免打扰时段 */}
           <Card style={{ margin: '0 20px 12px' }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A', marginBottom: 4 }}>免打扰时段</div>
-            <div style={{ fontSize: 12, color: '#9CA3AF', marginBottom: 14 }}>该时段内不推送通知</div>
+            <div style={{ fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.textPrimary, marginBottom: 4 }}>免打扰时段</div>
+            <div style={{ fontSize: fontSize.sm, color: colors.textTertiary, marginBottom: 14 }}>该时段内不推送通知</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <input type="time" value={quiet.start} onChange={(e) => setQuiet((q) => ({ ...q, start: e.target.value }))} style={{ flex: 1, border: '1px solid #E5E7EB', borderRadius: 12, padding: '11px 12px', fontSize: 14, outline: 'none', color: '#1A1A1A' }} />
-              <span style={{ color: '#9CA3AF', fontWeight: 600 }}>至</span>
-              <input type="time" value={quiet.end} onChange={(e) => setQuiet((q) => ({ ...q, end: e.target.value }))} style={{ flex: 1, border: '1px solid #E5E7EB', borderRadius: 12, padding: '11px 12px', fontSize: 14, outline: 'none', color: '#1A1A1A' }} />
+              <input type="time" value={quiet.start} onChange={(e) => setQuiet((q) => ({ ...q, start: e.target.value }))} style={{ flex: 1, border: `1px solid ${colors.border}`, borderRadius: radius.lg, padding: '11px 12px', fontSize: fontSize.lg, outline: 'none', color: colors.textPrimary }} />
+              <span style={{ color: colors.textTertiary, fontWeight: fontWeight.semibold }}>至</span>
+              <input type="time" value={quiet.end} onChange={(e) => setQuiet((q) => ({ ...q, end: e.target.value }))} style={{ flex: 1, border: `1px solid ${colors.border}`, borderRadius: radius.lg, padding: '11px 12px', fontSize: fontSize.lg, outline: 'none', color: colors.textPrimary }} />
             </div>
           </Card>
 
           <div style={{ padding: '10px 20px' }}>
-            <button onClick={save} disabled={saving} style={{ width: '100%', height: 48, borderRadius: 16, border: 'none', background: '#34C759', color: '#fff', fontSize: 15, fontWeight: 700, cursor: saving ? 'wait' : 'pointer' }}>{saving ? '保存中…' : '保存设置'}</button>
+            <button onClick={save} disabled={saving} style={{ width: '100%', height: 48, borderRadius: radius.xl, border: 'none', background: colors.primary, color: colors.textInverse, fontSize: fontSize.xl, fontWeight: fontWeight.bold, cursor: saving ? 'wait' : 'pointer' }}>{saving ? '保存中…' : '保存设置'}</button>
           </div>
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }

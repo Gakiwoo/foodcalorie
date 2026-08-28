@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { logout, fetchMe } from './src/api/auth';
 import { toast } from './src/ui/toast';
 import { NavBar, StatusBar } from './src/ui/common';
 import { useUnits } from './src/ui/units';
+import { PageContainer } from './src/ui/components';
+import { colors, radius, shadow, fontSize, fontWeight } from './src/ui/theme';
 
-// 设置页：统一使用可离线打包的 Font Awesome 图标，不再依赖设计稿导出的散列资源名。
-
-// 分组与设置项（to 为跳转目标；valueKey+valueMap 为 profile 动态值；value 为静态文案）
-// 说明：所有行均为可跳转的真实设置入口（原演示开关已下线，避免"假设置"误导）
 const GROUPS = [
   {
     title: '目标与偏好',
@@ -45,14 +43,13 @@ const GROUPS = [
 
 const rowStyle = { width: '100%', height: 56, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', cursor: 'pointer' };
 const leftStyle = { display: 'flex', alignItems: 'center', gap: 12 };
-const labelStyle = { color: '#1A1A1A', fontSize: 15, fontWeight: 500 };
-const valueStyle = { color: '#9CA3AF', fontSize: 14, textAlign: 'right' };
-const dividerStyle = { width: 'calc(100% - 32px)', height: 1, background: '#EEF0F2', marginLeft: 16 };
+const labelStyle = { color: colors.textPrimary, fontSize: fontSize.xl, fontWeight: fontWeight.medium };
+const valueStyle = { color: colors.textTertiary, fontSize: fontSize.lg, textAlign: 'right' };
+const dividerStyle = { width: 'calc(100% - 32px)', height: 1, background: colors.segBg, marginLeft: 16 };
 
 export default function FoodCalorieSettings() {
   const navigate = useNavigate();
   const { unitCalorie, kcal } = useUnits();
-  // F1：真实数据（目标热量 + 记录总数 + 昵称 + profile 动态值），加载失败时回退占位
   const [profile, setProfile] = useState(null);
   const [nickname, setNickname] = useState('');
   const [targetCal, setTargetCal] = useState(null);
@@ -64,15 +61,15 @@ export default function FoodCalorieSettings() {
         const p = await http.get('/api/v1/foodcalorie/profile');
         setProfile(p.data ?? null);
         setTargetCal(p.data?.target_calories ?? null);
-      } catch { /* 未登录忽略 */ }
+      } catch { }
       try {
         const me = await fetchMe();
         setNickname(me?.nickname || '');
-      } catch { /* 未登录忽略 */ }
+      } catch { }
       try {
         const r = await http.get('/api/v1/foodcalorie/records', { page: 1, pageSize: 1 });
         setRecordCount(r.data?.total ?? null);
-      } catch { /* 未登录忽略 */ }
+      } catch { }
     })();
   }, []);
 
@@ -86,48 +83,44 @@ export default function FoodCalorieSettings() {
   }
 
   return (
-    <div data-name="FoodCalorie-Settings" style={{ width: '100%', minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: '#F7F8FA' }}>
+    <PageContainer data-name="FoodCalorie-Settings">
       <StatusBar />
       <NavBar title="设置" />
 
       <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 20, padding: '12px 20px' }}>
-        {/* 账户卡 → 个人主页 */}
-        <div data-name="account-card" onClick={() => navigate('/profile')} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 16, background: '#FFFFFF', borderRadius: 20, boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+        <div data-name="account-card" onClick={() => navigate('/profile')} style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 16, background: colors.surface, borderRadius: radius.xxl, boxShadow: shadow.lg, cursor: 'pointer' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 56, height: 56, borderRadius: 28, background: 'linear-gradient(135deg,#34C759,#22A85A)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <i className="fas fa-user" style={{ color: '#FFFFFF', fontSize: 24 }} aria-hidden="true" />
+              <i className="fas fa-user" style={{ color: colors.textInverse, fontSize: 24 }} aria-hidden="true" />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <span style={{ color: '#1A1A1A', fontSize: 17, fontWeight: 700 }}>{nickname || '食刻用户'}</span>
-              <span style={{ color: '#9CA3AF', fontSize: 13 }}>查看个人主页</span>
+              <span style={{ color: colors.textPrimary, fontSize: 17, fontWeight: fontWeight.bold }}>{nickname || '食刻用户'}</span>
+              <span style={{ color: colors.textTertiary, fontSize: fontSize.lg }}>查看个人主页</span>
             </div>
           </div>
           <i className="fas fa-chevron-right" style={{ color: '#C0C4CC', fontSize: 13 }} aria-hidden="true" />
         </div>
 
-        {/* 我的记录 → 记录页（带来源标记） */}
-        <div data-name="card-records" onClick={() => navigate('/records', { state: { from: 'settings' } })} style={{ width: '100%', height: 48, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', background: '#FFFFFF', borderRadius: 16, boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
+        <div data-name="card-records" onClick={() => navigate('/records', { state: { from: 'settings' } })} style={{ width: '100%', height: 48, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 16px', background: colors.surface, borderRadius: radius.xl, boxShadow: shadow.lg, cursor: 'pointer' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 36, height: 36, display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: 10, background: '#E8F5EC' }}>
-              <i className="fas fa-clipboard-list" style={{ fontSize: 16, color: '#22A85A' }} />
+            <div style={{ width: 36, height: 36, display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: radius.md, background: colors.primaryBg }}>
+              <i className="fas fa-clipboard-list" style={{ fontSize: 16, color: colors.primaryDark }} />
             </div>
-            <span style={{ color: '#1A1A1A', fontSize: 14, fontWeight: 600 }}>我的记录</span>
+            <span style={{ color: colors.textPrimary, fontSize: fontSize.lg, fontWeight: fontWeight.semibold }}>我的记录</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ color: '#9CA3AF', fontSize: 12 }}>{recordCount != null ? recordCount + ' 条记录' : '--'}</span>
+            <span style={{ color: colors.textTertiary, fontSize: fontSize.sm }}>{recordCount != null ? recordCount + ' 条记录' : '--'}</span>
             <i className="fas fa-chevron-right" style={{ color: '#C0C4CC', fontSize: 12 }} aria-hidden="true" />
           </div>
         </div>
 
-        {/* 分组设置项 */}
         {GROUPS.map((g) => (
           <div key={g.title} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ padding: '0 4px' }}>
-              <span style={{ color: '#9CA3AF', fontSize: 13, fontWeight: 500 }}>{g.title}</span>
+              <span style={{ color: colors.textTertiary, fontSize: fontSize.lg, fontWeight: fontWeight.medium }}>{g.title}</span>
             </div>
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', background: '#FFFFFF', borderRadius: 16, boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'column', background: colors.surface, borderRadius: radius.xl, boxShadow: shadow.lg, overflow: 'hidden' }}>
               {g.rows.map((r, i) => {
-                // 动态值：valueKey 命中 profile 时用 valueMap 映射；否则用静态 value
                 const dynamicValue =
                   r.valueKey && profile != null && profile[r.valueKey] != null
                     ? r.valueMap[profile[r.valueKey]] ?? null
@@ -137,7 +130,7 @@ export default function FoodCalorieSettings() {
                   <React.Fragment key={r.key}>
                     <div style={rowStyle} onClick={() => navigate(r.to)}>
                       <div style={leftStyle}>
-                        <i className={'fas ' + r.icon} style={{ width: 18, color: '#22A85A', fontSize: 16, textAlign: 'center' }} aria-hidden="true" />
+                        <i className={'fas ' + r.icon} style={{ width: 18, color: colors.primaryDark, fontSize: 16, textAlign: 'center' }} aria-hidden="true" />
                         <span style={labelStyle}>{r.label}</span>
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -155,11 +148,10 @@ export default function FoodCalorieSettings() {
           </div>
         ))}
 
-        {/* 退出登录 */}
-        <div data-name="logout-card" onClick={handleLogout} style={{ width: '100%', padding: '15px 0', textAlign: 'center', background: '#FFFFFF', borderRadius: 16, boxShadow: '0px 4px 14px 0px rgba(0,0,0,0.05)', cursor: 'pointer' }}>
-          <span style={{ color: '#E03131', fontSize: 14, fontWeight: 700 }}>退出登录</span>
+        <div data-name="logout-card" onClick={handleLogout} style={{ width: '100%', padding: '15px 0', textAlign: 'center', background: colors.surface, borderRadius: radius.xl, boxShadow: shadow.lg, cursor: 'pointer' }}>
+          <span style={{ color: '#E03131', fontSize: fontSize.lg, fontWeight: fontWeight.bold }}>退出登录</span>
         </div>
       </div>
-    </div>
+    </PageContainer>
   );
 }

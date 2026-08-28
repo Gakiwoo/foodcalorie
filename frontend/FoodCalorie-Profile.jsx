@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { http, apiClient } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card, Seg } from './src/ui/common';
 import { useBusy } from './src/ui/useBusy';
+import { PageContainer } from './src/ui/components';
+import { colors, radius, fontSize, fontWeight } from './src/ui/theme';
 
-// 个人信息页：真实数据（GET/PUT profile + PUT /api/auth/me 昵称）
 const GOALS = [
   { value: '减脂', label: '减脂' },
   { value: '保持', label: '保持' },
@@ -49,10 +50,8 @@ export default function FoodCalorieProfile() {
 
   async function save() {
     if (!nickname.trim()) return toast('昵称不能为空');
-    // runSaving：同步闩锁防双击重复保存（昵称 PUT + profile PUT 双请求场景尤需防重）
     await runSaving(async () => {
       try {
-        // 昵称走 gakiwoo /api/auth/me；其余走 profile（F2：昵称失败必须中断并提示，不得静默吞错）
         if (nickname !== '') {
           await apiClient('/api/auth/me', { method: 'PUT', body: JSON.stringify({ nickname: nickname.trim() }) });
         }
@@ -73,28 +72,27 @@ export default function FoodCalorieProfile() {
   }
 
   const row = (label, child) => (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 0', borderBottom: '1px solid #F3F4F6' }}>
-      <span style={{ fontSize: 14, color: '#1A1A1A', fontWeight: 500 }}>{label}</span>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 0', borderBottom: `1px solid ${colors.borderLight}` }}>
+      <span style={{ fontSize: fontSize.lg, color: colors.textPrimary, fontWeight: fontWeight.medium }}>{label}</span>
       {child}
     </div>
   );
 
-  const inputStyle = { border: 'none', outline: 'none', textAlign: 'right', fontSize: 14, color: '#1A1A1A', background: 'transparent', width: 150 };
+  const inputStyle = { border: 'none', outline: 'none', textAlign: 'right', fontSize: fontSize.lg, color: colors.textPrimary, background: 'transparent', width: 150 };
 
   return (
-    <div data-name="FoodCalorie-Profile" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <PageContainer data-name="FoodCalorie-Profile">
       <StatusBar />
-      <NavBar title="个人信息" right={<span style={{ fontSize: 13, color: '#22A85A', fontWeight: 600 }} onClick={save}>保存</span>} />
+      <NavBar title="个人信息" right={<span style={{ fontSize: fontSize.md, color: colors.primaryDark, fontWeight: fontWeight.semibold }} onClick={save}>保存</span>} />
       {loading ? (
-        <div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div>
+        <div style={{ padding: 60, textAlign: 'center', color: colors.textTertiary, fontSize: fontSize.lg }}>加载中…</div>
       ) : (
         <>
-          {/* 头像卡 */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '16px 0 20px', gap: 8 }}>
             <div style={{ width: 76, height: 76, borderRadius: 38, background: 'linear-gradient(135deg,#34C759 0%,#22A85A 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <i className="fas fa-user" style={{ fontSize: 30, color: '#FFFFFF' }} />
+              <i className="fas fa-user" style={{ fontSize: 30, color: colors.textInverse }} />
             </div>
-            <span style={{ fontSize: 12, color: '#9CA3AF' }}>更换头像</span>
+            <span style={{ fontSize: fontSize.sm, color: colors.textTertiary }}>更换头像</span>
           </div>
 
           <Card style={{ margin: '0 20px 12px', padding: '0 16px' }}>
@@ -108,10 +106,10 @@ export default function FoodCalorieProfile() {
           </Card>
 
           <div style={{ padding: '10px 20px' }}>
-            <button onClick={save} disabled={saving} style={{ width: '100%', height: 48, borderRadius: 16, border: 'none', background: '#34C759', color: '#fff', fontSize: 15, fontWeight: 700, cursor: saving ? 'wait' : 'pointer' }}>{saving ? '保存中…' : '保存修改'}</button>
+            <button onClick={save} disabled={saving} style={{ width: '100%', height: 48, borderRadius: radius.xl, border: 'none', background: colors.primary, color: colors.textInverse, fontSize: fontSize.xl, fontWeight: fontWeight.bold, cursor: saving ? 'wait' : 'pointer' }}>{saving ? '保存中…' : '保存修改'}</button>
           </div>
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }

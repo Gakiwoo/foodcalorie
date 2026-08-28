@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { http } from './src/api/client';
 import { toast } from './src/ui/toast';
 import { StatusBar, NavBar, Card } from './src/ui/common';
 import { useBusy } from './src/ui/useBusy';
+import { PageContainer } from './src/ui/components';
+import { colors, radius, fontSize, fontWeight } from './src/ui/theme';
 
-// 饮食偏好页：真实数据（GET/PUT profile.diet_preferences）
 const GROUPS = [
   { title: '口味偏好', key: 'taste', options: ['清淡', '微辣', '中辣', '重口', '甜口', '酸口'] },
   { title: '饮食方式', key: 'style', options: ['均衡', '低碳水', '高蛋白', '素食', '低脂', '低盐'] },
@@ -36,7 +37,6 @@ export default function FoodCalorieDietPref() {
   }
 
   async function save() {
-    // runSaving：同步闩锁防双击重复保存
     await runSaving(async () => {
       try {
         await http.put('/api/v1/foodcalorie/profile', { diet_preferences: selected });
@@ -49,16 +49,16 @@ export default function FoodCalorieDietPref() {
   }
 
   return (
-    <div data-name="FoodCalorie-DietPref" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <PageContainer data-name="FoodCalorie-DietPref">
       <StatusBar />
       <NavBar title="饮食偏好" />
       {loading ? (
-        <div style={{ padding: 60, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>加载中…</div>
+        <div style={{ padding: 60, textAlign: 'center', color: colors.textTertiary, fontSize: fontSize.lg }}>加载中…</div>
       ) : (
         <>
           {GROUPS.map((g) => (
             <Card key={g.key} style={{ margin: '6px 20px 12px' }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A', marginBottom: 12 }}>{g.title}</div>
+              <div style={{ fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.textPrimary, marginBottom: 12 }}>{g.title}</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
                 {g.options.map((opt) => {
                   const on = selected.includes(opt);
@@ -67,13 +67,8 @@ export default function FoodCalorieDietPref() {
                       key={opt}
                       onClick={() => toggle(opt)}
                       style={{
-                        padding: '8px 16px',
-                        borderRadius: 20,
-                        fontSize: 13,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        background: on ? '#34C759' : '#F3F4F6',
-                        color: on ? '#FFFFFF' : '#6B7280'
+                        padding: '8px 16px', borderRadius: 20, fontSize: fontSize.md, fontWeight: fontWeight.semibold, cursor: 'pointer',
+                        background: on ? colors.primary : colors.borderLight, color: on ? colors.textInverse : colors.textSecondary
                       }}>
                       {opt}
                     </div>
@@ -83,10 +78,10 @@ export default function FoodCalorieDietPref() {
             </Card>
           ))}
           <div style={{ padding: '10px 20px' }}>
-            <button onClick={save} disabled={saving} style={{ width: '100%', height: 48, borderRadius: 16, border: 'none', background: '#34C759', color: '#fff', fontSize: 15, fontWeight: 700, cursor: saving ? 'wait' : 'pointer' }}>{saving ? '保存中…' : '保存偏好'}</button>
+            <button onClick={save} disabled={saving} style={{ width: '100%', height: 48, borderRadius: radius.xl, border: 'none', background: colors.primary, color: colors.textInverse, fontSize: fontSize.xl, fontWeight: fontWeight.bold, cursor: saving ? 'wait' : 'pointer' }}>{saving ? '保存中…' : '保存偏好'}</button>
           </div>
         </>
       )}
-    </div>
+    </PageContainer>
   );
 }

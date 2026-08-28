@@ -6,8 +6,9 @@ import { StatusBar, NavBar, Card } from './src/ui/common';
 import { useBusy } from './src/ui/useBusy';
 import { useUnits } from './src/ui/units';
 import { Loading, EmptyState } from './src/ui/PageState';
+import { PageContainer } from './src/ui/components';
+import { colors, fontSize, fontWeight } from './src/ui/theme';
 
-// 我的收藏页：真实数据（GET favorites 联查内容标题 + 取消收藏）
 export default function FoodCalorieFavorites() {
   const navigate = useNavigate();
   const { unitCalorie, kcal } = useUnits();
@@ -30,7 +31,6 @@ export default function FoodCalorieFavorites() {
   useEffect(() => { load(); }, [load]);
 
   async function uncollect(fav) {
-    // runUncollect：同步闩锁防双击连点重复取消收藏
     await runUncollect(async () => {
       try {
         await http.del('/api/v1/foodcalorie/favorites?type=' + fav.type + '&ref_id=' + fav.ref_id);
@@ -43,7 +43,7 @@ export default function FoodCalorieFavorites() {
   }
 
   return (
-    <div data-name="FoodCalorie-Favorites" style={{ width: '100%', minHeight: '100dvh', background: '#F7F8FA', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}>
+    <PageContainer data-name="FoodCalorie-Favorites">
       <StatusBar />
       <NavBar title="我的收藏" />
 
@@ -59,24 +59,24 @@ export default function FoodCalorieFavorites() {
               data-name={'fav-card-' + f.id}
               style={{ display: 'flex', gap: 12, padding: 12, cursor: 'pointer' }}
               onClick={() => navigate(`${f.type === 'recipe' ? '/recipe' : '/article'}?id=${encodeURIComponent(f.ref_id)}`)}>
-              <div style={{ width: 56, height: 56, borderRadius: 14, background: '#E8F5EC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 26 }}>{f.cover_icon || (f.type === 'recipe' ? '🍽️' : '📄')}</div>
+              <div style={{ width: 56, height: 56, borderRadius: 14, background: colors.primaryBg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 26 }}>{f.cover_icon || (f.type === 'recipe' ? '🍽️' : '📄')}</div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#1A1A1A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.textPrimary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {f.title || ('内容 #' + f.ref_id)}
                 </div>
-                <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                <div style={{ fontSize: fontSize.xs, color: colors.textTertiary, marginTop: 3, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                   {f.summary || '—'}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                  <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: f.type === 'recipe' ? '#E8F5EC' : '#EFF6FF', color: f.type === 'recipe' ? '#22A85A' : '#3B82F6', fontWeight: 600 }}>{f.type === 'recipe' ? '食谱' : '文章'}</span>
-                  {f.calories > 0 && <span style={{ fontSize: 11, color: '#E8590C', fontWeight: 600 }}>{kcal(f.calories)} {unitCalorie}</span>}
+                  <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 8, background: f.type === 'recipe' ? colors.primaryBg : '#EFF6FF', color: f.type === 'recipe' ? colors.primaryDark : '#3B82F6', fontWeight: fontWeight.semibold }}>{f.type === 'recipe' ? '食谱' : '文章'}</span>
+                  {f.calories > 0 && <span style={{ fontSize: fontSize.xs, color: '#E8590C', fontWeight: fontWeight.semibold }}>{kcal(f.calories)} {unitCalorie}</span>}
                 </div>
               </div>
-              <i className="fas fa-bookmark" style={{ fontSize: 15, color: '#34C759', cursor: 'pointer', alignSelf: 'center' }} onClick={(e) => { e.stopPropagation(); uncollect(f); }} />
+              <i className="fas fa-bookmark" role="button" tabIndex={0} aria-label="取消收藏" style={{ fontSize: 15, color: colors.primary, cursor: 'pointer', alignSelf: 'center' }} onClick={(e) => { e.stopPropagation(); uncollect(f); }} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); uncollect(f); } }} />
             </Card>
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }
