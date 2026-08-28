@@ -144,6 +144,9 @@ jobs:
         working-directory: frontend/android
       - name: Upload signed APK to GitHub Release
         if: env.HAS_RELEASE_SECRETS == 'true'
+        # 覆盖 job 级 defaults（frontend/）：APK 路径以仓库根为基准，
+        # 否则解析成 frontend/frontend/... 导致 glob 无匹配（v1.0.6 首发实测踩中）
+        working-directory: .
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
