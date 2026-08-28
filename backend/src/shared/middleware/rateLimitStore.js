@@ -1,6 +1,8 @@
 'use strict'
 // 可插拔限流存储：配置 REDIS_URL 时使用 Redis 滑动窗口（多实例共享计数），
 // 未配置或 Redis 故障时由调用方回退内存实现（单实例行为不变，fail-open 到内存保护）。
+const { logger } = require('./../utils/logger')
+
 const REDIS_URL = process.env.REDIS_URL || ''
 
 let client = null
@@ -28,7 +30,7 @@ async function connect() {
     // 连接期错误标记 failed：让调用方立即回退内存，避免请求阻塞在长连接超时上
     c.on('error', (err) => {
       failed = true
-      console.warn('[rateLimit] redis 连接异常，降级为内存限流:', err.message)
+      logger.warn({ err: err.message }, '[rateLimit] redis 连接异常，降级为内存限流')
     })
     try {
       await c.connect()
@@ -66,12 +68,14 @@ async function closeRateLimit() {
 }
 
 // Redis 滑动窗口（原子 Lua）：清理窗口外时间戳 → 计数 → 放行则写入并续期
+// EXPIRE 按 windowMs 参数化（ARGV[4] = 窗口秒数 + 1s 余量）：
+// 原写死 600s，windowMs > 10min 时窗口数据会在统计中途被整体逐出（潜伏缺陷）
 const SLIDING_WINDOW_LUA = `
 redis.call('ZREMRANGEBYSCORE', KEYS[1], 0, ARGV[1])
 local count = redis.call('ZCARD', KEYS[1])
 if count >= tonumber(ARGV[3]) then return 0 end
 redis.call('ZADD', KEYS[1], ARGV[2], ARGV[2] .. ':' .. tostring(math.random(1e9)))
-redis.call('EXPIRE', KEYS[1], 600)
+redis.call('EXPIRE', KEYS[1], tonumber(ARGV[4]))
 return 1`
 
 /**
@@ -83,7 +87,7 @@ async function checkRedis(key, limit, windowMs) {
   const now = Date.now()
   const res = await c.eval(SLIDING_WINDOW_LUA, {
     keys: [key],
-    arguments: [String(now - windowMs), String(now), String(limit)]
+    arguments: [String(now - windowMs), String(now), String(limit), String(Math.ceil(windowMs / 1000) + 1)]
   })
   return res === 1
 }
