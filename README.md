@@ -230,14 +230,14 @@ export GRADLE_USER_HOME="<项目根>/.gradle-home"
 
 **下载指引：**
 
-1. 打开 [Releases 页面](https://github.com/Gakiwoo/foodcalorie/releases)，选择最新版本（当前 `v1.0.4`）
-2. 在「Assets」区域下载 APK 文件（命名规范：`foodcalorie-v1.0.4-debug.apk`）
+1. 打开 [Releases 页面](https://github.com/Gakiwoo/foodcalorie/releases)，选择最新版本（当前 `v1.0.6`）
+2. 在「Assets」区域下载 APK 文件（命名规范：`app-release.apk`，正式签名版；历史 debug 版为 `foodcalorie-v1.0.4-debug.apk`）
 3. 将 APK 传到 Android 手机（微信/网盘/数据线均可），点击安装
 4. 系统提示「未知来源」时，允许安装来自该来源的应用（设置 → 安全 → 安装未知应用）
 
 > **注意事项**
 >
-> - 当前发布为 **debug 签名** 构建（CI 自动产出），适合功能体验与真机联调
+> - 自 v1.0.6 起发布 **release 正式签名** 构建（CI 自动签名上传）；历史版本为 debug 签名，升级需先卸载旧版
 > - APK 内置生产 API 地址（`https://foodcalorie.gakiwoo.com`），安装即可使用，登录与 Web 端账号互通
 > - 最小支持 Android 5.1+（minSdk 22）
 
