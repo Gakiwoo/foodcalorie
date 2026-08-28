@@ -107,6 +107,9 @@ jobs:
     steps:
       - name: Skip when release secrets missing
         if: env.HAS_RELEASE_SECRETS == 'false'
+        # 覆盖 job 级 defaults（frontend/）：此分支下 checkout 被门控未执行，
+        # frontend/ 目录不存在，bash 会因 cwd 不存在启动失败（v1.0.5 实测踩中）
+        working-directory: .
         run: echo "FC_RELEASE_* Secrets 未配置，跳过签名发布"; exit 0
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         if: env.HAS_RELEASE_SECRETS == 'true'
