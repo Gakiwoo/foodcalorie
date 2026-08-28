@@ -31,6 +31,11 @@ export default defineConfig({
     target: 'es2015'
   },
   plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+    globals: true
+  },
   server: {
     host: '0.0.0.0', // 绑定所有接口（E2E 脚本用 127.0.0.1 访问；默认 localhost 在 Windows 仅绑 ::1）
     port: 5173,
