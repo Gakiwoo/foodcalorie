@@ -1,12 +1,14 @@
 # 食刻 FoodCalorie
 
-**拍照识别食物卡路里的健康饮食记录 App** —— 全栈自研，覆盖 Android APK 与 Web 双端。拍一张餐食照片，AI（Kimi 视觉模型）自动识别食物与热量；结合每日目标、周月趋势与打卡挑战，帮你轻松掌握每一餐的营养比例。后端与 [gakiwoo.com](https://gakiwoo.com) 共用账号体系，一处注册、多端通用。
+**拍照识别食物卡路里的健康饮食记录 App** —— 全栈自研，覆盖 Android APK 与 Web 双端。拍一张餐食照片，AI（Kimi 视觉模型）自动识别食物与热量；结合每日目标、周月趋势与打卡挑战，帮你轻松掌握每一餐的营养比例。账号与 [gakiwoo.com](https://gakiwoo.com) 主站互通，一处注册、多端登录。
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
+[![CI](https://github.com/Gakiwoo/foodcalorie/actions/workflows/ci.yml/badge.svg)](https://github.com/Gakiwoo/foodcalorie/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/Gakiwoo/foodcalorie)](https://github.com/Gakiwoo/foodcalorie/releases)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 ## 预览
 
-> 截图取自生产环境（2026-08-18，v1.0.4 代码，含 MasterGo 设计稿还原）。
+> 截图取自生产环境。
 
 |             首页（今日记录）             |            我的页（数据/设置）            |
 | :--------------------------------------: | :----------------------------------------: |
@@ -14,45 +16,27 @@
 |             **记录页**             |              **发现页**              |
 | ![Records](./docs/images/records-v2.png) | ![Discover](./docs/images/discover-v2.png) |
 
-## Table of Contents
-
-- [预览](#预览)
-- [功能特性](#功能特性)
-- [技术栈](#技术栈)
-- [架构](#架构)
-- [目录结构](#目录结构)
-- [前置条件](#前置条件)
-- [本地开发](#本地开发)
-- [环境变量](#环境变量)
-- [API 概览](#api-概览)
-- [测试](#测试)
-- [构建](#构建)
-- [部署](#部署)
-- [下载与安装（Android APK）](#下载与安装android-apk)
-- [文档索引](#文档索引)
-- [License](#license)
-
 ## 功能特性
 
-- **AI 拍照识别**：Kimi 视觉模型（`moonshot-v1-8k-vision-preview`）识别餐食，输出热量/蛋白质/脂肪/碳水；未配置 Key 时自动降级为食物库候选推荐
-- **记录与统计**：今日摄入进度环、周/月报表、目标达标天数；按日期/餐次管理记录，支持编辑删除
-- **食物库**：精选常见食物营养数据（支持搜索与分类）；AI 识别结果可审核后回灌（`AI_BACKFILL_ENABLED` 显式开启）
-- **收藏与内容**：食物/文章/食谱收藏；发现页内容流
-- **挑战打卡**：连续打卡激励
-- **数据导出**：JSON / CSV 一键导出个人记录
-- **双端交付**：Web SPA（React）+ Android APK（Capacitor，包名 `com.shike.app`；当前提供 debug 签名构建）
-- **生产安全**：限流（写 30/min · 读 120/min · AI 5/min，Redis 多实例共享，故障回退内存）、上传魔数校验、密钥守卫、时区统一（北京时间）、`trust proxy`、CORS 白名单
+- **AI 拍照识别**：Kimi 视觉模型识别餐食，输出热量/蛋白质/碳水/脂肪；未配置 Key 或识别失败时自动降级为食物库候选推荐，可用性不受影响
+- **记录与统计**：今日摄入进度环、日/周/月报表、月历热力、目标达标天数；按日期/餐次管理记录，支持编辑删除
+- **食物库**：内置常见中餐食物营养数据，支持关键字/分类搜索分页
+- **收藏与内容**：食物/文章/食谱收藏；发现页内容流与详情
+- **挑战打卡**：参与挑战、每日打卡、连续天数（streak）与积分激励
+- **数据导出**：个人记录一键导出 CSV（含 Excel 公式注入防护）/ JSON
+- **设置中心**：目标热量、饮食偏好、热量/重量单位（kcal↔kJ、g↔oz 实时换算）、识别精度、通知偏好
+- **双端交付**：Web SPA + Android APK，同一份代码；APK 由 CI 构建并正式签名发布到 GitHub Releases
 
 ## 技术栈
 
-| 层     | 技术                                                                                           |
-| ------ | ---------------------------------------------------------------------------------------------- |
-| 前端   | Vite 8 · React 18 · react-router-dom 7 · font-awesome 本地打包（零 CDN）                    |
-| 移动端 | Capacitor 7 Android（`com.shike.app`；APK 由 GitHub Actions CI 构建并发布到 Releases）       |
-| 后端   | Node 24 · Express 4 · better-sqlite3 · zod 校验 · pino 日志 · multer 2（上传）            |
-| 认证   | 复用 gakiwoo 账号体系（`/api/auth/*`，token 互通）                                           |
-| AI     | Moonshot Kimi 视觉模型（可降级）                                                               |
-| 部署   | 阿里云 ECS · PM2 · nginx 独立子域（`https://foodcalorie.gakiwoo.com`）· GitHub Actions CI |
+| 层     | 技术 |
+| ------ | ---- |
+| 前端   | Vite 8 · React 18 · react-router-dom 7 · 设计令牌 + 组件库（`src/ui`）· vitest + Testing Library |
+| 移动端 | Capacitor 7 Android（`com.shike.app`，minSdk 23 / Android 6.0+） |
+| 后端   | Node 24 · Express 4 · better-sqlite3 · zod 校验 · pino 日志 · multer 2（上传） |
+| 认证   | 复用 gakiwoo 主站账号体系（`/api/auth/*`），httpOnly Cookie + Bearer 双通道 |
+| AI     | Moonshot Kimi 视觉模型（可降级） |
+| 工程   | GitHub Actions（CI / 签名发布 / 自动部署）· PM2 · nginx · ESLint · node:test |
 
 ## 架构
 
@@ -62,200 +46,177 @@ flowchart LR
     Web["Web SPA<br/>Vite + React 18"]
     APK["Android APK<br/>Capacitor 7"]
   end
-  subgraph Frontend["前端（同一份代码）"]
-    Vite["dist/<br/>base './'<br/>es2015"]
+  subgraph Backend["后端 Express 4 · 模块化单体"]
+    App["app.js<br/>helmet · 限流 · 统一错误码"]
+    Mods["9 业务模块<br/>ai · challenges · contents<br/>export · favorites · foods<br/>health · profiles · records"]
+    DB[("SQLite<br/>better-sqlite3 · WAL")]
   end
-  subgraph Backend["后端 Express 4 · 127.0.0.1:3001"]
-    App["app.js<br/>限流·魔数·trust proxy·6 段错误码"]
-    Mods["9 模块<br/>ai · challenges · contents<br/>export · favorites · foods<br/>health · profiles · records"]
-    DB[("SQLite<br/>better-sqlite3")]
-  end
-  subgraph Auth["gakiwoo-api :3000"]
-    Users[("users / JWT")]
-    AuthAPI["/api/auth/*"]
+  subgraph Auth["gakiwoo-api"]
+    AuthAPI["/api/auth/*<br/>注册登录（token 互通）"]
   end
   subgraph AI["Moonshot Kimi"]
-    Kimi["视觉模型<br/>moonshot-v1-8k-vision-preview"]
+    Kimi["视觉模型"]
   end
-  subgraph Deploy["生产（阿里云 ECS）"]
-    Nginx["nginx<br/>foodcalorie.gakiwoo.com"]
-    PM2["PM2<br/>foodcalorie-api"]
-  end
-  subgraph CI["GitHub Actions"]
-    Tests["lint + 单测 + 依赖审计 + APK 构建"]
+  subgraph CICD["GitHub Actions"]
+    CI["CI：lint + 单测 + 密钥扫描 + APK"]
+    Rel["tag → 签名 APK → Releases"]
+    Dep["Deploy：备份 → 部署 → 冒烟"]
   end
 
-  Web --> Vite --> Nginx --> PM2 --> App
-  APK --> Vite
+  Web --> App
+  APK --> App
   App --> Mods --> DB
   Mods <-->|鉴权| AuthAPI
-  Mods <-->|共用账号| Users
   Mods -->|拍照识别| Kimi
-  CI -->|测试 APK 构建| Web
-  CI -->|单测 lint| Mods
+  CI --> App
+  Rel --> APK
+  Dep --> Backend
 ```
 
-> **已知架构约束**：食刻后端与 gakiwoo-api 共享同一 SQLite 文件与 `JWT_SECRET`（业务库直接读其 `users` 表，无外键），账号体系零成本复用的代价是两服务 schema/部署互相耦合，且 SQLite 多进程写并发有上限——这是有意为之的务实取舍，不支持水平扩展；若未来需要独立扩容，应把用户/认证域显式服务化。
+- **后端**：模块化单体，9 个模块均为 Controller / Service / DAO 三层；横切关注点（鉴权、限流、校验、错误序列化、时区、私有图片存储）收口在 `src/shared/`
+- **前端**：32 个页面组件，设计令牌（`src/ui/theme.js`）+ 页面原语组件统一视觉；API 层统一封装（401 单飞刷新、GET 智能重试、错误码映射）
+- **账号体系**：与主站共用注册登录，业务库仅以 `user_id` 关联用户，不存储密码
 
 ## 目录结构
 
 ```
 foodcalorie/
-├── frontend/                 # Vite + React 18（31 个页面组件）
-│   ├── App.jsx               # 路由表（全站导航已收敛为组件内 onClick）
-│   ├── FoodCalorie-*.jsx     # 页面组件（真实数据 / 数据驱动渲染）
-│   ├── src/api/              # client.js（统一 baseURL/鉴权/401 自愈）+ auth.js
-│   ├── src/ui/               # common（状态栏/环图）+ toast
+├── frontend/                 # Vite + React 18（32 个页面组件）
+│   ├── App.jsx               # 路由表（懒加载 + 页面标题 + 导航栈）
+│   ├── FoodCalorie-*.jsx     # 页面组件（真实数据驱动）
+│   ├── src/api/              # client.js（统一请求/401 自愈/重试）+ auth.js
+│   ├── src/ui/               # theme.js 设计令牌 + components/ 原语 + hooks + 三态组件
+│   ├── src/test/             # vitest 页面冒烟套件（34 文件 / 376 用例）
 │   ├── android/              # Capacitor 原生工程（com.shike.app）
-│   ├── scripts/              # 构建与 E2E（build-apk.sh / verify_*.cjs）
-│   └── vite.config.js        # base './'（Web/APK 双兼容）+ dev proxy → 服务器
+│   └── scripts/              # APK 构建与 E2E 验证脚本
 ├── backend/                  # Express 分层（Controller/Service/DAO）
-│   ├── src/modules/          # 9 模块：ai/challenges/contents/export/favorites/foods/health/profiles/records
-│   ├── src/shared/           # 限流/错误码/中间件
-│   ├── test/                 # node:test 单测（58 用例，覆盖安全/并发/跨用户隔离）
-│   ├── .env.example          # 环境变量模板
-│   ├── SPEC.md               # 需求规格
-│   └── ASSESSMENT.md         # 完成度评估与遗留项
-├── docs/                     # PROJECT_STRUCTURE.md / pages-inventory.md / README.md
-├── ops/                      # nginx / sshd 运维配置
-├── archive/                  # 归档区（原型/脚本，只读参考）
-└── scripts/                  # 仓库级脚本（check-secrets.mjs 等）
+│   ├── src/modules/          # 9 业务模块
+│   ├── src/shared/           # 中间件（鉴权/限流/校验/错误）+ 工具 + 私有图片存储
+│   ├── test/                 # node:test 单测（11 文件 / 58 用例）
+│   └── SPEC.md               # 需求规格
+├── docs/                     # 结构索引 / 发布手册 / Release notes
+├── ops/                      # nginx / sshd / 备份 运维配置模板
+└── scripts/                  # 仓库级脚本（密钥扫描 / 版本号同步）
 ```
 
-## 前置条件
+## 快速开始
 
-- **Node.js ≥ 24**（建议 `.nvmrc` = `24.14.0`；`better-sqlite3` 为原生模块，运行时版本必须一致）
-- npm ≥ 10
-- （仅本机 APK 构建）JDK 21 + Android SDK（`build-tools` 34+/`platforms;android-34`）；**推荐直接使用 GitHub Actions 构建**（见 [构建](#构建)）
-
-## 本地开发
+前置条件：**Node.js ≥ 24**（见 `.nvmrc`；better-sqlite3 为原生模块，运行时版本需与安装时一致）、npm ≥ 10。
 
 ```bash
 # 后端（默认 http://127.0.0.1:3001）
 cd backend
-cp .env.example .env        # 按需填写（JWT_SECRET 需与 gakiwoo-api 一致才可登录）
+cp .env.example .env        # 按注释填写
 npm install
 npm run dev                 # nodemon 热重载
 
-# 前端（默认 http://localhost:5173）
+# 前端（默认 http://localhost:5173，/api/* 自动代理）
 cd frontend
 npm install
-npm run dev                 # vite dev，/api/* 自动代理到服务器
+npm run dev
 ```
 
-浏览器访问 `http://localhost:5173` 即可。注册登录走 gakiwoo 账号体系。
+浏览器访问 `http://localhost:5173`，注册登录后即可使用全部功能。
 
 ## 环境变量
 
-后端完整变量见 [`backend/.env.example`](./backend/.env.example)，核心项：
+后端完整模板见 [`backend/.env.example`](./backend/.env.example)：
 
-| 变量                    | 说明                                                                            |
-| ----------------------- | ------------------------------------------------------------------------------- |
-| `PORT` / `HOST`     | 服务监听（生产收敛为`127.0.0.1:3001`）                                        |
-| `NODE_ENV`            | `production` 时触发密钥守卫与全局限流                                         |
-| `JWT_SECRET`          | **必须与 gakiwoo-api 完全一致**（token 互通）                             |
-| `DB_PATH`             | SQLite 路径（生产与 gakiwoo-api 指向同一库，共享 users 表）                     |
-| `CORS_ORIGINS`        | 逗号分隔白名单（Web/`https://localhost`/`capacitor://localhost`）           |
-| `REDIS_URL`           | 可选。配置后限流改用 Redis 滑动窗口（多实例共享计数），未配置或故障自动回退内存 |
-| `MOONSHOT_API_KEY`    | Kimi 视觉模型 Key（缺失则 AI 降级为候选推荐）                                   |
-| `UPLOAD_DIR`          | 私有上传目录（图片仅鉴权 API 可读）                                             |
-| `SWAGGER_ENABLED`     | 生产 Swagger 文档开关                                                           |
-| `AI_BACKFILL_ENABLED` | 模型结果回灌公共食物库开关（默认关）                                            |
+| 变量 | 说明 |
+| ---- | ---- |
+| `PORT` / `HOST` | 监听地址（生产默认仅本机监听，由 nginx 反代对外） |
+| `NODE_ENV` | `production` 触发密钥守卫、CORS 强校验等 fail-closed 检查 |
+| `JWT_SECRET` | 登录态签名密钥（生产必配，长度 ≥ 16，占位值拒绝启动） |
+| `DB_PATH` | SQLite 文件路径（默认 `./data/foodcalorie.db`） |
+| `CORS_ORIGINS` | 逗号分隔白名单；生产未配置时拒绝启动 |
+| `REDIS_URL` | 可选。配置后限流改用 Redis 滑动窗口（多实例共享），故障自动回退内存 |
+| `MOONSHOT_API_KEY` | Kimi 视觉模型 Key（缺省时 AI 降级为候选推荐） |
+| `UPLOAD_DIR` | 私有上传目录（图片仅能通过鉴权 API 读取，nginx 层同步禁暴露） |
+| `SWAGGER_ENABLED` | 生产 Swagger 开关（`/api/docs`，默认关） |
+| `AI_BACKFILL_ENABLED` | 模型识别结果回灌公共食物库开关（默认关） |
 
 ## API 概览
 
-- 统一前缀：业务 `/api/v1/foodcalorie/*`，认证 `/api/auth/*`（复用 gakiwoo-api）
-- 统一响应：`{ code, message, data }`；6 段错误码（1xxxx 参数 / 2xxxx 鉴权 / 3xxxx 业务 / 4xxxx 权限 / 5xxxx 系统 / 9xxxx 内部）
-- 9 个业务模块：`health`（探活）· `records`（记录 CRUD + 统计）· `foods`（食物库/搜索）· `ai`（拍照识别）· `favorites`（收藏）· `contents`（文章/食谱）· `challenges`（挑战打卡）· `profiles`（个人目标）· `export`（数据导出）
+- 业务前缀：`/api/v1/foodcalorie/*`；认证：`/api/auth/*`（复用主站）
+- 统一响应：`{ code, message, data }`；错误码分段（1xxxx 参数 / 2xxxx 鉴权 / 3xxxx 记录 / 4xxxx 内容收藏 / 5xxxx 统计导出）
+- 模块：`health`（探活）· `records`（记录 CRUD + 统计 + 月历）· `foods`（食物库搜索）· `ai`（拍照识别 + 私有图片）· `favorites` · `contents` · `challenges` · `profiles` · `export`
 - 生产 Swagger：`SWAGGER_ENABLED=true` 时 `/api/docs` 可用
 
-## 测试
+## 测试与质量
 
 ```bash
-# 后端单测（58 用例，需 Node 24）
-cd backend && npm test
+# 后端（node:test，58 用例：CRUD / 统计口径 / 并发防重 / 跨用户隔离 / 上传与限流安全）
+cd backend && npm run lint && npm test
 
-# 前端单元（vitest，34 文件 / 376 用例）
-cd frontend && npm test
+# 前端（vitest，34 文件 / 376 用例：31 页面冒烟 + 单元）
+cd frontend && npm run lint && npm test
 
-# 前端 E2E（连 dev server，16 个脚本：verify_m7/m8/.../m14 + 3b/3c 冒烟 + prod）
-cd frontend/scripts && node verify_m14.cjs    # 例：AI 识别闭环
-
-# 生产 E2E（连 https://foodcalorie.gakiwoo.com，8 项断言）
-node verify_prod.cjs
+# 端到端（连 dev server 的功能回归脚本 + 生产冒烟）
+cd frontend/scripts && node verify_m14.cjs
 ```
 
-CI（GitHub Actions `.github/workflows/ci.yml`）覆盖：密钥扫描（`check-secrets.mjs`）、后端 lint + 单测 + 依赖审计、前端 lint + 构建 + 单元测试。
+CI（`.github/workflows/ci.yml`）在每次 push/PR 运行 4 个 job：**security**（密钥扫描）、**backend**（lint + 单测 + 依赖审计）、**frontend**（lint + 单测 + 构建 + 审计）、**android-debug**（构建 APK artifact）。
 
-## 构建
+## 构建与发布
 
-### Web 产物
+### Web
 
 ```bash
-# base './'（Web 与 APK 双兼容；dist/ 不入库）
-cd frontend && npm run build
+cd frontend && npm run build   # base './'，产物 dist/
 ```
 
-### Android APK（推荐：GitHub Actions）
+### Android APK
 
-每次推送到 `main`，CI（`.github/workflows/ci.yml` 的 `android-debug` job）自动：
-`npm run build:apk` → `cap sync android` → `gradlew assembleDebug`，并将 APK 上传为 **CI artifact**；发布到 Releases 见下方 [下载与安装](#下载与安装)。
+推荐由 CI 构建：推送 `v*` tag 自动触发 `android-release` job——从 Secrets 还原 keystore → `gradlew assembleRelease` 正式签名 → 上传到 GitHub Releases；同时 `android-debug` 产出 debug APK artifact。
 
-### Android APK（本机可选）
+本机构建（可选）：需 JDK 21 + Android SDK，`npm run build:apk` → `npx cap sync android` → `./gradlew assembleDebug`。签名凭据经 `FC_RELEASE_*` 环境变量注入（见 `apk.env.example`），不落任何 tracked 文件。
 
-```bash
-cd frontend/android
-# 需 JDK 21（Capacitor 7 必须）与 Android SDK；gradle 缓存用项目内 GRADLE_USER_HOME=.gradle-home
-export JAVA_HOME="<JDK 21 安装路径>"
-export GRADLE_USER_HOME="<项目根>/.gradle-home"
-./gradlew assembleDebug --no-daemon   # → android/app/build/outputs/apk/debug/app-debug.apk
-```
-
-> 说明：构建脚本 `scripts/build-apk.mjs` 自动注入 `VITE_API_ORIGIN=https://foodcalorie.gakiwoo.com`（纯源站地址，无路径后缀）、相对路径资源与 es2015 目标（兼容 Android 5.1+ WebView）。release 签名通过 `FC_RELEASE_*` 环境变量配置（keystore 密码），未配置时仅产出 debug 签名 APK。
+完整发布门禁与步骤见 [`docs/RELEASE_PLAYBOOK.md`](./docs/RELEASE_PLAYBOOK.md)。
 
 ## 部署
 
-生产拓扑：阿里云 ECS · PM2（`foodcalorie-api`，监听 `127.0.0.1:3001`）· nginx 独立子域 `https://foodcalorie.gakiwoo.com`（前端静态 + `/api/v1/foodcalorie/*` 反代；**`/uploads/` 在 nginx 层硬性 404**，图片仅经鉴权 API `/api/v1/foodcalorie/ai/images/:filename` 读取，见 `ops/nginx/`）。
+生产拓扑：单台云服务器，nginx 对外（Web 静态 + `/api` 反代），后端 PM2 仅监听本机回环；`/uploads/` 在 nginx 层硬性 404，图片一律走鉴权 API。
 
-标准发布流程（详见 [`backend/README.md`](./backend/README.md) 与 [`docs/README.md`](./docs/README.md)）：
+- **自动部署**：`Deploy` workflow（手动触发或推 tag）——构建前后端产物 → 服务器自动备份（保留 5 份）→ 解压安装 → `pm2 restart` → 健康检查冒烟，失败即中止可回滚；部署完成后写 `RELEASE_SHA` 标记线上版本
+- **回滚**：使用服务器备份目录还原后 `pm2 restart`（见 `ops/backup/README.md`）
 
-1. 本地构建（前端 `npm run build` / 后端打包 src+test）
-2. 服务器备份（`cp -r` 至 `*-backup-YYYYMMDD`）
-3. scp 上传 → 解压 → `npm install` → `pm2 restart foodcalorie-api`
-4. 验证：后端单测 + 生产 E2E（`verify_prod.cjs`）+ 关键接口 curl
+运维配置模板（nginx 站点 / sshd 加固 / 备份脚本）见 [`ops/`](./ops/)。
 
-## 下载与安装（Android APK）
+## 下载安装（Android）
 
-最新 APK 发布在 **GitHub Releases**：[Gakiwoo/foodcalorie Releases](https://github.com/Gakiwoo/foodcalorie/releases)
+最新 APK 在 [GitHub Releases](https://github.com/Gakiwoo/foodcalorie/releases) 获取（当前 `v1.0.6`，release 正式签名）：
 
-**下载指引：**
+1. 下载 Release 附件中的 `app-release.apk`
+2. 传到 Android 手机（微信/网盘/数据线均可），点击安装
+3. 系统提示「未知来源」时，允许安装后继续
+4. 打开「食刻」，使用邮箱注册或登录（与 Web 端账号互通）
 
-1. 打开 [Releases 页面](https://github.com/Gakiwoo/foodcalorie/releases)，选择最新版本（当前 `v1.0.6`）
-2. 在「Assets」区域下载 APK 文件（命名规范：`app-release.apk`，正式签名版；历史 debug 版为 `foodcalorie-v1.0.4-debug.apk`）
-3. 将 APK 传到 Android 手机（微信/网盘/数据线均可），点击安装
-4. 系统提示「未知来源」时，允许安装来自该来源的应用（设置 → 安全 → 安装未知应用）
+> - v1.0.6 起为正式签名；此前安装过 debug 签名旧版的用户需先卸载再安装（签名不同无法覆盖升级）
+> - 最低支持 Android 6.0（minSdk 23）
 
-> **注意事项**
->
-> - 自 v1.0.6 起发布 **release 正式签名** 构建（CI 自动签名上传）；历史版本为 debug 签名，升级需先卸载旧版
-> - APK 内置生产 API 地址（`https://foodcalorie.gakiwoo.com`），安装即可使用，登录与 Web 端账号互通
-> - 最小支持 Android 5.1+（minSdk 22）
+## 安全设计
+
+- **访问控制**：所有业务查询强制带 `user_id` 过滤（IDOR 防护）；JWT 显式限定 HS256；登录态走 httpOnly Cookie（前端 token 不落 localStorage）
+- **上传安全**：multipart 大小限制 + 文件魔数校验（拒绝伪装扩展名）+ 私有图片所有权校验，图片仅能由所有者经鉴权 API 读取
+- **注入防护**：全量参数 zod 校验与 SQL 预编译；CSV 导出带公式注入防护
+- **限流与降级**：全局写/读限流 + AI/导出独立限流，内存滑窗，可插拔 Redis 共享存储（故障回退内存）
+- **配置安全**：生产环境密钥缺失/占位、CORS 白名单未配置均拒绝启动；CI 内置密钥扫描；仓库零凭据
+- **传输与响应头**：全站 HTTPS + HSTS，helmet 安全头
 
 ## 文档索引
 
-- [`docs/PROJECT_STRUCTURE.md`](./docs/PROJECT_STRUCTURE.md) — ★ 文件结构索引（维护首选）
-- [`docs/pages-inventory.md`](./docs/pages-inventory.md) — 前端页面清单（路由/组件）
-- [`backend/SPEC.md`](./backend/SPEC.md) — 原始需求规格
-- [`backend/ASSESSMENT.md`](./backend/ASSESSMENT.md) — 完成度评估与遗留项
-- [`ops/`](./ops/) — nginx / sshd 运维配置
+- [`docs/PROJECT_STRUCTURE.md`](./docs/PROJECT_STRUCTURE.md) — 文件结构索引（维护首选）
+- [`backend/SPEC.md`](./backend/SPEC.md) — 需求规格
+- [`docs/RELEASE_PLAYBOOK.md`](./docs/RELEASE_PLAYBOOK.md) — 发布手册（门禁/流程/回滚）
+- [`docs/release-notes-v1.0.6.md`](./docs/release-notes-v1.0.6.md) — 最新 Release notes
+- [`backend/README.md`](./backend/README.md) — 后端开发与运维手册
+- [`ops/README.md`](./ops/README.md) — 运维基线（Node/SSH/签名/私有上传）
 
 ## Contributing
 
-1. Fork 本仓库
-2. 创建特性分支（`git checkout -b feat/amazing-feature`）
-3. 提交变更（`git commit -m 'feat: add amazing feature'`）
-4. 推送分支（`git push origin feat/amazing-feature`）
-5. 发起 Pull Request（CI 全绿后合并）
+1. Fork 本仓库并创建特性分支
+2. 提交变更（提交信息遵循 `feat:` / `fix:` / `docs:` / `chore:` 约定）
+3. 发起 Pull Request，CI 全绿后合并
 
 ## License
 

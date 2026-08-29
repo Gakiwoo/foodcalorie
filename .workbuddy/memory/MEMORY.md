@@ -1,7 +1,7 @@
 # 食刻（FoodCalorie）项目长期记忆
 
 ## 部署与运维（重要）
-- 服务器：root@123.57.102.126（gakiwoo 同服务器），**本机 id_ed25519 已免密授权**（ssh root@123.57.102.126 直接可连，无需密码——用户记忆里只记录了密码 WUjiaqi1006!，实际密钥已可用）
+- 服务器：生产服务器（gakiwoo 同机），**部署密钥已免密授权**（登录凭据细节已脱敏；历史记录中误存的密码已作废）
 - **后端实际运行目录（2026-08-18 确认）：`/var/www/foodcalorie-releases/20260813T091015Z-b9cd7f4d7490/backend`（pm2 foodcalorie-api 的 script path），不是 `/var/www/foodcalorie-api`！部署后端必须 rsync 到 releases 目录并 pm2 restart，仅更新 foodcalorie-api 不会生效**。查证命令：`pm2 describe foodcalorie-api | grep script`
 - 后端 PM2 `foodcalorie-api` 监听 127.0.0.1:3001（已收敛内网）；health `/api/v1/foodcalorie/health`
 - 前端：/var/www/foodcalorie-web（dist 静态，子域 https://foodcalorie.gakiwoo.com，nginx 独立 location，非 gakiwoo 主站路径）

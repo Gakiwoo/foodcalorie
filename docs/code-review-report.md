@@ -89,7 +89,7 @@
 16. **E2E 脚本已漂移且未入 CI**
     - `verify_m12.cjs:58` 断言"选择食物"（现文案"其他候选"）、`verify_m10.cjs:28` 断言不存在文案、`verify_m9.cjs:60` 与 Detail 硬编码矛盾；硬编码本机路径与截图目录。断言改 `data-name`、路径环境变量化、进 package.json。
 17. **服务器 IP 与基础设施信息残留 tracked 文件**
-    - `backend/README.md:136`、`server-audit.md:4`、`docs/PROJECT_STRUCTURE.md:180`、`.workbuddy/memory/*.md` 含公网 IP `123.57.102.126`；`project-assessment-2026-08-18.md:126` 留本机 keystore 路径。
+    - `backend/README.md:136`、`server-audit.md:4`、`docs/PROJECT_STRUCTURE.md:180`、`.workbuddy/memory/*.md` 含服务器公网 IP（已脱敏）；`project-assessment-2026-08-18.md:126` 留本机 keystore 路径。
 18. **PM2 配置健康度欠缺**
     - `ecosystem.config.cjs` 硬编码解释器路径、无 `kill_timeout`（PM2 默认 ~1600ms SIGKILL 会打断应用自身 5s 优雅关闭/WAL checkpoint）、无日志轮转。
 

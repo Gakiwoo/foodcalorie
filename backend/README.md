@@ -133,7 +133,7 @@ backend/
 - 前端 E2E（puppeteer）：真实注册→登录→`/me=200`→记录 API 200→退出→`/me=401` 全部通过
 - 备份：`/var/backups/gakiwoo/gakiwoo-pre-foodcalorie-*.db`、`foodcalorie-api/.env.bak.*`、`gakiwoo.com.bak.*`
 
-**本地开发**：`frontend/vite.config.js` 代理 `/api/auth` → `https://gakiwoo.com`、`/api/v1` → **直连 `http://123.57.102.126:3001`**（不依赖 nginx），含 dev 专用 cookie 重写（剥离 Domain/Secure，localhost 可登录）；`127.0.0.1:5173` 已在 gakiwoo ALLOWED_ORIGINS 白名单，CSRF 不拦截。
+**本地开发**：`frontend/vite.config.js` 将 `/api/auth` 与 `/api/v1` 代理至 `https://gakiwoo.com`，含 dev 专用 cookie 重写（剥离 Domain/Secure，localhost 可登录）；`127.0.0.1:5173` 已在服务端 CORS 白名单。
 
 > ⚠️ **重要运维提醒**：
 > 1. gakiwoo 发布流程可能重写 nginx 配置。发布后必须验证 `/api/v1/foodcalorie/health`，并通过受控配置管理恢复收窄路由。
