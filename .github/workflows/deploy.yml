@@ -58,7 +58,10 @@ jobs:
           cd frontend
           npm ci
           npm run build
-          tar czf ../deploy-frontend.tgz dist
+          # -C dist .：去掉 dist/ 前缀。生产 nginx root 即 /var/www/foodcalorie-web
+          #（index.html 平铺在根，见 sites-enabled/foodcalorie.gakiwoo.com），
+          # 带 dist/ 前缀解压会落到子目录导致新版本不生效
+          tar czf ../deploy-frontend.tgz -C dist .
 
       - name: Upload artifacts
         if: env.HAS_DEPLOY_SECRETS == 'true'
@@ -68,7 +71,8 @@ jobs:
       - name: Backup → install → restart → smoke
         if: env.HAS_DEPLOY_SECRETS == 'true'
         run: |
-          ssh "${{ secrets.DEPLOY_HOST }}" 'bash -s' <<'REMOTE'
+          # 把短 SHA 透传到远端：解压后写入 RELEASE_SHA（沿用既有手工部署约定，供线上核对版本）
+          ssh "${{ secrets.DEPLOY_HOST }}" "SHORT_SHA=${GITHUB_SHA:0:7} bash -s" <<'REMOTE'
           set -euo pipefail
           TS=$(date +%Y%m%d-%H%M%S)
 
@@ -85,9 +89,10 @@ jobs:
           tar xzf /tmp/deploy-backend.tgz
           /opt/node-v24/bin/npm ci --omit=dev
 
-          # 3) 解压前端
+          # 3) 解压前端 + 记录部署版本
           mkdir -p /var/www/foodcalorie-web
           tar xzf /tmp/deploy-frontend.tgz -C /var/www/foodcalorie-web
+          echo "$SHORT_SHA" > /var/www/foodcalorie-web/RELEASE_SHA
 
           # 4) 重启 + 冒烟（失败即退出，可由人工回滚备份目录）
           pm2 restart foodcalorie-api
