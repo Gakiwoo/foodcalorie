@@ -13,16 +13,14 @@ function readFrontendSourceFiles() {
 }
 
 describe('native chrome and packaged icons', () => {
-  it('renders web status bar from the shared StatusBar component only', () => {
+  it('delegates the status bar to the operating system', () => {
     const source = readFrontendSourceFiles()
 
-    // 设计稿要求 Web 端在 StatusBar 组件内渲染伪状态栏（9:41 + signal/wifi/battery），
-    // 页面组件本身不应硬编码这些原型元素。
     expect(source).toContain('<StatusBar')
-    expect(source).toContain('9:41')
-    expect(source).toContain('fa-signal')
-    expect(source).toContain('fa-wifi')
-    expect(source).toContain('fa-battery')
+    expect(source).not.toContain('data-name="status-time"')
+    expect(source).not.toContain('fa-signal')
+    expect(source).not.toContain('fa-wifi')
+    expect(source).not.toContain('fa-battery')
   })
 
   it('does not reference unbundled design-export assets', () => {

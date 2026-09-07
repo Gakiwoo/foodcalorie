@@ -88,6 +88,8 @@ jobs:
           cd /var/www/foodcalorie-api
           tar xzf /tmp/deploy-backend.tgz
           /opt/node-v24/bin/npm ci --omit=dev
+          echo "$SHORT_SHA" > /var/www/foodcalorie-api/RELEASE_SHA
+          echo "$SHORT_SHA" > /var/www/foodcalorie-api/.release
 
           # 3) 解压前端 + 记录部署版本
           mkdir -p /var/www/foodcalorie-web
@@ -98,6 +100,8 @@ jobs:
           pm2 restart foodcalorie-api
           sleep 3
           curl -sf http://127.0.0.1:3001/api/v1/foodcalorie/health >/dev/null || { echo "SMOKE FAILED"; exit 1; }
+          test "$(cat /var/www/foodcalorie-api/RELEASE_SHA)" = "$SHORT_SHA"
+          test "$(cat /var/www/foodcalorie-web/RELEASE_SHA)" = "$SHORT_SHA"
           echo "DEPLOY OK: ${TS}"
           REMOTE
 

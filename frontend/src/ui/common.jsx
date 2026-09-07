@@ -26,8 +26,7 @@ export function normalizeDailyStats(value) {
   };
 }
 
-// Web 端状态栏：按设计稿渲染 9:41 + signal/wifi/battery 图标，
-// 确保 H5/浏览器预览与设计稿一致；原生平台仍只配置系统栏。
+// 系统状态栏属于操作系统界面，不在 Web 内容中伪造；原生平台仅配置真实系统栏。
 export function StatusBar({ appearance = 'light' }) {
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
@@ -41,32 +40,7 @@ export function StatusBar({ appearance = 'light' }) {
     ]);
   }, [appearance]);
 
-  if (Capacitor.isNativePlatform()) return null;
-
-  const isDark = appearance === 'dark';
-  const color = isDark ? colors.textInverse : colors.textPrimary;
-  const bg = isDark ? '#0F0F0F' : colors.bg;
-  return (
-    <div
-      data-name="status-bar"
-      aria-hidden="true"
-      style={{
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        padding: '12px 20px 8px',
-        background: bg,
-        flexShrink: 0
-      }}>
-      <span data-name="status-time" style={{ color, fontSize: fontSize.lg, fontWeight: fontWeight.semibold, lineHeight: '20px' }}>9:41</span>
-      <div data-name="status-icons" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 6 }}>
-        <i data-name="icon-signal" className="fas fa-signal" style={{ fontSize: 14, color }} />
-        <i data-name="icon-wifi" className="fas fa-wifi" style={{ fontSize: 14, color }} />
-        <i data-name="icon-battery" className="fas fa-battery-full" style={{ fontSize: 14, color }} />
-      </div>
-    </div>
-  );
+  return null;
 }
 
 export function NavBar({ title, right, onBack, appearance = 'light', showBack = true }) {

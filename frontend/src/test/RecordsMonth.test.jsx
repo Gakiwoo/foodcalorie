@@ -49,8 +49,8 @@ describe('FoodCalorieRecordsMonth', () => {
 
   it('渲染当前年月标题', async () => {
     const { findByText } = renderPage(<FoodCalorieRecordsMonth />);
-    // 当前是 2026 年 8 月
-    expect(await findByText(/2026年8月/)).toBeInTheDocument();
+    const now = new Date();
+    expect(await findByText(`${now.getFullYear()}年${now.getMonth() + 1}月`)).toBeInTheDocument();
   });
 
   it('渲染"月总摄入"标签', async () => {
@@ -81,11 +81,13 @@ describe('FoodCalorieRecordsMonth', () => {
     expect(await findByText('六')).toBeInTheDocument();
   });
 
-  it('渲染日历日期（1号到31号）', async () => {
+  it('渲染日历日期（1号到当月最后一天）', async () => {
     const { findByText } = renderPage(<FoodCalorieRecordsMonth />);
+    const now = new Date();
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
     expect(await findByText('1')).toBeInTheDocument();
     expect(await findByText('15')).toBeInTheDocument();
-    expect(await findByText('31')).toBeInTheDocument();
+    expect(await findByText(String(lastDay))).toBeInTheDocument();
   });
 
   it('渲染底部提示"点击日期查看当日记录"', async () => {

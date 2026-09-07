@@ -2,6 +2,8 @@ name: CI
 
 on:
   pull_request:
+  schedule:
+    - cron: '17 2 * * 1' # 每周回归，及时发现日期边界与依赖安全漂移
   push:
     branches: [main]
     tags: ['v*'] # tag 触发 android-release（签名 APK → GitHub Releases）
@@ -76,6 +78,7 @@ jobs:
           java-version: 21
           cache: gradle
       - run: npm ci
+      - run: node ../scripts/verify-release-version.mjs
       - run: VITE_API_ORIGIN=https://foodcalorie.gakiwoo.com npm run build:apk
       - run: npx cap sync android
       - run: ./gradlew assembleDebug --no-daemon
@@ -127,6 +130,8 @@ jobs:
           cache: gradle
       - run: npm ci
         if: env.HAS_RELEASE_SECRETS == 'true'
+      - run: node ../scripts/verify-release-version.mjs "${GITHUB_REF_NAME}"
+        if: env.HAS_RELEASE_SECRETS == 'true'
       - name: Write release keystore from secrets
         if: env.HAS_RELEASE_SECRETS == 'true'
         run: |
@@ -142,6 +147,26 @@ jobs:
       - run: ./gradlew assembleRelease --no-daemon
         if: env.HAS_RELEASE_SECRETS == 'true'
         working-directory: frontend/android
+      - name: Verify and name signed APK
+        if: env.HAS_RELEASE_SECRETS == 'true'
+        working-directory: .
+        run: |
+          set -euo pipefail
+          SOURCE_APK=frontend/android/app/build/outputs/apk/release/app-release.apk
+          EXPECTED_VERSION="${GITHUB_REF_NAME#v}"
+          VERSION_CODE=$("$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer" manifest version-code "$SOURCE_APK")
+          test "$VERSION_CODE" -gt 0
+          test "$("$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer" manifest application-id "$SOURCE_APK")" = "com.shike.app"
+          test "$("$ANDROID_HOME/cmdline-tools/latest/bin/apkanalyzer" manifest version-name "$SOURCE_APK")" = "$EXPECTED_VERSION"
+          BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)
+          "$BUILD_TOOLS/aapt" dump badging "$SOURCE_APK" | grep -F "application-label:'食刻'"
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs "$SOURCE_APK"
+          RELEASE_DIR=frontend/android/app/build/outputs/apk/release
+          RELEASE_FILE="FoodCalorie-${GITHUB_REF_NAME}-code${VERSION_CODE}-release.apk"
+          RELEASE_APK="$RELEASE_DIR/$RELEASE_FILE"
+          cp "$SOURCE_APK" "$RELEASE_APK"
+          (cd "$RELEASE_DIR" && sha256sum "$RELEASE_FILE" > "${RELEASE_FILE}.sha256")
+          echo "RELEASE_APK=$RELEASE_APK" >> "$GITHUB_ENV"
       - name: Upload signed APK to GitHub Release
         if: env.HAS_RELEASE_SECRETS == 'true'
         # 覆盖 job 级 defaults（frontend/）：APK 路径以仓库根为基准，
@@ -154,5 +179,5 @@ jobs:
             gh release create "${GITHUB_REF_NAME}" --generate-notes
           fi
           gh release upload "${GITHUB_REF_NAME}" \
-            frontend/android/app/build/outputs/apk/release/app-release.apk \
+            "$RELEASE_APK" "${RELEASE_APK}.sha256" \
             --clobber

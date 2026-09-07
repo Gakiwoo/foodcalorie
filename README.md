@@ -167,11 +167,11 @@ cd frontend && npm run build   # base './'，产物 dist/
 
 ### Android APK
 
-推荐由 CI 构建：推送 `v*` tag 自动触发 `android-release` job——从 Secrets 还原 keystore → `gradlew assembleRelease` 正式签名 → 上传到 GitHub Releases；同时 `android-debug` 产出 debug APK artifact。
+推荐由 CI 构建：推送 `v*` tag 自动触发 `android-release` job——从 Secrets 还原 keystore → 校验应用 ID、版本号和签名 → 以 `FoodCalorie-v<version>-code<versionCode>-release.apk` 命名并附带 SHA-256 → 上传到 [GitHub Releases](https://github.com/Gakiwoo/foodcalorie/releases)。GitHub Release 是面向用户的唯一 APK 来源；本地 `build/outputs` 与 CI debug artifact 仅用于开发测试，不能对外分发或覆盖安装正式版。
 
 本机构建（可选）：需 JDK 21 + Android SDK，`npm run build:apk` → `npx cap sync android` → `./gradlew assembleDebug`。签名凭据经 `FC_RELEASE_*` 环境变量注入（见 `apk.env.example`），不落任何 tracked 文件。
 
-完整发布门禁与步骤见 [`docs/RELEASE_PLAYBOOK.md`](./docs/RELEASE_PLAYBOOK.md)。
+完整发布门禁与步骤见 [`docs/RELEASE_PLAYBOOK.md`](./docs/RELEASE_PLAYBOOK.md)，产物存放规则见 [`docs/ARTIFACT_POLICY.md`](./docs/ARTIFACT_POLICY.md)。
 
 ## 部署
 

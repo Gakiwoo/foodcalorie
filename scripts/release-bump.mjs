@@ -1,5 +1,5 @@
 // 发布版本号同步：一次命令同步 Web 与 Android 两侧版本号，杜绝人工漏改
-// 用法：node scripts/release-bump.mjs 1.0.5
+// 用法：node scripts/release-bump.mjs 1.0.7
 //  - frontend/src/version.js   → APP_VERSION / APP_BUILD（今天日期）
 //  - android/app/build.gradle  → versionName / versionCode（自动 +1）
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -13,23 +13,41 @@ if (!/^\d+\.\d+\.\d+$/.test(version)) {
   process.exit(1)
 }
 
+function compareVersions(left, right) {
+  const a = left.split('.').map(Number)
+  const b = right.split('.').map(Number)
+  for (let index = 0; index < 3; index += 1) {
+    if (a[index] !== b[index]) return a[index] - b[index]
+  }
+  return 0
+}
+
 const buildDate = new Date().toISOString().slice(0, 10).replace(/-/g, '')
 
 // 1) frontend/src/version.js
 const vf = join(root, 'frontend', 'src', 'version.js')
 let v = readFileSync(vf, 'utf8')
+const currentVersion = v.match(/APP_VERSION = '([^']+)'/)?.[1]
+if (!currentVersion || compareVersions(version, currentVersion) <= 0) {
+  console.error(`新版本必须高于当前版本 ${currentVersion || '(无法读取)'}`)
+  process.exit(1)
+}
+
+// 所有校验必须在写文件前完成，避免只更新一半。
+const gf = join(root, 'frontend', 'android', 'app', 'build.gradle')
+let g = readFileSync(gf, 'utf8')
+const prevCode = Number(g.match(/versionCode (\d+)/)?.[1] || 0)
+const currentAndroidVersion = g.match(/versionName "([^"]+)"/)?.[1]
+if (!prevCode || currentAndroidVersion !== currentVersion) {
+  console.error(`版本源不一致：Web=${currentVersion} Android=${currentAndroidVersion} code=${prevCode}`)
+  process.exit(1)
+}
+
 v = v.replace(/APP_VERSION = '[^']+'/, `APP_VERSION = '${version}'`)
 v = v.replace(/APP_BUILD = '[^']+'/, `APP_BUILD = '${buildDate}'`)
 writeFileSync(vf, v)
 
 // 2) android/app/build.gradle
-const gf = join(root, 'frontend', 'android', 'app', 'build.gradle')
-let g = readFileSync(gf, 'utf8')
-const prevCode = Number(g.match(/versionCode (\d+)/)?.[1] || 0)
-if (!prevCode) {
-  console.error('build.gradle 未找到 versionCode，中止')
-  process.exit(1)
-}
 g = g.replace(/versionCode \d+/, `versionCode ${prevCode + 1}`)
 g = g.replace(/versionName "[^"]+"/, `versionName "${version}"`)
 writeFileSync(gf, g)

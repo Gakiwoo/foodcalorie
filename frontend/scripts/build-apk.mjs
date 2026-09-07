@@ -1,4 +1,7 @@
 import { build } from 'vite'
+import { rmSync } from 'node:fs'
+import { dirname, join, relative } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { verifyApkAssets } from './verify-apk-assets.mjs'
 
 const DEFAULT_API_ORIGIN = 'https://foodcalorie.gakiwoo.com'
@@ -10,14 +13,21 @@ if (apiOrigin.protocol !== 'https:' || apiOrigin.pathname !== '/') {
   throw new Error('Android production builds require a path-free HTTPS VITE_API_ORIGIN')
 }
 
-// 说明：输出目录清理由调用方完成（bash: rm -rf dist-apk）。
-// 本机环境将 vite emptyOutDir 与 fs.rmSync 都替换为 safe-delete shim，对 dist-apk 会 fail-closed，
-// 因此这里 emptyOutDir 关闭且不做删除；调用方先删目录即可（目录不存在时 vite 直接创建）。
+// 每次从空目录构建，避免旧 hash 资源再次被 Capacitor 打包。
+// 删除前同时校验绝对路径、相对边界和目录名，防止路径配置错误扩大影响范围。
+const frontendRoot = join(dirname(fileURLToPath(import.meta.url)), '..')
+const outDir = join(frontendRoot, 'dist-apk')
+const relativeOutDir = relative(frontendRoot, outDir)
+if (relativeOutDir !== 'dist-apk' || dirname(outDir) !== frontendRoot) {
+  throw new Error(`Refusing to clean unexpected APK output directory: ${outDir}`)
+}
+rmSync(outDir, { recursive: true, force: true })
+
 await build({
   mode: 'apk',
   build: {
-    outDir: 'dist-apk',
-    emptyOutDir: false,
+    outDir,
+    emptyOutDir: true,
   },
 })
 
