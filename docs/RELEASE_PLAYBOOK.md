@@ -31,7 +31,8 @@ node scripts/verify-release-version.mjs v<x.y.z>
 修复分支同时推送到 GitHub 和 Codeup；GitHub PR 的 CI 全绿后合并。随后拉取 `origin/main` 并将相同提交推到 Codeup：
 
 ```bash
-git fetch origin codeup --prune
+git fetch origin --prune
+git fetch codeup --prune
 git switch main
 git pull --ff-only origin main
 git push codeup main
